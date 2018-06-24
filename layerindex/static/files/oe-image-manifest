@@ -1,0 +1,310 @@
+#!/usr/bin/env python3
+
+# Script to extract information from image manifests
+#
+# Copyright (C) 2018 Intel Corporation
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+import sys
+import os
+import argparse
+import logging
+import json
+import shutil
+import tempfile
+import tarfile
+from collections import OrderedDict
+
+scripts_path = os.path.dirname(os.path.realpath(__file__))
+# We look for runqemu not because we need it specifically, it's just something
+# that should be there in the real scripts directory
+if not scripts_path.endswith('/scripts') or not os.path.exists(os.path.join(scripts_path, 'runqemu')):
+    sys.stderr.write('Please place this script in the "scripts" subdirectory of your build system before running it\n')
+    sys.exit(1)
+lib_path = scripts_path + '/lib'
+sys.path = sys.path + [lib_path]
+import scriptutils
+logger = scriptutils.logger_create('devtool')
+import argparse_oe
+import scriptpath
+bitbakepath = scriptpath.add_bitbake_lib_path()
+if not bitbakepath:
+    logger.error("Unable to find bitbake by searching parent directory of this script or PATH")
+    sys.exit(1)
+logger.debug('Using standard bitbake path %s' % bitbakepath)
+scriptpath.add_oe_lib_path()
+
+
+def list_packages(args):
+    pkglist = []
+    with open(args.manifest, 'r') as f:
+        for line in f:
+            linesplit = line.split()
+            if len(linesplit) == 3:
+                pkglist.append(linesplit[0])
+    for pkg in sorted(pkglist):
+        print('%s' % pkg)
+
+
+def get_recipe_list(manifest, tinfoil):
+    pkgdata_dir = tinfoil.config_data.getVar('PKGDATA_DIR')
+
+    pkglist = []
+    with open(manifest, 'r') as f:
+        for line in f:
+            linesplit = line.split()
+            if len(linesplit) == 3:
+                pkglist.append(linesplit[0])
+
+    recipelist = []
+    for pkg in pkglist:
+        pkgdatafile = os.path.join(pkgdata_dir, 'runtime-reverse', pkg)
+        with open(pkgdatafile, 'r') as f:
+            for line in f:
+                if line.startswith('PN:'):
+                    recipe = line.split(':', 1)[1].strip()
+                    if not recipe in recipelist:
+                        recipelist.append(recipe)
+                    break
+    return recipelist
+
+
+def list_recipes(args):
+    import bb.tinfoil
+    with bb.tinfoil.Tinfoil() as tinfoil:
+        tinfoil.logger.setLevel(logger.getEffectiveLevel())
+        tinfoil.prepare(config_only=True)
+        recipelist = get_recipe_list(args.manifest, tinfoil)
+        for recipe in sorted(recipelist):
+            print('%s' % recipe)
+
+
+def export_recipe_info(args):
+    import bb.tinfoil
+    import bb.utils
+    import oe.utils
+    import oe.recipeutils
+
+    varlist = ['PN',
+               'PV',
+               'SUMMARY',
+               'DESCRIPTION',
+               'SECTION',
+               'LICENSE',
+               'HOMEPAGE',
+               'BUGTRACKER',
+               'PROVIDES',
+               'BBCLASSEXTEND',
+               'DEPENDS',
+               'PACKAGECONFIG']
+
+    def handle_value(value):
+        if value:
+            return oe.utils.squashspaces(value)
+        else:
+            return value
+
+    def find_git_repo(pth):
+        checkpth = pth
+        while checkpth != os.sep:
+            if os.path.exists(os.path.join(checkpth, '.git')):
+                return checkpth
+            checkpth = os.path.dirname(checkpth)
+        return None
+
+    def get_git_remote_branch(repodir):
+        try:
+            stdout, _ = bb.process.run('git rev-parse --abbrev-ref --symbolic-full-name @{u}', cwd=repodir, shell=True)
+        except bb.process.ExecutionError as e:
+            stdout = None
+        if stdout:
+            return stdout.strip()
+        else:
+            return None
+
+    def get_git_head_commit(repodir):
+        try:
+            stdout, _ = bb.process.run('git rev-parse HEAD', cwd=repodir, shell=True)
+        except bb.process.ExecutionError as e:
+            stdout = None
+        if stdout:
+            return stdout.strip()
+        else:
+            return None
+
+    def get_git_repo_url(repodir, remote='origin'):
+        import bb.process
+        # Try to get upstream repo location from origin remote
+        try:
+            stdout, _ = bb.process.run('git remote -v', cwd=repodir, shell=True)
+        except bb.process.ExecutionError as e:
+            stdout = None
+        if stdout:
+            for line in stdout.splitlines():
+                splitline = line.split()
+                if len(splitline) > 1:
+                    if splitline[0] == remote and scriptutils.is_src_url(splitline[1]):
+                        return splitline[1]
+        return None
+
+    with bb.tinfoil.Tinfoil(tracking=True) as tinfoil:
+        tinfoil.logger.setLevel(logger.getEffectiveLevel())
+        tinfoil.prepare(config_only=False)
+        recipelist = get_recipe_list(args.manifest, tinfoil)
+
+        if args.output:
+            outname = os.path.basename(args.output)
+        else:
+            outname = os.path.splitext(os.path.basename(args.manifest))[0]
+        if outname.endswith('.tar.gz'):
+            outname = outname[:-7]
+
+        tmpoutdir = tempfile.mkdtemp(prefix='oe-image-manifest-')
+        try:
+
+            # FIXME build config?
+            # FIXME runtime config?
+            # FIXME split layer info from recipes?
+            # FIXME treat workspace layer differently?
+
+            layers = OrderedDict()
+            for layerdir in tinfoil.config_data.getVar('BBLAYERS').split():
+                layerdata = OrderedDict()
+                layername = os.path.basename(layerdir)
+                if layername in layers:
+                    logger.error('Layer name %s is not unique in configuration' % layername)
+                    sys.exit(2)
+                repodir = find_git_repo(layerdir)
+                if repodir and os.path.abspath(repodir) != os.path.abspath(layerdir):
+                    remotebranch = get_git_remote_branch(repodir)
+                    remote = 'origin'
+                    if remotebranch and '/' in remotebranch:
+                        rbsplit = remotebranch.split('/', 1)
+                        layerdata['actual_branch'] = rbsplit[1]
+                        remote = rbsplit[0]
+                    layerdata['vcs_url'] = get_git_repo_url(repodir, remote)
+                    layerdata['vcs_subdir'] = os.path.relpath(layerdir, repodir)
+                    commit = get_git_head_commit(repodir)
+                    if commit:
+                        layerdata['vcs_commit'] = commit
+                layers[layername] = layerdata
+
+            rvalues = {}
+            for pn in recipelist:
+                rd = tinfoil.parse_recipe(pn)
+                rvalues[pn] = OrderedDict()
+                fpth = rd.getVar('FILE')
+                layerdir = oe.recipeutils.find_layerdir(fpth)
+                rvalues[pn]['filepath'] = os.path.relpath(fpth, layerdir)
+                for varname in varlist:
+                    rvalues[pn][varname] = handle_value(rd.getVar(varname))
+
+                gr = set(tinfoil.config_data.getVar("__inherit_cache") or [])
+                lr = set(rd.getVar("__inherit_cache") or [])
+                rvalues[pn]['inherits'] = sorted({os.path.splitext(os.path.basename(r))[0] for r in lr if r not in gr})
+
+                rvalues[pn]['source_urls'] = []
+                for url in (rd.getVar('SRC_URI') or '').split():
+                    if not url.startswith('file://'):
+                        url = url.split(';')[0]
+                        rvalues[pn]['source_urls'].append(url)
+
+                rvalues[pn]['packageconfig_opts'] = OrderedDict()
+                for key in rd.getVarFlags('PACKAGECONFIG').keys():
+                    if key == 'doc':
+                        continue
+                    rvalues[pn]['packageconfig_opts'][key] = rd.getVarFlag('PACKAGECONFIG', key, True)
+
+                # FIXME other files e.g. configs
+                patches = oe.recipeutils.get_recipe_patches(rd)
+                rvalues[pn]['patches'] = []
+                if patches:
+                    recipeoutdir = os.path.join(tmpoutdir, pn)
+                    bb.utils.mkdirhier(recipeoutdir)
+                    for patch in patches:
+                        # Patches may be in other layers too
+                        # FIXME check this works with remote patches
+                        patchlayerdir = oe.recipeutils.find_layerdir(patch)
+                        rvalues[pn]['patches'].append((os.path.basename(patchlayerdir), os.path.relpath(patch, patchlayerdir)))
+                        shutil.copy(patch, recipeoutdir)
+
+                rvalues[pn]['layer'] = os.path.basename(layerdir)
+
+            data = OrderedDict()
+            data['layers'] = layers
+            data['recipes'] = rvalues
+            with open(os.path.join(tmpoutdir, 'data.json'), 'w') as f:
+                json.dump(data, f, indent=2)
+
+            tarfn = args.output
+            if tarfn.endswith(os.sep):
+                tarfn = tarfn[:-1]
+            if not tarfn.endswith(('.tar.gz', '.tgz')):
+                tarfn += '.tar.gz'
+            with open(tarfn, 'wb') as f:
+                with tarfile.open(None, "w:gz", f) as tar:
+                    tar.add(tmpoutdir, outname)
+        finally:
+            shutil.rmtree(tmpoutdir)
+
+
+def main():
+    parser = argparse_oe.ArgumentParser(description="Image manifest utility",
+                                        epilog="Use %(prog)s <subcommand> --help to get help on a specific command")
+    parser.add_argument('-d', '--debug', help='Enable debug output', action='store_true')
+    parser.add_argument('-q', '--quiet', help='Print only errors', action='store_true')
+    subparsers = parser.add_subparsers(dest="subparser_name", title='subcommands', metavar='<subcommand>')
+    subparsers.required = True
+
+    parser_recipes = subparsers.add_parser('recipes',
+                                          help='List recipes producing packages within an image',
+                                          description='Lists recipes producing the packages that went into an image, using the manifest and pkgdata')
+    parser_recipes.add_argument('manifest', help='Manifest file')
+    parser_recipes.set_defaults(func=list_recipes)
+
+    parser_packages = subparsers.add_parser('packages',
+                                          help='List packages within an image',
+                                          description='Lists packages that went into an image, using the manifest')
+    parser_packages.add_argument('manifest', help='Manifest file')
+    parser_packages.set_defaults(func=list_packages)
+
+    parser_export = subparsers.add_parser('export-info',
+                                          help='Export recipe info for an image',
+                                          description='Export info for recipes that went into an image, using the manifest, pkgdata and recipes themselves')
+    parser_export.add_argument('manifest', help='Manifest file')
+    parser_export.add_argument('output', help='Output file (tarball) - defaults to manifest name if not specified', nargs='?')
+    parser_export.set_defaults(func=export_recipe_info)
+
+
+    args = parser.parse_args()
+
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+    elif args.quiet:
+        logger.setLevel(logging.ERROR)
+
+    ret = args.func(args)
+
+    return ret
+
+
+if __name__ == "__main__":
+    try:
+        ret = main()
+    except Exception:
+        ret = 1
+        import traceback
+        traceback.print_exc()
+    sys.exit(ret)

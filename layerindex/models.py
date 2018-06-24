@@ -517,6 +517,9 @@ class Recipe(models.Model):
     def comparison_recipes(self):
         return ClassicRecipe.objects.filter(cover_layerbranch=self.layerbranch).filter(cover_pn=self.pn)
 
+    def sub_file_url(self, path):
+        return self.layerbranch.file_url(path)
+
     def __str__(self):
         return os.path.join(self.filepath, self.filename)
 
@@ -538,6 +541,8 @@ class Source(models.Model):
             return drop_dotgit('https://git.yoctoproject.org/cgit/cgit.cgi' + self.url[26:])
         elif self.url.startswith('git://git.kernel.org'):
             return 'https' + self.url[3:]
+        elif '://' not in self.url:
+            return self.recipe.sub_file_url(os.path.join(self.recipe.filepath, self.url))
         return None
 
     def __str__(self):
@@ -567,7 +572,7 @@ class Patch(models.Model):
         ordering = ['recipe', 'apply_order']
 
     def vcs_web_url(self):
-        url = self.recipe.layerbranch.file_url(self.path)
+        url = self.recipe.sub_file_url(self.path)
         return url or ''
 
     def read_status_from_file(self, patchfn, logger=None):
@@ -864,3 +869,60 @@ class SiteNotice(models.Model):
 
     def text_sanitised(self):
         return utils.sanitise_html(self.text)
+
+
+class ImageComparison(models.Model):
+    user = models.ForeignKey(User)
+    name = models.CharField(max_length=255)
+    from_branch = models.ForeignKey(Branch, related_name='imagecomparison_from_set')
+    to_branch = models.ForeignKey(Branch, related_name='imagecomparison_to_set')
+
+    class Meta:
+        unique_together = ('user', 'name',)
+
+    def __str__(self):
+        return '%s' % (self.name)
+
+@receiver(models.signals.post_delete, sender=ImageComparison)
+def delete_image_compare_patches(sender, instance, *args, **kwargs):
+    # Ensure that patches imported with an image comparison get deleted when it is deleted
+    import settings
+    import shutil
+    patchdir = getattr(settings, 'IMAGE_COMPARE_PATCH_DIR', '')
+    if patchdir:
+        comppatchdir = os.path.join(patchdir, str(instance.id))
+        if os.path.isdir(comppatchdir):
+            shutil.rmtree(comppatchdir)
+
+
+class ImageComparisonRecipe(Recipe):
+    COVER_STATUS_CHOICES = [
+        ('U', 'Unknown'),
+        ('N', 'Not available'),
+        ('S', 'Distro-specific'),
+        ('O', 'Obsolete'),
+        ('E', 'Equivalent functionality'),
+        ('D', 'Direct match'),
+    ]
+    comparison = models.ForeignKey(ImageComparison)
+    cover_layerbranch = models.ForeignKey(LayerBranch, verbose_name='Covering layer', blank=True, null=True)
+    cover_pn = models.CharField('Covering recipe', max_length=100, blank=True)
+    cover_status = models.CharField(max_length=1, choices=COVER_STATUS_CHOICES, default='U')
+    cover_comment = models.TextField(blank=True)
+
+    def get_cover_recipe(self):
+        if self.cover_layerbranch and self.cover_pn:
+            return ClassicRecipe.objects.filter(layerbranch=self.cover_layerbranch).filter(pn=self.cover_pn).first()
+        else:
+            return None
+
+    def sub_file_url(self, path):
+        import settings
+        prefix = getattr(settings, 'IMAGE_COMPARE_PATCH_URL_PREFIX', None)
+        if prefix:
+            return os.path.join(prefix, str(self.comparison.id), self.pn, os.path.basename(path))
+        else:
+            return ''
+
+    def __str__(self):
+        return '%s: %s' % (self.comparison, self.pn)

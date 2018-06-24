@@ -11,17 +11,17 @@
 {% endcomment %}
 
 <!--
-{% block title_append %} - comparison - select match for {{ select_for.name }}{% endblock %}
+{% block title_append %} - {% if image_comparison %}image comparison{% else %}comparison{% endif %} - select match for {{ select_for.name }}{% endblock %}
 -->
 
 {% block navbar %}
 {% endblock %}
 
                 {% block page_heading %}
-                <h2>Select match for {{ select_for.pn }} in {% if branch.comparison %}{{ branch }}{% else %}OpenEmbedded{% endif %}</h2>
+                <h2>Select match for {{ select_for.pn }} in {% if image_comparison %}{{ branch }}{% else %}OpenEmbedded{% endif %}</h2>
                 <div class="pull-right">
                     <a href="#selectRecipeDialog" role="button" data-toggle="modal" class="select_recipe_button btn {% if recipe.id == existing_cover_recipe.id %}btn-primary{% else %}btn-default{% endif %}">No match</a>
-                    <a href="{% url 'comparison_recipe' select_for.id %}" class="btn btn-default">Cancel</a>
+                    <a href="{% if image_comparison %}{% url 'image_comparison_recipe' select_for.id %}{% else %}{% url 'comparison_recipe' select_for.id %}{% endif %}" class="btn btn-default">Cancel</a>
                 </div>
 
                                         <form id="comparison_form" class="form-inline" method="post">
@@ -84,6 +84,8 @@
                             {% block table_row_extra %}<td><a href="#selectRecipeDialog" role="button" data-toggle="modal" class="select_recipe_button btn {% if recipe.id == existing_cover_recipe.id %}btn-primary{% else %}btn-default{% endif %}" recipe-pn="{{ recipe.pn }}" recipe-layerbranch="{{ recipe.layerbranch.id }}">Select</a></td>{% endblock %}
 
                             {% block no_comparison_recipe_url %}{% url 'comparison_select_detail' select_for.id recipe.id %}{% endblock %}
+                            {% block comparison_recipe_url %}{% url 'image_comparison_select_detail' select_for.id recipe.id %}{% endblock %}
+                            {% block comparison_recipe_url_compare %}{% url 'image_comparison_select_detail' select_for.id recipe.id %}{% endblock %}
 
                         {% block export_button %}
                         {% endblock %}

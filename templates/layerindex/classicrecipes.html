@@ -258,7 +258,7 @@
                                 <td>{% if recipe.cover_recipe %}{{ recipe.cover_recipe.get_cover_status_display }}{% endif %}</td>
                                 <td>{% if recipe.cover_recipe %}<a href="{% url 'comparison_recipe' recipe.cover_recipe.id %}">{% endif %}{{ recipe.cover_recipe.pn }}{% if recipe.cover_recipe %}</a>{% endif %}</td>
                             {% elif compare %}
-                                <td><a href="{% url 'comparison_recipe' recipe.id %}">{{ recipe.name }}{% if recipe.needs_attention %} <i class="glyphicon glyphicon-exclamation-sign" data-toggle="tooltip" title="Needs attention" aria-hidden="true"></i>{% endif %}</a></td>
+                                <td><a href="{% block comparison_recipe_url_compare %}{% url 'comparison_recipe' recipe.id %}{% endblock %}">{{ recipe.name }}{% if recipe.needs_attention %} <i class="glyphicon glyphicon-exclamation-sign" data-toggle="tooltip" title="Needs attention" aria-hidden="true"></i>{% endif %}</a></td>
                                 <td>{{ recipe.pv|truncatechars:10 }}</td>
                                 <td>{% if recipe.patch_set.exists %}{{ recipe.patch_set.count }}{% endif %}</td>
                                 <td>{{ recipe.get_cover_status_display }}{% if recipe.cover_comment %} <a href="{% url 'classic_recipe' recipe.id %}"><i class="glyphicon glyphicon-comment" data-toggle="tooltip" title="{{ recipe.cover_comment }}" aria-hidden="true"></i></a>{% endif %}</td>

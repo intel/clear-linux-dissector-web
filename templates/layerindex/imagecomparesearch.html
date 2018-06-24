@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% comment %}
+
+  layerindex-web - image comparison recipe search page template
+
+  Copyright (C) 2018 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+<!--
+{% block title_append %} - image comparison - {{ comparison.name }}{% endblock %}
+-->
+
+
+{% block content %}
+{% autoescape on %}
+
+        <div class="row-fluid">
+
+            <div class="col-md-12">
+
+                <h2>Compare image to {{ comparison.to_branch }} - {{ comparison.name }}</h2>
+
+{% if recipe_list %}
+                <table class="table table-striped table-bordered recipestable">
+                    <thead>
+                        <tr>
+                            <th>Recipe name</th>
+                            <th class="col-md-2">OE Layer</th>
+                            <th>Version</th>
+                            <th>Patches</th>
+                            <th class="col-md-4">Status</th>
+                            <th>Covering package</th>
+                            <th>Version</th>
+                            <th>Patches</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for recipe in recipe_list %}
+                            <tr {% if recipe.preferred_count > 0 %}class="muted"{% endif %}>
+                                <td><a href="{% url 'image_comparison_recipe' recipe.id %}">{{ recipe.name }}</a></td>
+                                <td><a href="{% url 'layer_item' 'master' recipe.layerbranch.layer.name %}">{{ recipe.layerbranch.layer.name }}</a></td>
+                                <td>{{ recipe.pv|truncatechars:14 }}</td>
+                                <td>{% if recipe.patch_set.exists %}{{ recipe.patch_set.count }}{% endif %}</td>
+                                <td>{{ recipe.get_cover_status_display }}</td>
+                                {% if recipe.cover_recipe %}
+                                <td><a href="{% url 'image_comparison_recipe' recipe.id %}">{{ recipe.cover_pn }}</a></td>
+                                <td {% if recipe.cover_vercmp < 0 %}class="error"{% endif %}>{{ recipe.cover_recipe.pv|truncatechars:14 }}</td>
+                                <td>{% if recipe.cover_recipe.patch_set.exists %}{{ recipe.cover_recipe.patch_set.count }}{% endif %}</td>
+                                {% else %}
+                                <td>{{ recipe.cover_pn }}</td>
+                                <td></td>
+                                <td></td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+    {% if is_paginated %}
+        {% load pagination %}
+        {% pagination page_obj %}
+    {% endif %}
+{% else %}
+    {% if searched %}
+    <p>No recipes in comparison.</p>
+    {% endif %}
+{% endif %}
+
+            </div>
+
+        </div>
+
+{% endautoescape %}
+
+{% endblock %}
+

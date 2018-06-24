@@ -1,0 +1,40 @@
+{% extends "layerindex/comparisonrecipebase.html" %}
+{% load i18n %}
+
+{% comment %}
+
+  layerindex-web - image comparison recipe detail page template
+
+  Copyright (C) 2018 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+
+<!--
+{% autoescape on %}
+{% block title_append %} - {{ recipe.comparison }} - {{ recipe.pn }}{% endblock %}
+{% endautoescape %}
+-->
+
+        {% block breadcrumbs %}
+        <ul class="breadcrumb">
+            <li><a href="{% url 'image_comparison_search' recipe.comparison.id %}">{{ recipe.comparison }}</a></li>
+            <li class="active">{{ recipe.name }}</li>
+        </ul>
+        {% endblock %}
+
+
+                            {% block selectbuttons %}
+                            {% if can_edit %}
+                            <a href="{% url 'image_comparison_select' recipe.id recipe.comparison.to_branch.name %}?q={{recipe.pn}}" class="btn btn-info">Select...</a>
+                            {% endif %}
+                            {% endblock %}
+
+
+                            {% block origin_row %}
+                            <th>Layer</th>
+                            <td><a href="{% url 'layer_item' recipe.layerbranch.branch.name recipe.layerbranch.layer.name %}">{{ recipe.layerbranch.layer.name }}</a> (from {{ recipe.layerbranch.branch.name}})</td>
+                            <td></td>
+                            {% endblock %}
+

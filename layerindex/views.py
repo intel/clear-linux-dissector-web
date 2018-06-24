@@ -13,13 +13,13 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidde
 from django.core.urlresolvers import reverse, reverse_lazy, resolve
 from django.core.exceptions import PermissionDenied
 from django.template import RequestContext
-from layerindex.models import Branch, LayerItem, LayerMaintainer, LayerBranch, LayerDependency, LayerNote, Update, LayerUpdate, Recipe, Machine, Distro, BBClass, IncFile, BBAppend, RecipeChange, RecipeChangeset, ClassicRecipe, StaticBuildDep, DynamicBuildDep
+from layerindex.models import Branch, LayerItem, LayerMaintainer, LayerBranch, LayerDependency, LayerNote, Update, LayerUpdate, Recipe, Machine, Distro, BBClass, IncFile, BBAppend, RecipeChange, RecipeChangeset, ClassicRecipe, StaticBuildDep, DynamicBuildDep, Patch, Source, ImageComparison, ImageComparisonRecipe
 from datetime import datetime
 from django.views.generic import TemplateView, DetailView, ListView
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import CreateView, DeleteView, UpdateView, FormView
 from django.views.generic.base import RedirectView
 from django.contrib.messages.views import SuccessMessageMixin
-from layerindex.forms import EditLayerForm, LayerMaintainerFormSet, EditNoteForm, EditProfileForm, RecipeChangesetForm, AdvancedRecipeSearchForm, BulkChangeEditFormSet, ClassicRecipeForm, ClassicRecipeSearchForm, ComparisonRecipeSelectForm
+from layerindex.forms import EditLayerForm, LayerMaintainerFormSet, EditNoteForm, EditProfileForm, RecipeChangesetForm, AdvancedRecipeSearchForm, BulkChangeEditFormSet, ClassicRecipeForm, ClassicRecipeSearchForm, ComparisonRecipeSelectForm, ImageComparisonCreateForm, ImageComparisonRecipeForm
 from django.db import transaction
 from django.contrib.auth.models import User, Permission
 from django.db.models import Q, Count, Sum
@@ -43,6 +43,8 @@ from django.dispatch import receiver
 import reversion
 from django.db.models.signals import pre_save
 from registration.models import RegistrationProfile
+
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 def edit_layernote_view(request, template_name, slug, pk=None):
     layeritem = get_object_or_404(LayerItem, name=slug)
@@ -1024,9 +1026,10 @@ class ClassicRecipeLinkWrapper(LinkWrapper):
         setattr(obj, 'cover_vercmp', vercmp)
 
 class ClassicRecipeReverseLinkWrapper(LinkWrapper):
-    def __init__(self, queryset, branch):
+    def __init__(self, queryset, branch, from_branch=None):
         self.queryset = queryset
         self.branch = branch
+        self.from_branch = from_branch
 
     # This function is required by generic views, create another proxy
     def _clone(self):
@@ -1035,7 +1038,11 @@ class ClassicRecipeReverseLinkWrapper(LinkWrapper):
     def _annotate(self, obj):
         recipe = None
         vercmp = 0
-        rq = ClassicRecipe.objects.filter(layerbranch__branch__name=self.branch).filter(cover_layerbranch=obj.layerbranch).filter(cover_pn=obj.pn)
+        if self.from_branch:
+            from_branchobj = LayerBranch.objects.get(layer=obj.layerbranch.layer, branch__name=self.from_branch)
+        else:
+            from_branchobj = obj.layerbranch
+        rq = ClassicRecipe.objects.filter(layerbranch__branch__name=self.branch).filter(cover_layerbranch=from_branchobj).filter(cover_pn=obj.pn)
         if rq:
             recipe = rq.first()
             if obj.pv and recipe.pv:
@@ -1606,6 +1613,271 @@ class ComparisonRecipeSelectDetailView(DetailView):
             form.save()
             messages.success(request, 'Changes to comparison recipe %s saved successfully.' % recipe.pn)
             return HttpResponseRedirect(reverse('comparison_recipe', args=(recipe.id,)))
+        else:
+            # FIXME this is ugly because HTML gets escaped
+            messages.error(request, 'Failed to save changes: %s' % form.errors)
+
+        return self.get(request, *args, **kwargs)
+
+
+class ImageCompareView(FormView):
+    form_class = ImageComparisonCreateForm
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super(ImageCompareView, self).dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        import tarfile
+        import tempfile
+        import shutil
+        import codecs
+        import json
+        import recipeparse
+        from collections import OrderedDict
+        if not self.request.user.is_authenticated():
+            raise PermissionDenied
+
+        patchdir = getattr(settings, 'IMAGE_COMPARE_PATCH_DIR', None)
+        if not patchdir:
+            raise Exception('IMAGE_COMPARE_PATCH_DIR not set')
+
+        jsdata = None
+        tmpoutdir = tempfile.mkdtemp(prefix='layerindex-')
+        try:
+            with tarfile.open(None, "r:gz", self.request.FILES['file']) as tar:
+                for tarinfo in tar:
+                    if tarinfo.isfile():
+                        fn = os.path.basename(tarinfo.name)
+                        if fn == 'data.json':
+                            with tar.extractfile(tarinfo) as f:
+                                tstream = codecs.getreader("utf-8")(f)
+                                jsdata = json.load(tstream, object_pairs_hook=OrderedDict)
+                tar.extractall(tmpoutdir)
+
+            # FIXME recipe file links may not work because versions may not match up (might have built an older version)
+
+            comparison = None
+            if jsdata:
+                with transaction.atomic():
+                    branch = Branch()
+                    # FIXME give this a unique name
+                    branch.name = form.cleaned_data['name'].replace(' ', '_')
+                    branch.bitbake_branch = 'N/A'
+                    branch.short_description = 'Image comparison %s' % form.cleaned_data['name']
+                    branch.updates_enabled = False
+                    branch.comparison = True
+                    branch.hidden = True
+                    branch.save()
+
+                    # Have a function to create layers on the fly so that we don't create any we don't need to
+                    layerbranches = {}
+                    def get_layerbranch(layername):
+                        layerbranch = layerbranches.get(layername, None)
+                        if layerbranch:
+                            return layerbranch
+                        actualname = layername
+                        if layername == 'meta':
+                            actualname = settings.CORE_LAYER_NAME
+                        jslayer = jsdata['layers'][layername]
+                        layer, created = LayerItem.objects.get_or_create(name=actualname)
+                        if created:
+                            layer.status = 'X'
+                            layer.layer_type = 'M'
+                            layer.summary = 'N/A'
+                            layer.description = 'N/A'
+                            layer.vcs_url = jslayer['vcs_url']
+                            layer.comparison = True
+                            layer.save()
+                        layerbranch = LayerBranch()
+                        layerbranch.layer = layer
+                        layerbranch.branch = branch
+                        layerbranch.vcs_subdir = jslayer['vcs_subdir']
+                        layerbranch.actual_branch = jslayer['actual_branch']
+                        layerbranch.save()
+                        layerbranches[layername] = layerbranch
+                        return layerbranch
+
+                    comparison = ImageComparison()
+                    comparison.user = self.request.user
+                    comparison.name = form.cleaned_data['name']
+                    comparison.from_branch = branch
+                    comparison.to_branch = form.cleaned_data['to_branch']
+                    comparison.save()
+
+                    # Copy patch files
+                    extdir = os.path.join(tmpoutdir, os.listdir(tmpoutdir)[0])
+                    comppatchdir = os.path.join(patchdir, str(comparison.id))
+                    os.makedirs(comppatchdir)
+                    for entry in os.listdir(extdir):
+                        # We skip out the json file by only copying directories
+                        entrypath = os.path.join(extdir, entry)
+                        if os.path.isdir(entrypath):
+                            shutil.move(entrypath, comppatchdir)
+
+                    for pn, jsrecipe in jsdata['recipes'].items():
+                        recipe = ImageComparisonRecipe()
+                        recipe.comparison = comparison
+                        recipe.layerbranch = get_layerbranch(jsrecipe['layer'])
+                        recipe.filepath = os.path.dirname(jsrecipe['filepath'])
+                        recipe.filename = os.path.basename(jsrecipe['filepath'])
+                        for key,value in jsrecipe.items():
+                            if key in ['filepath', 'layer', 'inherits', 'patches', 'source_urls', 'DEPENDS', 'PACKAGECONFIG', 'packageconfig_opts']:
+                                continue
+                            keylower = key.lower()
+                            if value and hasattr(recipe, keylower):
+                                setattr(recipe, keylower, value)
+                        recipe.inherits = ' '.join(jsrecipe.get('inherits', []))
+
+                        # Cover info
+                        cover_recipe = ClassicRecipe.objects.filter(layerbranch__branch=comparison.to_branch).filter(cover_layerbranch__layer__name=recipe.layerbranch.layer.name).filter(cover_pn=pn).first()
+                        if cover_recipe:
+                            recipe.cover_pn = cover_recipe.pn
+                            # FIXME cover_layerbranch needs to be handled specially
+                            recipe.cover_layerbranch = cover_recipe.layerbranch
+                            # FIXME cover_status might not match
+                            recipe.cover_status = cover_recipe.cover_status
+
+                        recipe.save()
+
+                        # Take care of dependencies
+                        depends = jsrecipe.get('DEPENDS', '')
+                        packageconfig_opts = jsrecipe.get('packageconfig_opts', {})
+                        recipeparse.handle_recipe_depends(recipe, depends, packageconfig_opts)
+
+                        for jsurl in jsrecipe.get('source_urls', []):
+                            source = Source()
+                            source.recipe = recipe
+                            source.url = jsurl
+                            source.save()
+                        for jspatch in jsrecipe.get('patches', []):
+                            patch = Patch()
+                            patch.recipe = recipe
+                            patch.path = jspatch[1]
+                            # FIXME handle bbappends - this is will only work for patches in the original recipe (also fetched patches)
+                            patch.src_path = os.path.relpath(patch.path, recipe.filepath)
+                            try:
+                                patch.read_status_from_file(os.path.join(comppatchdir, pn, os.path.basename(patch.path)))
+                            except Exception as e:
+                                print('Failed to read patch status for %s: %s' % (patch.path, e))
+                            patch.save()
+
+        finally:
+            shutil.rmtree(tmpoutdir)
+
+        if comparison:
+            return HttpResponseRedirect(reverse('image_comparison_search', args=(comparison.id,)))
+        else:
+            # FIXME handle this properly
+            return HttpResponse('Invalid JSON data')
+
+    def get_context_data(self, **kwargs):
+        context = super(ImageCompareView, self).get_context_data(**kwargs)
+        context['comparisons'] = ImageComparison.objects.filter(user=self.request.user)
+        return context
+
+
+class ImageCompareDetailView(DetailView):
+    model = ImageComparison
+
+
+class ImageCompareRecipeSearchView(ListView):
+    context_object_name = 'recipe_list'
+    paginate_by = 50
+
+    def get_queryset(self):
+        comparison = get_object_or_404(ImageComparison, pk=self.kwargs['pk'])
+        qs = ImageComparisonRecipe.objects.filter(comparison=comparison).order_by(Lower('pn'))
+        return ClassicRecipeLinkWrapper(qs)
+
+    def get_context_data(self, **kwargs):
+        context = super(ImageCompareRecipeSearchView, self).get_context_data(**kwargs)
+        context['comparison'] = get_object_or_404(ImageComparison, pk=self.kwargs['pk'])
+        return context
+
+class ImageCompareRecipeDetailView(SuccessMessageMixin, UpdateView):
+    form_class = ImageComparisonRecipeForm
+    model = ImageComparisonRecipe
+    context_object_name = 'recipe'
+
+    def get_success_message(self, cleaned_data):
+        return "Comparison saved successfully"
+
+    def get_success_url(self):
+        return reverse_lazy('image_comparison_recipe', args=(self.object.id,))
+
+    def get_context_data(self, **kwargs):
+        context = super(ImageCompareRecipeDetailView, self).get_context_data(**kwargs)
+        recipe = self.get_object()
+        if recipe:
+            context['packageconfigs'] = recipe.packageconfig_set.order_by('feature')
+            context['staticdependencies'] = recipe.staticbuilddep_set.order_by('name')
+            cover_recipe = recipe.get_cover_recipe()
+            context['cover_recipe'] = cover_recipe
+            context['recipes'] = [recipe, cover_recipe]
+        context['layerbranch_desc'] = recipe.layerbranch.layer.name
+        context['layerbranch_addtext'] = ' (from %s)' % recipe.comparison
+        context['to_desc'] = recipe.comparison.to_branch
+        context['can_edit'] = self.request.user.is_authenticated()
+        return context
+
+
+class ImageCompareRecipeSelectView(ClassicRecipeSearchView):
+    def get_context_data(self, **kwargs):
+        context = super(ImageCompareRecipeSelectView, self).get_context_data(**kwargs)
+        recipe = get_object_or_404(ImageComparisonRecipe, pk=self.kwargs['pk'])
+        context['select_for'] = recipe
+        context['existing_cover_recipe'] = recipe.get_cover_recipe()
+        comparison_form = ImageComparisonRecipeForm(prefix='selectrecipedialog', instance=recipe)
+        comparison_form.fields['cover_pn'].widget = forms.HiddenInput()
+        comparison_form.fields['cover_layerbranch'].widget = forms.HiddenInput()
+        context['comparison_form'] = comparison_form
+        context['can_edit'] = self.request.user.is_authenticated()
+        context['image_comparison'] = True
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            raise PermissionDenied
+
+        recipe = get_object_or_404(ImageComparisonRecipe, pk=self.kwargs['pk'])
+        form = ImageComparisonRecipeForm(request.POST, prefix='selectrecipedialog', instance=recipe)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Changes to image comparison recipe %s saved successfully.' % recipe.pn)
+            return HttpResponseRedirect(reverse('image_comparison_recipe', args=(recipe.id,)))
+        else:
+            # FIXME this is ugly because HTML gets escaped
+            messages.error(request, 'Failed to save changes: %s' % form.errors)
+
+        return self.get(request, *args, **kwargs)
+
+class ImageCompareRecipeSelectDetailView(ClassicRecipeDetailView):
+    def get_context_data(self, **kwargs):
+        context = super(ImageCompareRecipeSelectDetailView, self).get_context_data(**kwargs)
+        recipe = get_object_or_404(ImageComparisonRecipe, pk=self.kwargs['selectfor'])
+        context['select_for'] = recipe
+        context['existing_cover_recipe'] = recipe.get_cover_recipe()
+        comparison_form = ImageComparisonRecipeForm(prefix='selectrecipedialog', instance=recipe)
+        comparison_form.fields['cover_pn'].widget = forms.HiddenInput()
+        comparison_form.fields['cover_layerbranch'].widget = forms.HiddenInput()
+        context['comparison_form'] = comparison_form
+        context['can_edit'] = False
+        context['image_comparison'] = True
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            raise PermissionDenied
+
+        recipe = get_object_or_404(ImageComparisonRecipe, pk=self.kwargs['selectfor'])
+        form = ImageComparisonRecipeForm(request.POST, prefix='selectrecipedialog', instance=recipe)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Changes to image comparison recipe %s saved successfully.' % recipe.pn)
+            return HttpResponseRedirect(reverse('image_comparison_recipe', args=(recipe.id,)))
         else:
             # FIXME this is ugly because HTML gets escaped
             messages.error(request, 'Failed to save changes: %s' % form.errors)

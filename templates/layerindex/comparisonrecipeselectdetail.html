@@ -11,7 +11,7 @@
 {% endcomment %}
 
 <!--
-{% block title_append %} - comparison - select match for {{ select_for.name }}{% endblock %}
+{% block title_append %} - {% if image_comparison %}image comparison{% else %}comparison{% endif%} - select match for {{ select_for.name }}{% endblock %}
 -->
 
                 {% block page_heading %}

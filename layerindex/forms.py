@@ -5,7 +5,7 @@
 # Licensed under the MIT license, see COPYING.MIT for details
 
 from collections import OrderedDict
-from layerindex.models import LayerItem, LayerBranch, LayerMaintainer, LayerNote, RecipeChangeset, RecipeChange, ClassicRecipe
+from layerindex.models import Branch, LayerItem, LayerBranch, LayerMaintainer, LayerNote, RecipeChangeset, RecipeChange, ClassicRecipe, ImageComparisonRecipe
 from django import forms
 from django.core.validators import URLValidator, RegexValidator, EmailValidator
 from registration.validators import ReservedNameValidator, DEFAULT_RESERVED_NAMES, validate_confusables
@@ -293,3 +293,14 @@ class ComparisonRecipeSelectForm(StyledForm):
     q = forms.CharField(label='Keyword', max_length=255, required=False)
     oe_layer = forms.ModelChoiceField(label='OE Layer', queryset=LayerItem.objects.filter(comparison=False).filter(status__in=['P', 'X']).order_by('name'), empty_label="(any)", required=False)
 
+
+class ImageComparisonCreateForm(forms.Form):
+    name = forms.CharField(max_length=50, help_text="Name for the image comparison")
+    file = forms.FileField()
+    to_branch = forms.ModelChoiceField(queryset=Branch.objects.filter(comparison=True).filter(hidden=False).order_by('name'))
+
+
+class ImageComparisonRecipeForm(forms.ModelForm):
+    class Meta:
+        model = ImageComparisonRecipe
+        fields = ('cover_pn', 'cover_layerbranch', 'cover_status', 'cover_comment')
