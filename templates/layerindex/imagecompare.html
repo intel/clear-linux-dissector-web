@@ -14,52 +14,56 @@
 <!--
 {% block title_append %} - image comparison{% endblock %}
 -->
+{% block hero %}
+<!-- Primary message       -->
+        <div class="container">
+            <h2 class="home">Compare Image</h2>
+            <p class="pageDesc">This tool allows you to compare the contents of an image (based on a manifest) with packages in another distribution.<br>To get started, either resume an existing comparison or create a new one.</p>
+        </div>
+{% endblock %}
 
 {% block content %}
 {% autoescape on %}
 
-<h2>Compare image</h2>
-
-<p>This tool allows you to compare the contents of an image (based on a manifest) with packages in another distribution.</p>
-
-<p>To get started, either resume an existing image comparison or create a new one.</p>
-
-{% if comparisons %}
-    <h3>Select an existing comparison</h3>
-    <ul>
-    {% for comparison in comparisons %}
-        <li><a href="{% url 'image_comparison_search' comparison.id %}">{{ comparison.name }}</a></li>
-    {% endfor %}
-    </ul>
-{% endif %}
-
-<h3>Create a new comparison</h3>
-
-<ol>
-<li>Download the <b><a href="{% static "files/oe-image-manifest" %}">oe-image-manifest script</a></b></li>
-<li>Copy/move it to the <code>scripts</code> subdirectory of your build system</li>
-<li>Make it executable:<br><code>chmod +x scripts/oe-image-manifest</code></li>
-<li>Initialise the build environment (if you have not already):<br><code>. ./oe-init-build-env</code></li>
-<li>Run the script:<br><code>oe-image-manifest export-info path/to/tmp/deploy/images/<i>machinename</i>/<i>imagename</i>.manifest</code></li>
-<li>Submit the resulting .tar.gz file below:
-</ol>
-
-<form class="form-inline" enctype="multipart/form-data" method="POST">
+    <div class="container">
+        <!-- Example row of columns -->
+        <div class="row">
+            <div class="col-md-6">
+                <h3 class="insetContent">CREATE A NEW COMPARISON</h3>
+                <div class="content">
+                    <p class="insetContent">Download the <a href="{% static "files/oe-image-manifest" %}">oe-image-manifest-script</a></p>
+                    <ul class="bullet">
+                        <li>Copy/move it to the <span class="hilite">scripts</span> subdirectory of your build system.</li>
+                        <li>Make it executable<br>
+                            <div class="hilite">chmod +x scripts/oe-image-manifest</div>
+                        </li>
+                        <li>Initialize the build environment (if you have not already)<br>
+                            <div class="hilite">../oe-init-build-env</div>
+                        </li>
+                        <li>Run the script<br>
+                            <div class="hilite">oe-image-manifest export-info path/to/tmp/deploy/images/
+machinename/imagename/imagename.manifest</div>
+                        </li>
+                        <li>Submit the resulting .tar.gz file below and give it a name:</li>
+                    </ul>
+                </div>
+                
+                <form class="form-inline insetContent" enctype="multipart/form-data" method="POST">
     {% csrf_token %}
     {% for hidden in form.hidden_fields %}
         {{ hidden }}
     {% endfor %}
     {% for field in form.visible_fields %}
         {% if field.errors %}
-        <div class="control-group alert alert-danger">
+        <div class="form-group alert alert-danger">
         {{ field.errors }}
         {% endif %}
-        <div class="control-group">
-            {{ field.label_tag }}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}" class="labelTitle">{{ field.label }}</label><br>
             {{ field }}
-            <span class="help-inline custom-help">
+            <span class="fileInputDesc">
                 {{ field.help_text }}
-            </span>
+            </span><br>
         {% if field.errors %}
         </div>
         {% endif %}
@@ -67,11 +71,27 @@
     {% endfor %}
     <div class="control-group">
         <div class="controls">
-            <button type="submit" class="btn btn-default">Create</button>
+            <button type="submit" class="btn btn-success">CREATE COMPARISON</button>
         </div>
     </div>
 </form>
-
+                                
+            </div>
+            <div class="col-md-6 col-pad">
+                
+              {% if comparisons %}
+                <h3>SELECT AN EXISTING COMPARISON</h3>
+                {% for comparison in comparisons %}
+                <a href="{% url 'image_comparison_search' comparison.id %}" class="existingLink">{{ comparison.name }}</a>
+                {% endfor %}
+              {% endif %}
+                
+            </div>
+        </div>
+    </div> <!-- /container -->
+    
+    
+    
 {% endautoescape %}
 
 {% endblock %}

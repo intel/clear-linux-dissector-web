@@ -18,7 +18,7 @@
 {% endblock %}
 
                 {% block page_heading %}
-                <h2>Select match for {{ select_for.pn }} in {% if image_comparison %}{{ branch }}{% else %}OpenEmbedded{% endif %}</h2>
+                <h1>Select match for {{ select_for.pn }} in {% if image_comparison %}{{ branch }}{% else %}OpenEmbedded{% endif %}</h1>
                 <div class="pull-right">
                     <a href="#selectRecipeDialog" role="button" data-toggle="modal" class="select_recipe_button btn {% if recipe.id == existing_cover_recipe.id %}btn-primary{% else %}btn-default{% endif %}">No match</a>
                     <a href="{% if image_comparison %}{% url 'image_comparison_recipe' select_for.id %}{% else %}{% url 'comparison_recipe' select_for.id %}{% endif %}" class="btn btn-default">Cancel</a>

@@ -10,17 +10,16 @@
 
 {% load i18n %}
 {% load staticfiles %}
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{% static "css/bootstrap.css" %}" />
-    <link rel="stylesheet" href="{% static "css/bootstrap-theme.css" %}" />
-    <link rel="stylesheet" href="{% static "css/additional.css" %}" />
+    <!-- <link rel="stylesheet" href="{% static "css/additional.css" %}" /   -->
+    <link rel="stylesheet" href="{% static "css/comparison-tool-styles.css" %}" />
     <link rel="icon" type="image/vnd.microsoft.icon" href="{% static "img/favicon.ico" %}" />
     <title>{{ site_name }}{% block title_append %} - {% endblock %}</title>
     {% block head_extra %}
@@ -30,75 +29,39 @@
 <body>
     {% block header %}
     {% autoescape on %}
-    <nav class="navbar navbar-default navbar-fixed-top">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <a class="navbar-brand" href="{% url 'frontpage' %}">{{ site_name }}</a>
-            </div>
-
-            <div class="navbar-collapse collapse">
-               {% block userfunctions %}
-               {% if user.is_authenticated %}
-                    <div class="btn-group pull-right nav-spacer">
-                        {% if perms.layerindex.publish_layer %}
-                        {% if unpublished_count > 0 %}
-                        <a class="btn btn-default navbar-btn" href="{% url 'layer_list_review' %}?branch=master">
-                            <span class="badge badge-warning review-notification">{{ unpublished_count }}</span>
-                        </a>
-                        {% endif %}
-                        {% endif %}
-                        <button class="btn btn-default navbar-btn dropdown-toggle" data-toggle="dropdown">
-                            <i class="glyphicon glyphicon-user" aria-hidden="true"></i>
-                            {{ user.username }}
-                            <b class="caret"></b>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url 'auth_logout' %}">{% trans "Log out" %}</a></li>
-                            <li><a href="{% url 'auth_password_change' %}">{% trans "Change password" %}</a></li>
-                            <li><a href="{% url 'profile' %}?return_to={{ request.path }}">{% trans "Edit profile" %}</a></li>
-                        </ul>
-                    </div>
-                {% else %}
-                    <div class="pull-right nav-spacer">
-                        <a class="btn btn-default navbar-btn" href="{% url 'auth_login' %}{% if login_return_url %}?next={{ login_return_url }}{% endif %}">{% trans "Log in" %}</a>
-                    </div>
-                {% endif %}
-                {% endblock %}
-                <ul class="nav navbar-nav pull-right">
-                    <li class="divider-vertical"></li>
-                </ul>
-                {% block topfunctions %}
-                <div class="pull-right nav-spacer">
-                    <a class="btn btn-info navbar-btn" href="{% url 'submit_layer' %}">Submit layer</a>
+        <div class="header-bkgd">
+        <nav class="navbar navbar-default navbar-static-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="/layerindex/imagecompare/">CLEAR LINUX DISSECTOR</a>
                 </div>
-                <ul class="nav navbar-nav pull-right">
-                    {% if user.is_authenticated %}
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        Tools
-                        <b class="caret"></b>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url 'bulk_change' %}">Bulk Change</a></li>
-                            <li><a href="{% url 'duplicates' 'master' %}">Duplicates</a></li>
-                            <li><a href="{% url 'update_list' %}">Updates</a></li>
-                            <li><a href="{% url 'stats' %}">Statistics</a></li>
-                            {% if rrs_enabled %}
-                            <li><a href="{% url 'rrs_frontpage' %}">Recipe Maintenance</a></li>
-                            {% endif %}
-                            {% if user.is_staff %}
-                            <li class="divider"></li>
-                            <li><a href="{% url 'admin:index' %}">Admin</a></li>
-                            <li><a href="{% url 'email_test' %}">Test email</a></li>
-                            {% endif %}
-                        </ul>
-                    </li>
-                    {% endif %}
-                </ul>
-                {% endblock %}
-            </div> <!-- end of "container" -->
-        </div> <!--  "end of "container-fluid" -->
-    </nav> <!--  end of "navbar" -->
+                <div id="navbar">
+                    <div class="navbar-form navbar-right">
+                        {% block userfunctions %}
+                        {% if user.is_authenticated %}
+                        <div class="dropdown account">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ user.username }} <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'auth_logout' %}">{% trans "Log out" %}</a></li>
+                                <li><a href="{% url 'auth_password_change' %}">{% trans "Change password" %}</a></li>
+                                <li><a href="{% url 'profile' %}?return_to={{ request.path }}">{% trans "Edit profile" %}</a></li>
+                            </ul>
+                        </div>
+                        {% else %}
+                    
+                        <a class="btn btn-default navbar-btn" href="{% url 'auth_login' %}{% if login_return_url %}?next={{ login_return_url }}{% endif %}">{% trans "Log in" %}</a>
+       
+                        {% endif %}
+                        {% endblock %}
+                    </div>
+                </div>
+                <!--/.navbar-collapse -->
+            </div>
+        </nav>
+        {% block hero %}
+        {% endblock %}
+    </div>
+    
     {% endautoescape %}
     {% endblock %}
 
@@ -116,17 +79,14 @@
         {% block content %}{% endblock %}
     </div>
 
-    <div id="footer">
-        {% block footer %}
-        <hr />
-        <div class="footer">
-            <a href="{% url 'history_list' %}">change history</a>
-            &bull; <a href="{% url 'about' %}">about this site</a>
-            &bull; <a href="http://www.openembedded.org/Layers_FAQ">FAQ</a>
-        </div>
 
+        {% block footer %}
+        <div class="container">
+            <footer>
+                <p class="pull-right">{% comment %} put footer copyright text here {% endcomment %}</p>
+            </footer>
+        </div>
         {% endblock %}
-    </div>
 
     <script src="{% static "js/jquery-3.3.1.js" %}"></script>
     <script src="{% static "js/bootstrap.js" %}"></script>

@@ -188,7 +188,7 @@
         </div>
         {% endif %}
 
-        <ul class="nav nav-tabs" id="layertabbar">
+        <ul class="nav nav-pills" id="layertabbar">
             {% if layerbranch.recipe_set.count > 0 %}
                 <li><a href="#recipes" data-toggle="tab">Recipes</a></li>
             {% endif %}
@@ -215,7 +215,7 @@
                     <nav class="navbar navbar-default">
                         <div class="container-fluid">
                             <div class="navbar-header">
-                                <a class="navbar-brand">{{ layeritem.name }} recipes <span class="text-muted">({{ layerbranch.sorted_recipes.count }})</span></a>
+                                <br><a class="navbar">{{ layeritem.name }} recipes <span class="text-muted">({{ layerbranch.sorted_recipes.count }})</span></a>
                             </div>
 
                             <div class="navbar-right">
@@ -231,7 +231,7 @@
                         </div>
                     </nav>
 
-                    <table class="table table-bordered recipestable">
+                    <table class="table table-striped recipestable">
                         <thead>
                             <tr>
                                 <th>Recipe name</th>
@@ -256,12 +256,12 @@
                     <nav class="navbar navbar-default">
                         <div class="container-fluid">
                             <div class="navbar-header">
-                                <a class="navbar-brand">{{ layeritem.name }} machines <span class="text-muted">({{ machines.count }})</span></a>
+                                <br><a class="navbar">{{ layeritem.name }} machines <span class="text-muted">({{ machines.count }})</span></a>
                             </div>
                         </div>
                     </nav>
 
-                    <table class="table table-bordered">
+                    <table class="table table-striped">
                         <tbody>
                             {% for machine in machines %}
                                 <tr>
@@ -278,12 +278,12 @@
                     <nav class="navbar navbar-default">
                         <div class="container-fluid">
                             <div class="navbar-header">
-                                <a class="navbar-brand">{{ layeritem.name }} bbappends <span class="text-muted">({{ appends.count }})</span></a>
+                                <br><a class="navbar">{{ layeritem.name }} bbappends <span class="text-muted">({{ appends.count }})</span></a>
                             </div>
                         </div>
                     </nav>
 
-                    <table class="table table-bordered">
+                    <table class="table table-striped">
                         <tbody>
                             {% for append in appends %}
                                 <tr>
@@ -299,12 +299,12 @@
                     <nav class="navbar navbar-default">
                         <div class="container-fluid">
                             <div class="navbar-header">
-                                <a class="navbar-brand">{{ layeritem.name }} classes <span class="text-muted">({{ classes.count }})</span></a>
+                                <br><a class="navbar">{{ layeritem.name }} classes <span class="text-muted">({{ classes.count }})</span></a>
                             </div>
                         </div>
                     </nav>
 
-                    <table class="table table-bordered">
+                    <table class="table table-striped">
                         <tbody>
                             {% for class in classes %}
                                 <tr>
@@ -320,12 +320,12 @@
                     <nav class="navbar navbar-default">
                         <div class="container-fluid">
                             <div class="navbar-header">
-                                <a class="navbar-brand">{{ layeritem.name }} distros <span class="text-muted">({{ distros.count }})</span></a>
+                                <br><a class="navbar">{{ layeritem.name }} distros <span class="text-muted">({{ distros.count }})</span></a>
                             </div>
                         </div>
                     </nav>
 
-                    <table class="table table-bordered">
+                    <table class="table table-striped">
                         <tbody>
                             {% for distro in distros %}
                                 <tr>
@@ -342,12 +342,12 @@
                     <nav class="navbar navbar-default">
                         <div class="container-fluid">
                             <div class="navbar-header">
-                                <a class="navbar-brand">{{ layeritem.name }} updates</a>
+                                <br><a class="navbar">{{ layeritem.name }} updates</a>
                             </div>
                         </div>
                     </nav>
 
-                    <table class="table table-bordered">
+                    <table class="table table-striped">
                         <thead>
                             <tr>
                                 <th>Date/time</th>

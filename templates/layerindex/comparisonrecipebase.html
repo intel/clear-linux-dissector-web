@@ -17,7 +17,7 @@
 {% endautoescape %}
 -->
 
-{% block contenttag %}<div id="content" class="container-fluid top-padded">{% endblock %}
+{% block contenttag %}<div id="content" class="container top-padded">{% endblock %}
 
 {% block content %}
 {% autoescape on %}
@@ -53,7 +53,7 @@
                             <td>{% if cover_recipe %}{{ cover_recipe.name }} ({{ recipe.get_cover_status_display }}{% if recipe.cover_comment %} - {{ recipe.cover_comment }}{% endif %}){% else %}{{ recipe.get_cover_status_display }}{% if recipe.cover_comment %} - {{ recipe.cover_comment }}{% endif %}{% endif %}{% block to_recipe_extra %}{% endblock %}
                             <div class="pull-right">
                             {% block selectbuttons %}
-                            <a href="#" class="btn btn-info">Select...</a>
+                            <a href="#" class="btn btn-default">Select...</a>
                             {% endblock %}
                             </div>
                             </td>
@@ -137,7 +137,7 @@
                         {% endblock %}
                     </tbody>
                 </table>
-
+<br><br>
                 <h2>Sources</h2>
                 <table width="100%" class="table table-bordered">
                     <thead>
@@ -164,7 +164,7 @@
                     {% endfor %}
                     </tr></tbody>
                 </table>
-
+<br><br>
                 <h2>Patches</h2>
                 <table width="100%" class="table table-bordered">
                     <thead>
