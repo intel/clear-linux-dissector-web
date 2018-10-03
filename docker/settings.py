@@ -289,3 +289,7 @@ TOOLS_LOG_DIR = ""
 USE_X_FORWARDED_HOST = True
 ALLOWED_HOSTS = [os.getenv('HOSTNAME', 'layers.test')]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Path and URL prefix for handling patches imported with image comparison data
+IMAGE_COMPARE_PATCH_DIR = "/opt/imagecompare-patches"
+IMAGE_COMPARE_PATCH_URL_PREFIX = "/imagecompare-patches/"

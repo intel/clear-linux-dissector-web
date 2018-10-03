@@ -34,6 +34,7 @@ docker-compose run --rm layersapp /opt/layerindex/manage.py createsuperuser
 ## Set the volume permissions using debian:stretch since we recently fetched it
 docker run --rm -v layerindexweb_layersmeta:/opt/workdir debian:stretch chown 500 /opt/workdir
 docker run --rm -v layerindexweb_layersstatic:/usr/share/nginx/html debian:stretch chown 500 /usr/share/nginx/html
+docker run --rm -v layerindexweb_patchvolume:/opt/imagecompare-patches debian:stretch chown 500 /opt/imagecompare-patches
 
 ## Generate static assets. Run this command again to regenerate at any time (when static assets in the code are updated)
 docker-compose run --rm -e STATIC_ROOT=/usr/share/nginx/html -v layerindexweb_layersstatic:/usr/share/nginx/html layersapp /opt/layerindex/manage.py collectstatic

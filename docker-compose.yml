@@ -15,6 +15,7 @@ services:
     hostname: localhost
     volumes:
      - layersmeta:/opt/workdir
+     - patchvolume:/opt/imagecompare-patches
     environment:
      #- SECRET_KEY=<set this here>
      - DATABASE_PASSWORD=testingpw
@@ -37,6 +38,7 @@ services:
     # - "443:443"
     volumes:
      - layersstatic:/usr/share/nginx/html
+     - patchvolume:/usr/share/nginx/html/imagecompare-patches
     # - layerscerts:/etc/letsencrypt
     container_name: layersweb
   layersrabbit:
@@ -63,3 +65,4 @@ volumes:
   layersmeta:
   layersstatic:
   layerscerts:
+  patchvolume:
