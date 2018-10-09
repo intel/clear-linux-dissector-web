@@ -47,27 +47,12 @@ urlpatterns = [
     url(r'^classes/$',
         RedirectView.as_view(url=reverse_lazy('class_search', args=('master',)), permanent=False)),
  
-    url(r'^submit/$', edit_layer_view, {'template_name': 'layerindex/submitlayer.html'}, name="submit_layer"),
-    url(r'^submit/thanks$',
-        TemplateView.as_view(
-            template_name='layerindex/submitthanks.html'),
-            name="submit_layer_thanks"),
-    url(r'^review/$',
-        LayerReviewListView.as_view(
-            template_name='layerindex/reviewlist.html'),
-            name='layer_list_review'),
-    url(r'^review/(?P<slug>[-\w]+)/$',
-        LayerReviewDetailView.as_view(
-            template_name='layerindex/reviewdetail.html'),
-            name='layer_review'),
     url(r'^layer/(?P<slug>[-\w]+)/addnote/$',
         edit_layernote_view, {'template_name': 'layerindex/editlayernote.html'}, name="add_layernote"),
     url(r'^layer/(?P<slug>[-\w]+)/editnote/(?P<pk>[-\w]+)/$',
         edit_layernote_view, {'template_name': 'layerindex/editlayernote.html'}, name="edit_layernote"),
     url(r'^layer/(?P<slug>[-\w]+)/deletenote/(?P<pk>[-\w]+)/$',
         delete_layernote_view, {'template_name': 'layerindex/deleteconfirm.html'}, name="delete_layernote"),
-    url(r'^layer/(?P<slug>[-\w]+)/delete/$',
-        delete_layer_view, {'template_name': 'layerindex/deleteconfirm.html'}, name="delete_layer"),
     url(r'^recipe/(?P<pk>[-\w]+)/$',
         RecipeDetailView.as_view(
             template_name='layerindex/recipedetail.html'),
@@ -77,28 +62,6 @@ urlpatterns = [
         LayerUpdateDetailView.as_view(
             template_name='layerindex/layerupdate.html'),
             name='layerupdate'),
-    url(r'^bulkchange/$',
-        BulkChangeView.as_view(
-            template_name='layerindex/bulkchange.html'),
-            name="bulk_change"),
-    url(r'^bulkchange/(?P<pk>\d+)/search/$',
-        BulkChangeSearchView.as_view(
-            template_name='layerindex/bulkchangesearch.html'),
-            name="bulk_change_search"),
-    url(r'^bulkchange/(?P<pk>\d+)/edit/$',
-        bulk_change_edit_view, {'template_name': 'layerindex/bulkchangeedit.html'}, name="bulk_change_edit"),
-    url(r'^bulkchange/(?P<pk>\d+)/review/$',
-        DetailView.as_view(
-            model=RecipeChangeset,
-            context_object_name='changeset',
-            template_name='layerindex/bulkchangereview.html'),
-            name="bulk_change_review"),
-    url(r'^bulkchange/(?P<pk>\d+)/patches/$',
-        bulk_change_patch_view, name="bulk_change_patches"),
-    url(r'^bulkchange/(?P<pk>\d+)/delete/$',
-        BulkChangeDeleteView.as_view(
-            template_name='layerindex/deleteconfirm.html'),
-            name="bulk_change_delete"),
     url(r'^branch/(?P<branch>[-\w]+)/',
         include('layerindex.urls_branch')),
     url(r'^updates/$',
@@ -125,19 +88,6 @@ urlpatterns = [
         StatsView.as_view(
             template_name='layerindex/stats.html'),
             name='stats'),
-    url(r'^oe-classic/$',
-        RedirectView.as_view(url=reverse_lazy('classic_recipe_search'), permanent=False),
-            name='classic'),
-    url(r'^oe-classic/recipes/$',
-        RedirectView.as_view(url=reverse_lazy('comparison_recipe_search', kwargs={'branch': 'oe-classic'}), permanent=False),
-            name='classic_recipe_search'),
-    url(r'^oe-classic/stats/$',
-        RedirectView.as_view(url=reverse_lazy('comparison_recipe_stats', kwargs={'branch': 'oe-classic'}), permanent=False),
-            name='classic_recipe_stats'),
-    url(r'^oe-classic/recipe/(?P<pk>[-\w]+)/$',
-        ClassicRecipeDetailView.as_view(
-            template_name='layerindex/classicrecipedetail.html'),
-            name='classic_recipe'),
     url(r'^comparison/recipes/(?P<branch>[-\w]+)/$',
         ClassicRecipeSearchView.as_view(
             template_name='layerindex/classicrecipes.html'),
