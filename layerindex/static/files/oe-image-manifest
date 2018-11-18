@@ -126,7 +126,7 @@ def export_recipe_info(args):
 
     def get_git_remote_branch(repodir):
         try:
-            stdout, _ = bb.process.run('git rev-parse --abbrev-ref --symbolic-full-name @{u}', cwd=repodir, shell=True)
+            stdout, _ = bb.process.run(['git', 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'], cwd=repodir)
         except bb.process.ExecutionError as e:
             stdout = None
         if stdout:
@@ -136,7 +136,7 @@ def export_recipe_info(args):
 
     def get_git_head_commit(repodir):
         try:
-            stdout, _ = bb.process.run('git rev-parse HEAD', cwd=repodir, shell=True)
+            stdout, _ = bb.process.run(['git', 'rev-parse', 'HEAD'], cwd=repodir)
         except bb.process.ExecutionError as e:
             stdout = None
         if stdout:
@@ -148,7 +148,7 @@ def export_recipe_info(args):
         import bb.process
         # Try to get upstream repo location from origin remote
         try:
-            stdout, _ = bb.process.run('git remote -v', cwd=repodir, shell=True)
+            stdout, _ = bb.process.run(['git', 'remote', '-v'], cwd=repodir)
         except bb.process.ExecutionError as e:
             stdout = None
         if stdout:
