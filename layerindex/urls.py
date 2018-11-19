@@ -29,7 +29,7 @@ router.register(r'layers', restviews.LayerViewSet, 'layers')
 
 urlpatterns = [
     url(r'^$',
-        RedirectView.as_view(url=reverse_lazy('layer_list', args=('master',)), permanent=False),
+        RedirectView.as_view(url=reverse_lazy('image_comparison'), permanent=False),
         name='frontpage'),
 
     url(r'^api/', include(router.urls)),
