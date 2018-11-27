@@ -935,3 +935,21 @@ class ImageComparisonRecipe(Recipe):
 
     def __str__(self):
         return '%s: %s' % (self.comparison, self.pn)
+
+
+class SecurityQuestion(models.Model):
+    question = models.CharField(max_length = 250, null=False)
+
+    def __str__(self):
+        return '%s' % (self.question)
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User)
+    answer_attempts = models.IntegerField(default=0)
+
+
+class SecurityQuestionAnswer(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    security_question = models.ForeignKey(SecurityQuestion)
+    answer = models.CharField(max_length = 250, null=False)
