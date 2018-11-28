@@ -1,9 +1,10 @@
-OE Layer Index web interface
-============================
+CLEAR LINUX* DISSECTOR
+======================
 
-This is a small Django-based web application that provides a way to
-manage an index of OpenEmbedded metadata layers for use on top of
-OE-Core.
+This is a small Django-based web application that enables comparing
+the contents of Linux-based images. The initial set of functionality
+enables comparing images produced by OpenEmbedded / Yocto Project tools
+to Clear Linux.
 
 There are two main methods of setting up this application - within
 a set of Docker containers, or standalone. The Docker-based setup
@@ -15,9 +16,9 @@ please use the docker setup.
 Docker Setup
 ------------
 
-To use layerindex-web hosted within Docker containers, refer to
-docker/README keeping in mind you'll need to set up Docker properly
-as part of the setup process. Once you've run through those
+To use this application hosted within Docker containers (recommended),
+refer to docker/README keeping in mind you'll need to set up Docker
+properly as part of the setup process. Once you've run through those
 instructions you'll need to return to this document and follow the
 instructions in the section "Database Setup" below.
 
@@ -196,68 +197,11 @@ further information on available options.
 Upgrading from an earlier version
 ---------------------------------
 
-This application uses Django's migrations functionality to allow changes
-in the database structure whilst preserving existing data. When upgrading
-with an existing database, you just need to invoke the migration command.
+To upgrade the Docker-based setup from a previous release, simply run:
 
-If you're migrating from a version prior to the Django 1.8 upgrade, you
-need to use the following command so that the initial migration (which
-takes care of creating the database structure and initial data) is
-skipped:
+./dockersetup.py -u
 
-python3 manage.py migrate --fake-initial
-
-Otherwise, you can just run the plain migration command:
-
-python3 manage.py migrate
-
-
-Support for OE-Classic
-----------------------
-
-The Layer index optionally provides a means to index OE-Classic on a
-one-off import basis and then compare what was there to what you have
-now in the indexed layers (with some graphs showing how much of it has
-been migrated/superseded). If you want to enable this, do the following:
-
-1. From the admin interface, create a Branch record with the following
-   values:
-     - Name: oe-classic (must be exactly this!)
-     - Bitbake branch: 1.12
-     - Enable updates: NOT ticked
-     - Comparison: ticked
-     - Update environment: if you have set up Python environments (for
-       python2 vs python3 across different branches) then you'll need
-       to select the python2 environment that you created here
-
-2. Clone OE-Classic somewhere locally on the machine running the
-   layer index:
-
-   git clone git://git.openembedded.org/openembedded
-
-3. Clone a bitbake somewhere locally and check out the 1.12 branch:
-
-   git clone git://git.openembedded.org/bitbake -b 1.12
-
-4. Run import_classic.py, specifying the path to OE-Classic and
-   the bitbake you checked out:
-
-   layerindex/tools/import_classic.py /path/to/bitbake112 /path/to/oeclassic
-
-5. Update the migration status of OE-Classic recipes based on other
-   layers in the database:
-
-   layerindex/tools/update_classic_status.py
-
-If you refresh the main page of the website, the OE-Classic data should
-now show up at the bottom of the branch drop-down menu. On a periodic
-basis you can repeat the last step to update the migration status in case
-new recipes are brought across (or replacements are created). Users with
-sufficient permissions can also manually update the migration status on
-the OE-Classic recipe detail pages within the website, which is useful
-for example when there's a replacement recipe in another layer that
-doesn't have the same name, so the update_classic_status.py script
-wouldn't be able to pick it up.
+This will update the code and run any required database migrations.
 
 
 Setting up other distro comparisons
@@ -339,14 +283,15 @@ If you have the rrs application enabled the link will also be shown in the
 Maintenance
 -----------
 
-The code for this application is maintained by the Yocto Project.
+The code for this application is maintained by Intel, as a fork of the
+OpenEmbedded layer index software maintained by the Yocto Project.
 
 The latest version of the code can always be found here:
 
-  http://git.yoctoproject.org/cgit/cgit.cgi/layerindex-web/
+  http://github.com/clearlinux/clr-dissector-web
 
-Contributions are welcome. Please send patches / pull requests to
-yocto@yoctoproject.org with '[layerindex-web]' in the subject.
+Contributions are welcome. Please send changes in the form of pull requests
+on the github repository linked above.
 
 
 License
@@ -369,3 +314,8 @@ All other content is copyright (C) 2013-2018 Intel Corporation and
 licensed under the MIT license (unless otherwise noted) - see
 COPYING.MIT for details.
 
+
+Trademarks
+----------
+
+* Other names and brands may be claimed as the property of others.
