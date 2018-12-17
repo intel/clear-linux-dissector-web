@@ -39,7 +39,7 @@ services:
     volumes:
      - layersstatic:/usr/share/nginx/html
      - patchvolume:/usr/share/nginx/html/imagecompare-patches
-    # - layerscerts:/etc/letsencrypt
+     - ./docker/certs:/opt/cert
     container_name: layersweb
   layersrabbit:
     image: rabbitmq:alpine
@@ -64,5 +64,4 @@ services:
 volumes:
   layersmeta:
   layersstatic:
-  layerscerts:
   patchvolume:
