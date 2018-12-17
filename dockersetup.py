@@ -27,7 +27,7 @@ import random
 import shutil
 
 def get_args():
-    parser = argparse.ArgumentParser(description='Script sets up the Clear Dissector tool with Docker Containers.')
+    parser = argparse.ArgumentParser(description='Script sets up the Clear Linux* Dissector tool with Docker Containers.')
 
     parser.add_argument('-o', '--hostname', type=str, help='Hostname of your machine. Defaults to localhost if not set.', required=False, default = "localhost")
     parser.add_argument('-p', '--http-proxy', type=str, help='http proxy in the format http://<myproxy:port>', required=False)
@@ -225,6 +225,26 @@ if (not https_port) and (not no_https):
 if not (http_port or https_port):
     print("Port mapping must include a mapping to port 80 or 443 inside the container (or both)")
     sys.exit(1)
+
+print("""
+Clear Linux* Dissector Docker setup script
+------------------------------------------
+
+This script will set up a cluster of Docker containers needed to run the
+Clear Linux* Dissector application.
+
+Configuration is controlled by command-line arguments. If you need to check
+which options you need to specify, press Ctrl+C now and then run the script
+again with the --help argument.
+
+Note that this script does have interactive prompts, so be prepared to
+provide information as needed.
+""")
+try:
+    input('Press Enter to begin setup (or Ctrl+C to exit)...')
+except KeyboardInterrupt:
+    print('')
+    sys.exit(2)
 
 if http_proxy:
     edit_gitproxy(proxymod, port)
