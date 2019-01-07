@@ -15,7 +15,7 @@ def layerindex_context(request):
     if site and site.name and site.name != 'example.com':
         site_name = site.name
     else:
-        site_name = 'OpenEmbedded Layer Index'
+        site_name = 'Clear Linux* Dissector'
     if request.path.startswith('/accounts'):
         login_return_url = ''
     else:
