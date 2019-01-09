@@ -15,7 +15,7 @@ services:
     hostname: localhost
     volumes:
      - layersmeta:/opt/workdir
-     - patchvolume:/opt/imagecompare-patches
+     - patchvolume:/opt/imagecompare-patches:z
     environment:
      #- "SECRET_KEY=<set this here>"
      - "DATABASE_USER=root"
@@ -41,7 +41,7 @@ services:
     # - "443:443"
     volumes:
      - layersstatic:/usr/share/nginx/html
-     - patchvolume:/usr/share/nginx/html/imagecompare-patches
+     - patchvolume:/opt/www/protected/imagecompare-patches:ro
      - ./docker/certs:/opt/cert
      - certbotwww:/var/www/certbot:z
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"

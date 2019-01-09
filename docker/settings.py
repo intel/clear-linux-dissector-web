@@ -292,4 +292,5 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Path and URL prefix for handling patches imported with image comparison data
 IMAGE_COMPARE_PATCH_DIR = "/opt/imagecompare-patches"
-IMAGE_COMPARE_PATCH_URL_PREFIX = "/imagecompare-patches/"
+IMAGE_COMPARE_PATCH_URL_PREFIX = "/layerindex/imagecompare/patch/"
+IMAGE_COMPARE_PATCH_INTERNAL_URL_PREFIX = "/protected/imagecompare-patches/"

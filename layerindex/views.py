@@ -1892,3 +1892,36 @@ class ImageCompareRecipeSelectDetailView(ClassicRecipeDetailView):
 
         return self.get(request, *args, **kwargs)
 
+
+def image_compare_patch_view(request, comparison, path):
+    if not request.user.is_authenticated():
+        raise PermissionDenied
+
+    comparobj = get_object_or_404(ImageComparison, pk=comparison)
+    if not comparobj.user_can_view(request.user):
+        raise PermissionDenied
+
+    # Basic path security - probably not necessary, but let's just
+    # have belt-and-braces
+    path = path.lstrip('/')
+    if '../' in path:
+        # Nope!
+        raise Http404;
+
+    from django.utils.encoding import smart_str
+
+    internal_prefix = getattr(settings, 'IMAGE_COMPARE_PATCH_INTERNAL_URL_PREFIX')
+    internal_dir = getattr(settings, 'IMAGE_COMPARE_PATCH_DIR')
+
+    file_name = os.path.basename(path)
+    redirect_path = os.path.join(internal_prefix, path)
+    actual_file = os.path.join(internal_dir, path)
+    if not os.path.exists(actual_file):
+        raise Http404;
+
+    response = HttpResponse(content_type='application/force-download')
+    response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(file_name)
+    # Note, X-Accel-Redirect is nginx-specific, this view won't work without it
+    response['X-Accel-Redirect'] = smart_str(redirect_path)
+    response['Content-Length'] = os.path.getsize(actual_file)
+    return response
