@@ -117,6 +117,10 @@ Configuration and running:
 
         celery -A layerindex.tasks worker --loglevel=info
 
+4. To ensure registration emails will link to your running instance,
+   change the site field to your site information on the admin page
+   under "Sites".
+
 
 
 Database Setup
