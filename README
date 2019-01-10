@@ -184,6 +184,7 @@ setup within it:
    * templates/base.html
    * templates/layerindex/about.html
 
+Please also see "Security Considerations" below.
 
 
 Usage
@@ -281,6 +282,38 @@ shown for this under the detail page for each package in the other distro.
 If you have the rrs application enabled the link will also be shown in the
 "Distros" section of the maintenance detail page for the covering recipe.
 
+
+
+Security Considerations
+-----------------------
+
+Some things to be aware of from a security perspective:
+
+* By default, anyone can register themselves an account. If you wish to
+  disable new user registration and manage users manually through the admin
+  interface instead, then add the following line to docker/settings.py:
+
+REGISTRATION_OPEN = False
+
+  Then, assuming you have already run dockersetup.py to install the
+  application, run the following command to update it:
+
+./dockersetup.py -u 
+
+* By default, dockersetup.py enables connection to the web server via
+  HTTPS using a self-signed certificate; connections via HTTP are
+  re-directed to HTTPS. The self-signed certificate is only intended to
+  provide a minimum level of security, but will result in browser warnings
+  and is not recommended for production - instead, obtain and use your own
+  certificate/key pair corresponding to the domain which is used to access
+  the application in production, or alternatively if the application is
+  accessible to the internet you can use Let's Encrypt.
+
+* If you provide your own certificates, you should probably also enable
+  HSTS in your configuration. Refer to the Django Security guide for
+  details on how to do that:
+
+  https://docs.djangoproject.com/en/1.11/topics/security/#ssl-https
 
 
 
