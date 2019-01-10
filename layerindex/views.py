@@ -1787,6 +1787,8 @@ class ImageCompareRecipeSearchView(ListView):
 
     def get_queryset(self):
         comparison = get_object_or_404(ImageComparison, pk=self.kwargs['pk'])
+        if not comparison.user_can_view(self.request.user):
+            raise PermissionDenied
         qs = ImageComparisonRecipe.objects.filter(comparison=comparison).order_by(Lower('pn'))
         return ClassicRecipeLinkWrapper(qs)
 
@@ -1826,13 +1828,15 @@ class ImageCompareRecipeSelectView(ClassicRecipeSearchView):
     def get_context_data(self, **kwargs):
         context = super(ImageCompareRecipeSelectView, self).get_context_data(**kwargs)
         recipe = get_object_or_404(ImageComparisonRecipe, pk=self.kwargs['pk'])
+        if not recipe.comparison.user_can_view(self.request.user):
+            raise PermissionDenied
         context['select_for'] = recipe
         context['existing_cover_recipe'] = recipe.get_cover_recipe()
         comparison_form = ImageComparisonRecipeForm(prefix='selectrecipedialog', instance=recipe)
         comparison_form.fields['cover_pn'].widget = forms.HiddenInput()
         comparison_form.fields['cover_layerbranch'].widget = forms.HiddenInput()
         context['comparison_form'] = comparison_form
-        context['can_edit'] = self.request.user.is_authenticated()
+        context['can_edit'] = recipe.comparison.user_can_edit(self.request.user)
         context['image_comparison'] = True
         return context
 
@@ -1857,6 +1861,8 @@ class ImageCompareRecipeSelectDetailView(ClassicRecipeDetailView):
     def get_context_data(self, **kwargs):
         context = super(ImageCompareRecipeSelectDetailView, self).get_context_data(**kwargs)
         recipe = get_object_or_404(ImageComparisonRecipe, pk=self.kwargs['selectfor'])
+        if not recipe.comparison.user_can_view(self.request.user):
+            raise PermissionDenied
         context['select_for'] = recipe
         context['existing_cover_recipe'] = recipe.get_cover_recipe()
         comparison_form = ImageComparisonRecipeForm(prefix='selectrecipedialog', instance=recipe)
@@ -1872,8 +1878,10 @@ class ImageCompareRecipeSelectDetailView(ClassicRecipeDetailView):
             raise PermissionDenied
 
         recipe = get_object_or_404(ImageComparisonRecipe, pk=self.kwargs['selectfor'])
-        form = ImageComparisonRecipeForm(request.POST, prefix='selectrecipedialog', instance=recipe)
+        if not recipe.comparison.user_can_edit(request.user):
+            raise PermissionDenied
 
+        form = ImageComparisonRecipeForm(request.POST, prefix='selectrecipedialog', instance=recipe)
         if form.is_valid():
             form.save()
             messages.success(request, 'Changes to image comparison recipe %s saved successfully.' % recipe.pn)

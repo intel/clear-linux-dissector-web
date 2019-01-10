@@ -880,6 +880,15 @@ class ImageComparison(models.Model):
     class Meta:
         unique_together = ('user', 'name',)
 
+    def user_can_view(self, user):
+        if user.is_authenticated():
+            if self.user == user or user.is_superuser:
+                return True
+        return False
+
+    def user_can_edit(self, user):
+        return self.user_can_view(user)
+
     def __str__(self):
         return '%s' % (self.name)
 
