@@ -1653,6 +1653,12 @@ class ImageCompareView(FormView):
                             with tar.extractfile(tarinfo) as f:
                                 tstream = codecs.getreader("utf-8")(f)
                                 jsdata = json.load(tstream, object_pairs_hook=OrderedDict)
+                        if '../' in fn or fn.startswith('/'):
+                            # Nope!
+                            return HttpResponse('Invalid image comparison tarball')
+                    elif not tarinfo.isdir():
+                        # Disallow symlinks / devices etc.
+                        return HttpResponse('Invalid image comparison tarball')
                 tar.extractall(tmpoutdir)
 
             # FIXME recipe file links may not work because versions may not match up (might have built an older version)
