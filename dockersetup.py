@@ -250,6 +250,19 @@ def edit_nginx_ssl_conf(hostname, https_port, certdir, certfile, keyfile):
     writefile("docker/nginx-ssl-edited.conf", ''.join(newlines))
 
 
+def edit_settings_py(no_https):
+    filedata = readfile('docker/settings.py')
+    newlines = []
+    lines = filedata.splitlines()
+    for line in lines:
+        if 'SESSION_COOKIE_SECURE' in line:
+            line = line.lstrip('#')
+            if no_https:
+                line = '#' + line
+        newlines.append(line + "\n")
+    writefile("docker/settings.py", ''.join(newlines))
+
+
 def edit_dockerfile_web(hostname, no_https):
     filedata = readfile('Dockerfile.web')
     newlines = []
@@ -472,6 +485,8 @@ if not updatemode:
     edit_dockercompose(hostname, dbpassword, dbapassword, secretkey, rmqpassword, portmapping, letsencrypt)
 
     edit_dockerfile_web(hostname, no_https)
+
+    edit_settings_py(no_https)
 
     if not no_https:
         setup_https(hostname, http_port, https_port, letsencrypt, cert, cert_key)
