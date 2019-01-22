@@ -259,6 +259,10 @@ def edit_settings_py(no_https):
             line = line.lstrip('#')
             if no_https:
                 line = '#' + line
+        elif 'CSRF_COOKIE_SECURE' in line:
+            line = line.lstrip('#')
+            if no_https:
+                line = '#' + line
         newlines.append(line + "\n")
     writefile("docker/settings.py", ''.join(newlines))
 
