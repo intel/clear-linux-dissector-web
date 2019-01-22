@@ -104,11 +104,11 @@ class Raw():
             qry = """SELECT rema.recipe_id, ma.name
                     FROM rrs_recipemaintainer AS rema
                     INNER JOIN rrs_maintainer AS ma
-                    ON rema.maintainer_id = ma.id"""
-            qry += "\nWHERE rema.history_id = %s"
-            qry += "\nAND rema.recipe_id IN %s;"
+                    ON rema.maintainer_id = ma.id
+                    WHERE rema.history_id = %s
+                    AND rema.recipe_id IN %s;"""
             cur = connection.cursor()
-            cur.execute(qry, [str(date_id), recipes_id])
+            cur.execute(qry, [str(date_id), tuple(recipes_id)])
             stats = Raw.dictfetchall(cur)
 
         return stats
@@ -130,11 +130,11 @@ class Raw():
 
         if date_id and recipes:
             qry = """SELECT id, status, no_update_reason
-                    FROM rrs_recipeupstream"""
-            qry += "\nWHERE history_id = %s"
-            qry += "\nAND recipe_id IN %s;"
+                    FROM rrs_recipeupstream
+                    WHERE history_id = %s
+                    AND recipe_id IN %s;"""
             cur = connection.cursor()
-            cur.execute(qry, [str(date_id.id), recipes])
+            cur.execute(qry, [str(date_id.id), tuple(recipes)])
 
             for re in Raw.dictfetchall(cur):
                 if re["status"] == "Y":
@@ -156,11 +156,11 @@ class Raw():
 
         if date_id:
             qry = """SELECT recipe_id, status, no_update_reason, version
-                    FROM rrs_recipeupstream"""
-            qry += "\nWHERE history_id = %s"
-            qry += "\nAND recipe_id IN (%s);"
+                    FROM rrs_recipeupstream
+                    WHERE history_id = %s
+                    AND recipe_id IN %s;"""
             cur = connection.cursor()
-            cur.execute(qry, [str(date_id), recipes_id])
+            cur.execute(qry, [str(date_id), tuple(recipes_id)])
             stats = Raw.dictfetchall(cur)
 
         return stats
@@ -214,11 +214,11 @@ class Raw():
         """  Get Recipe Upgrade for the milestone based on Recipes """
         cur = connection.cursor()
         qry = """SELECT DISTINCT recipe_id
-                FROM rrs_recipeupgrade"""
-        qry += "\nWHERE commit_date >= %s"
-        qry += "\nAND commit_date <= %s"
-        qry += "\nAND recipe_id IN %s;"
-        cur.execute(qry, [start_date, end_date, recipes_id])
+                FROM rrs_recipeupgrade
+                WHERE commit_date >= %s
+                AND commit_date <= %s
+                AND recipe_id IN %s;"""
+        cur.execute(qry, [start_date, end_date, tuple(recipes_id)])
         return Raw.dictfetchall(cur)
 
     @staticmethod
