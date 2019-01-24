@@ -92,7 +92,7 @@ STATICFILES_FINDERS = (
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = os.getenv('SECRET_KEY', '')
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -101,6 +101,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'reversion.middleware.RevisionMiddleware',
+    'layerindex.middleware.LoginRequiredMiddleware',
 )
 
 # We allow CORS calls from everybody
@@ -290,11 +291,23 @@ TOOLS_LOG_DIR = ""
 USE_X_FORWARDED_HOST = True
 ALLOWED_HOSTS = [os.getenv('HOSTNAME', 'layers.test')]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+#SESSION_COOKIE_SECURE = True
+#CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 
 # Path and URL prefix for handling patches imported with image comparison data
 IMAGE_COMPARE_PATCH_DIR = "/opt/imagecompare-patches"
 IMAGE_COMPARE_PATCH_URL_PREFIX = "/layerindex/imagecompare/patch/"
 IMAGE_COMPARE_PATCH_INTERNAL_URL_PREFIX = "/protected/imagecompare-patches/"
+
+LOGIN_EXEMPT_URLS = (
+    '^/accounts/register/',
+    '^/accounts/reset/[0-9A-Za-z_\-]+/[0-9A-Za-z]{1,3}-[0-9A-Za-z]{1,20}/',
+    '^/accounts/activate/[-:\w]+/$',
+    '^/accounts/password_reset/',
+    '^/accounts/reset/fail/',
+    '^/accounts/lockout/',
+    '^/admin/',
+    '^/captcha/image/(.*)',
+    '^/layerindex/api/(.*)',
+)

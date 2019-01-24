@@ -101,7 +101,7 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'reversion.middleware.RevisionMiddleware',
-    'layerindex.middleware.LoginRequiredMiddleware'
+    'layerindex.middleware.LoginRequiredMiddleware',
 )
 
 # We allow CORS calls from everybody
@@ -300,5 +300,5 @@ LOGIN_EXEMPT_URLS = (
     '^/accounts/lockout/',
     '^/admin/',
     '^/captcha/image/(.*)',
-    '^/layerindex/api/(.*)'
+    '^/layerindex/api/(.*)',
 )
