@@ -9,117 +9,88 @@ to Clear Linux.
 There are two main methods of setting up this application - within
 a set of Docker containers, or standalone. The Docker-based setup
 is more suited for production whereas standalone is a bit easier
-for development. If you simply want to run and use the layer index, 
-please use the docker setup.
+for development. This document will consider only the Docker-based
+setup; for standalone please see README.devel.
 
 
 Docker Setup
 ------------
 
-To use this application hosted within Docker containers (recommended),
-refer to docker/README keeping in mind you'll need to set up Docker
-properly as part of the setup process. Once you've run through those
-instructions you'll need to return to this document and follow the
-instructions in the section "Database Setup" below.
+The dockersetup.py script will set up and configure a cluster of 5 or 6
+docker containers:
+
+  - layersapp: the application
+  - layersdb: the database
+  - layersweb: NGINX web server (as a proxy and for serving static content)
+  - layerscelery: Celery (for running background jobs)
+  - layersrabbit: RabbitMQ (required by Celery)
+  - layerscertbot: Runs certbot to keep letsencrypt certificates up-to-date
+                   (optional, default disabled)
+
+The script will edit all necessary configuration files, build and launch all
+containers, and do the initial database setup. It is advised that you start
+with a .sql database file to prepopulate your database. The following
+instructions will walk you through the setup.
+
+1) Install docker and docker-compose per instructions:
+
+        https://docs.docker.com/compose/install/
+
+   ** Note: for latest docker-compose version follow the directions above,
+      rather than using a perhaps outdated one provided by your distribution.
+
+2) Run the setup script (dockersetup.py). You can optionally supply your
+   hostname, proxy settings, a sql database file of layer mappings to import,
+   and a host to container port mapping. For more information, run:
+
+        ./dockersetup.py -h
+
+   Example command to run containers with a proxy and with a database to
+   import:
+
+        ./dockersetup.py -d ~/databasedump.sql -p http://<proxyserver>:<port>
+
+   NOTE: If you want email sending to work (required for user registration and
+   password resets), you should use the -e/--email-host option to specify your
+   outgoing email server.
+
+   During the setup you will be asked for a username, email and password to
+   set up a super user for the database.
+
+3) Once the script completes, open a web browser and navigate to the URL
+   printed out by the script. By default that would be: https://localhost:8081
+
+4) If you have chosen to not supply a prepopulated database and are instead
+   starting fresh, you should now follow the instructions in the
+   "Database Setup" section of the main README.
+
+5) If you need to rerun this script for any reason a second time, you'll need
+   to choose between two modes:
+
+   A) Updating (-u/--update) - updates the code and runs any database upgrades
+      if applicable, or
+
+   B) Reinstalling (-r/--reinstall) - deletes the containers and reinstalls
+      from scratch. Be warned that this will throw away all data in the
+      database.
+
+   Note that updating with -u/--update will only work if the configuration
+   changes originally made by dockersetup.py upon installation (e.g. passwords,
+   hostname, etc.) are still present in the source tree.
 
 
-Standalone Setup
-----------------
 
-In order to run this application standalone you will need:
+TROUBLESHOOTING:
 
-* Python 3.4+
-* Django 1.11.x - tested with 1.11.12; newer versions may work, but
-  the application has not been tested with 2.0 or newer.
-* RabbitMQ 3.6.x - tested with 3.6.10.
-* For production usage, a web server set up to host Django applications
-  (not needed for local-only testing/development)
-* A database supported by Django (SQLite, MySQL, etc.). Django takes
-  care of creating the database itself, you just need to ensure that the
-  database server (if not using SQLite) is configured and running.
-* Third-party Django/python modules as detailed by requirements.txt.
-  If you're using pip, you can install these by running:
-    pip install -r requirements.txt
-* On the machine that will run the backend update script (which does not
-  have to be the same machine as the web server, however it does still
-  have to have Django installed, have the same or similar configuration
-  in settings.py and have access to the database used by the web
-  application):
-  * Python 2.7.6+ / Python 3.4+ to match with the version of BitBake
-    for the OpenEmbedded branch being parsed (for modern versions it's
-    Python 3.)
-  * Python dependencies as per requirements.txt (we still need Django
-    etc. here since we interact with the database through Django's ORM.)
+- Network issues behind a proxy when building container: On some systems
+  (particularly where dnsmasq is installed), /etc/resolv.conf is set to
+  127.0.0.x, rather than your local DNS server. Docker will look there for
+  your DNS server, and when it fails to find it it will default to using a
+  public one (frequently 8.8.8.8). Many corporate proxies blocks public DNS
+  servers, so you will need to manually supply the DNS server to docker using
+  /etc/docker/daemon.json:
 
-Example virtualenv-based setup for the above:
-
-Python's virtualenv provides an easy way to isolate the python dependencies
-of applications such as the layer index. Here's an example of setting up a
-virtualenv for the layer index that's particularly useful for development.
-(This assumes a Debian-based distribution, adjust accordingly for other
-distros).
-
-1. Install required host distro packages (some of these are required by
-   pip to build the dependencies; it's also assumed you want MariaDB as
-   the database backend):
-
-   sudo apt-get install virtualenv libmariadb-client-lgpl-dev build-essential python3-dev libjpeg-dev libz-dev libfreetype6-dev mariadb-server rabbitmq-server
-
-2. Work around path issues (you may not need this):
-
-   sudo ln -s /usr/bin/mariadb_config /usr/bin/mysql_config
-
-3. Create a Python 3 virtualenv (path can be anywhere you like):
-
-   virtualenv -p python3 /path/to/desired/venv
-
-4. Activate the virtualenv:
-
-   . /path/to/desired/venv/bin/activate
-
-5. Install requirements:
-
-   pip install -r requirements.txt
-
-
-Configuration and running:
-
-1. Edit settings.py to specify a database, EMAIL_HOST, SECRET_KEY and
-   other settings specific to your installation. Ensure you set
-   LAYER_FETCH_DIR to an absolute path to a location with sufficient
-   space for fetching layer repositories. Modify RABBIT_BROKER
-   and RABBIT_BACKEND to reflect the settings used by your RabbitMQ
-   server.
-
-2. Run the following commands within the layerindex-web directory to
-   initialise the database:
-
-   python3 manage.py migrate
-   python3 manage.py createsuperuser
-
-3. You can test the web application locally by setting DEBUG = True in
-   settings.py and running the following:
-
-   python3 manage.py runserver
-
-   Then visit http://127.0.0.1:8000/layerindex/ with your browser. As
-   with all Django applications there is an admin interface available
-   at http://127.0.0.1:8000/admin/ also. The initial login and password
-   will be those you entered in the step above when creating an admin
-   account.
-
-   NOTE: This local server should only be used for testing - for
-   production you need to use a proper web server and have DEBUG set
-   to False (or use the Docker-based setup).
-
-   3.1. In order to process asynchronous tasks like sending email,
-        you will need to run a Celery worker:
-
-        celery -A layerindex.tasks worker --loglevel=info
-
-4. To ensure registration emails will link to your running instance,
-   change the site field to your site information on the admin page
-   under "Sites".
+	{"dns": ["xx.xx.xx.xx] }
 
 
 
@@ -127,20 +98,20 @@ Database Setup
 --------------
 
 Once the application is running you'll need to do a bit of further
-setup within it:
+setup within it (for a fresh database without importing previous
+data):
 
 1. You'll need to add at least the openembedded-core layer to the
    database, or some equivalent that contains conf/bitbake.conf for
    the base system configuration. To add this, follow these steps:
 
    1.1. With the server running, go to the main page -
-        http://127.0.0.1:8000/admin/ (or http://localhost:8080/admin/
-        for the docker-compose setup - the hostname must match what
-        the web server is configured for). Then click on the "Log in"
-        button on the top right and use the login/password for the
-        admin account you added previously.
+        http://localhost:8080/admin/ for the Docker-based setup
+        (adjust based upon the hosname specified during setup).
+        Then log in with the username/password for the superuser
+        account that you specified during setup.
 
-   1.2. Click on the "Submit Layer" button in the top right and
+   1.2. Add a LayerItem and LayerBranch button in the top right and
         enter the details for the core layer. To use the real
         openembedded-core layer, use these values:
 
@@ -158,45 +129,24 @@ setup within it:
         unless you change CORE_LAYER_NAME in settings.py to match
         whatever alternative name you use here.
 
-   2.3. The layer has been added but is not yet published. (For the
-        public index this provides some protection against spam and
-        malformed entries.) To publish it, click on the orange number
-        next to your login name at the top right, click on the
-        newly added layer entry, and then click on "Publish Layer".
-
-2. If you need to support multiple branches of OpenEmbedded/BitBake
-   where some require Python 2.x and others require Python 3.x, then
-   you will need to set up "Python environment" records through the
-   admin interface to correspond to these so that the right Python
-   version gets used to parse the branch, and then set the
-   "Update environment" field on each branch record to point to the
-   appropriate environment. If you're using virtualenv you will need
-   separate virtual environments set up for Python 2 and 3 which you
-   should point to in the Python environment record.
-
-3. Set the site name (as displayed in the top bar and page titles) by
-   going into the admin interface (http://127.0.0.1:8000/admin/
-   or equivalent), clicking on "Sites" at the bottom, and editing the
-   first entry, setting "Display name" to the desired name.
-
-4. You may wish to customise some of the page templates to suit your
-   installation, in particular:
-   * templates/base.html
-   * templates/layerindex/about.html
-
 Please also see "Security Considerations" below.
 
 
 Usage
 -----
 
-On a regular basis you need to run the update script:
+You may wish to update the OpenEmbedded layer information on a regular basis;
+if you wish to do that:
 
-path/to/layerindex/update.py
+   Incremental update:
 
-This will fetch all of the layer repositories, analyse their contents
-and update the database with the results. Run the script with --help for
-further information on available options.
+       docker-compose run --rm layersapp /opt/layerindex/layerindex/update.py
+
+   Reload all data (should only be needed if the database structure has
+   changed as part of an upgrade of the application code):
+
+       docker-compose run --rm layersapp /opt/layerindex/layerindex/update.py -r
+
 
 
 Upgrading from an earlier version
@@ -353,6 +303,11 @@ REGISTRATION_OPEN = False
     this lockout, log into the admin interface, go to Users, click on the
     the user, tick the Active checkbox and then save.
 
+* The REST API inherited from the OpenEmbedded layerindex upon which this
+  application is based has been disabled, since it has no access controls
+  on querying data (since the OE layer index operates entirely on publicly
+  accessible information, whereas this application may not in actual usage).
+
 
 Maintenance
 -----------
@@ -384,7 +339,7 @@ Bundled Chart.js is redistributed under the MIT license.
 
 Bundled TableSorter is redistributed under the MIT license.
 
-All other content is copyright (C) 2013-2018 Intel Corporation and
+All other content is copyright (C) 2013-2019 Intel Corporation and
 licensed under the MIT license (unless otherwise noted) - see
 COPYING.MIT for details.
 
