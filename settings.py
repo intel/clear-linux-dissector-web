@@ -298,6 +298,7 @@ LOGIN_EXEMPT_URLS = (
     '^/accounts/password_reset/',
     '^/accounts/reset/fail/',
     '^/accounts/lockout/',
+    '^/admin/',
     '^/captcha/image/(.*)',
     '^/layerindex/api/(.*)'
 )
