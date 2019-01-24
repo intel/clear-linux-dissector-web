@@ -315,6 +315,43 @@ REGISTRATION_OPEN = False
 
   https://docs.djangoproject.com/en/1.11/topics/security/#ssl-https
 
+* To reset a forgotten account password, you can either use the password
+  reset function ( /accounts/password_reset/ ) or alternatively from the
+  backend you can run the following command:
+
+  docker-compose exec layersapp /opt/layerindex/manage.py changepassword <username>
+
+* The web-based password reset function will ask the user answers to
+  security questions they selected and answered when they created the
+  account. Admins can configure the selectable security questions in
+  the admin interface under "Security questions"; however, be cautious
+  about deleting or substantially changing a question if you already
+  have user accounts that have given answers to that question. You
+  can check this if you go to delete the security question - any user
+  answers will show up as "Security question answers" listed to be
+  deleted along with the question.
+
+  Note: the superuser created during setup will not have answers to
+  security questions set, so if you think you might need to use the
+  password reset function later you will need to set these by logging
+  into the application and then going to Edit Profile on the top-right
+  user drop-down menu.
+
+* Account lockout: this application will lock out the user in two ways:
+
+  - By IP address (using django-axes) for too many invalid login attempts.
+    The lockout can be removed using the following command:
+
+    docker-compose exec layersapp /opt/layerindex/manage.py axes_reset
+
+    If you wish to disable this, remove or comment out "axes" in
+    INSTALLED_APPS. For more information on configuring axes, see:
+
+    https://django-axes.readthedocs.io/en/latest/
+
+  - By account for too many incorrect password reset attempts. To remove
+    this lockout, log into the admin interface, go to Users, click on the
+    the user, tick the Active checkbox and then save.
 
 
 Maintenance
