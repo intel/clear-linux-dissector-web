@@ -40,7 +40,8 @@ urlpatterns = [
         RedirectView.as_view(url=reverse_lazy('image_comparison'), permanent=False),
         name='frontpage'),
 
-    url(r'^api/', include(router.urls)),
+    # FIXME: REST API disabled for now
+    #url(r'^api/', include(router.urls)),
 
     url(r'^layers/$',
         RedirectView.as_view(url=reverse_lazy('layer_list', args=('master',)), permanent=False)),
