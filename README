@@ -97,39 +97,16 @@ TROUBLESHOOTING:
 Database Setup
 --------------
 
-Once the application is running you'll need to do a bit of further
-setup within it (for a fresh database without importing previous
-data):
+For a fresh database (without importing any database dump) you will need layer
+data. To import the full set for the master branch from the public instance at
+layers.openembedded.org you can run the following:
 
-1. You'll need to add at least the openembedded-core layer to the
-   database, or some equivalent that contains conf/bitbake.conf for
-   the base system configuration. To add this, follow these steps:
+docker-compose run --rm layersapp /opt/layerindex/layerindex/tools/import_layers.py -d https://layers.openembedded.org
 
-   1.1. With the server running, go to the main page -
-        http://localhost:8080/admin/ for the Docker-based setup
-        (adjust based upon the hosname specified during setup).
-        Then log in with the username/password for the superuser
-        account that you specified during setup.
+Alternatively, you can populate the database manually or use the separate
+import_layer.py script to import layers individually.
 
-   1.2. Add a LayerItem and LayerBranch button in the top right and
-        enter the details for the core layer. To use the real
-        openembedded-core layer, use these values:
-
-        Layer name:               openembedded-core
-        Layer type:               Base
-        Summary:                  Core metadata
-        Description:              Core metadata
-        Repository URL:           git://git.openembedded.org/openembedded-core
-        Repository subdirectory:  meta
-
-        Once you have filled in the required values, click on the
-        "Submit Layer" button.
-
-        NOTE: The name of the layer must be "openembedded-core",
-        unless you change CORE_LAYER_NAME in settings.py to match
-        whatever alternative name you use here.
-
-Please also see "Security Considerations" below.
+NOTE: Please also see "Security Considerations" below.
 
 
 Usage
@@ -248,20 +225,21 @@ REGISTRATION_OPEN = False
   Then, assuming you have already run dockersetup.py to install the
   application, run the following command to update it:
 
-./dockersetup.py -u 
+./dockersetup.py -u
 
 * By default, dockersetup.py enables connection to the web server via
   HTTPS using a self-signed certificate; connections via HTTP are
-  re-directed to HTTPS. The self-signed certificate is only intended to
-  provide a minimum level of security, but will result in browser warnings
-  and is not recommended for production - instead, obtain and use your own
-  certificate/key pair corresponding to the domain which is used to access
-  the application in production, or alternatively if the application is
-  accessible to the internet you can use Let's Encrypt.
+  re-directed to HTTPS. However, the self-signed certificate is only
+  intended to provide a minimum level of security, but will result in
+  browser warnings and is not recommended for production - instead,
+  obtain and use your own certificate/key pair corresponding to the
+  domain which will be used to access the application in production,
+  or alternatively if the application is accessible to the internet you
+  can use Let's Encrypt.
 
-* If you provide your own certificates, you should probably also enable
-  HSTS in your configuration. Refer to the Django Security guide for
-  details on how to do that:
+* If you provide your own certificates for HTTPS, you should probably
+  also enable HSTS in your configuration. Refer to the Django Security
+  guide for details on how to do that:
 
   https://docs.djangoproject.com/en/1.11/topics/security/#ssl-https
 
@@ -276,8 +254,9 @@ REGISTRATION_OPEN = False
   account. Admins can configure the selectable security questions in
   the admin interface under "Security questions"; however, be cautious
   about deleting or substantially changing a question if you already
-  have user accounts that have given answers to that question. You
-  can check this if you go to delete the security question - any user
+  have user accounts that have given answers to that question, as doing
+  so will invalidate the user-set answers. You can check this if you go
+  to delete the security question in the admin interface - any user
   answers will show up as "Security question answers" listed to be
   deleted along with the question.
 
@@ -287,10 +266,16 @@ REGISTRATION_OPEN = False
   into the application and then going to Edit Profile on the top-right
   user drop-down menu.
 
+* Security question answers are stored using the same mechanism as
+  for passwords, i.e. a secure one-way hash; thus answers cannot be
+  retrieved from the database once set. Additionally, if a user wants
+  to change one of their answers via the Edit Profile function, they
+  will be required to re-specify all of them.
+
 * Account lockout: this application will lock out the user in two ways:
 
-  - By IP address (using django-axes) for too many invalid login attempts.
-    The lockout can be removed using the following command:
+  - By IP address (using django-axes) after too many invalid login attempts.
+    (default 3). The lockout can be removed using the following command:
 
     docker-compose exec layersapp /opt/layerindex/manage.py axes_reset
 

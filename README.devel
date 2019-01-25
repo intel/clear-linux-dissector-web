@@ -96,17 +96,10 @@ Configuration and running:
 
         celery -A layerindex.tasks worker --loglevel=info
 
-4. To ensure registration emails will link to your running instance,
-   change the site field to your site information on the admin page
-   under "Sites".
+4. To import layer data from the public instance at layers.openembedded.org
+   you can run the following (defaults to the master branch only):
 
+   layerindex/tools/import_layers.py -d https://layers.openembedded.org
 
-Accessing the site:
-
-Once running, the application is accessible at:
-
-  http://127.0.0.1:8000/
-
-The admin interface can be accessed at:
-
-  http://127.0.0.1:8000/admin/
+   Alternatively you can add layers individually using the separate 
+   layerindex/tools/import_layer.py script or through the admin interface.
