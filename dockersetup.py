@@ -232,7 +232,7 @@ def edit_dockercompose(hostname, dbpassword, dbapassword, secretkey, rmqpassword
             if email_port:
                 newlines.append(format + '- "EMAIL_PORT=' + email_port + '"\n')
             else:
-                newlines.append(format + '#- "EMAIL_PORT=<set this here>"\n')
+                newlines.append(format + '#- "EMAIL_PORT=<set this here if not the default>"\n')
         elif "ports:" in line:
             if in_layersweb:
                 in_layersweb_ports = True
