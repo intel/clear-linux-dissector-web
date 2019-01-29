@@ -1962,8 +1962,8 @@ def image_compare_patch_view(request, comparison, path):
     internal_dir = getattr(settings, 'IMAGE_COMPARE_PATCH_DIR')
 
     file_name = os.path.basename(path)
-    redirect_path = os.path.join(internal_prefix, path)
-    actual_file = os.path.join(internal_dir, path)
+    redirect_path = os.path.join(internal_prefix, comparison, path)
+    actual_file = os.path.join(internal_dir, comparison, path)
     if not os.path.exists(actual_file):
         raise Http404;
 
