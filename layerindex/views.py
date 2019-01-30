@@ -1740,7 +1740,7 @@ class ImageCompareView(FormView):
                         layerbranch.layer = layer
                         layerbranch.branch = branch
                         layerbranch.vcs_subdir = jslayer['vcs_subdir']
-                        layerbranch.actual_branch = jslayer['actual_branch']
+                        layerbranch.actual_branch = jslayer.get('actual_branch', '')
                         layerbranch.save()
                         layerbranches[layername] = layerbranch
                         return layerbranch
