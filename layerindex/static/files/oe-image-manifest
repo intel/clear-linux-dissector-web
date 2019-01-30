@@ -235,10 +235,12 @@ def export_recipe_info(args):
                     bb.utils.mkdirhier(recipeoutdir)
                     for patch in patches:
                         # Patches may be in other layers too
-                        # FIXME check this works with remote patches
                         patchlayerdir = oe.recipeutils.find_layerdir(patch)
-                        rvalues[pn]['patches'].append((os.path.basename(patchlayerdir), os.path.relpath(patch, patchlayerdir)))
-                        shutil.copy(patch, recipeoutdir)
+                        # patchlayerdir will be None for remote patches, which we ignore
+                        # (since currently they are considered as part of sources)
+                        if patchlayerdir:
+                            rvalues[pn]['patches'].append((os.path.basename(patchlayerdir), os.path.relpath(patch, patchlayerdir)))
+                            shutil.copy(patch, recipeoutdir)
 
                 rvalues[pn]['layer'] = os.path.basename(layerdir)
 
