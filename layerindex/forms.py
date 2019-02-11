@@ -353,3 +353,14 @@ class ImageComparisonRecipeForm(forms.ModelForm):
     class Meta:
         model = ImageComparisonRecipe
         fields = ('cover_pn', 'cover_layerbranch', 'cover_status', 'cover_comment')
+
+    def clean(self):
+        cleaned_data = super(ImageComparisonRecipeForm, self).clean()
+        cover_pn = cleaned_data.get('cover_pn')
+        cover_layerbranch = cleaned_data.get('cover_layerbranch')
+        if cleaned_data.get('cover_status') in ['U', 'N', 'S']:
+            if cover_layerbranch:
+                cleaned_data['cover_layerbranch'] = None
+            if cover_pn:
+                cleaned_data['cover_pn'] = ''
+        return cleaned_data
