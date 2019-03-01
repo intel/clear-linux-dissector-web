@@ -170,6 +170,8 @@ def export_recipe_info(args):
             outname = os.path.splitext(os.path.basename(args.manifest))[0]
         if outname.endswith('.tar.gz'):
             outname = outname[:-7]
+        elif outname.endswith('.tgz'):
+            outname = outname[:-4]
 
         tmpoutdir = tempfile.mkdtemp(prefix='oe-image-manifest-')
         try:
@@ -250,7 +252,7 @@ def export_recipe_info(args):
             with open(os.path.join(tmpoutdir, 'data.json'), 'w') as f:
                 json.dump(data, f, indent=2)
 
-            tarfn = args.output
+            tarfn = outname
             if tarfn.endswith(os.sep):
                 tarfn = tarfn[:-1]
             if not tarfn.endswith(('.tar.gz', '.tgz')):
