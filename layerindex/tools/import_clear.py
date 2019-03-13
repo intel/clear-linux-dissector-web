@@ -11,6 +11,7 @@ import os
 import argparse
 import subprocess
 import logging
+import urllib.request
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -20,15 +21,20 @@ logger = utils.logger_create('ClearImport')
 
 
 def import_clear(args):
-    if not args.release:
-        # FIXME get latest release from https://cdn.download.clearlinux.org/releases/current/clear/latest
-        logger.error('Please specify Clear Linux release')
-        return 1
+    if args.release:
+        release = args.release
+    else:
+        logger.debug('Checking latest Clear Linux release...')
+        rq = urllib.request.Request('https://cdn.download.clearlinux.org/releases/current/clear/latest')
+        data = urllib.request.urlopen(rq).read()
+        release = data.decode('utf-8').strip()
+
+    logger.debug('Fetching Clear Linux release %s' % release)
 
     env = os.environ.copy()
     if args.clear_tool_path:
         env['PATH'] = args.clear_tool_path + ':' + env['PATH']
-    cmd = ['dissector', '-clear_version', args.release, '-all']
+    cmd = ['dissector', '-clear_version', release, '-all']
     if args.bundles_url:
         cmd += ['-bundles_url', args.bundles_url]
     if args.repo_url:
@@ -39,8 +45,8 @@ def import_clear(args):
         return 1
 
     cwd = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-    pkgdir = os.path.join(args.outdir, args.release, 'source')
-    cmd = ['layerindex/tools/import_otherdistro.py', 'import-pkgspec', args.branch, args.layer, pkgdir, '--description', 'Clear Linux %s' % args.release]
+    pkgdir = os.path.join(args.outdir, release, 'source')
+    cmd = ['layerindex/tools/import_otherdistro.py', 'import-pkgspec', args.branch, args.layer, pkgdir, '--description', 'Clear Linux %s' % release]
     if args.update:
         cmd += ['-u', args.update]
     return_code = subprocess.call(cmd, cwd=cwd)
