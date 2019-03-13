@@ -62,7 +62,8 @@ def import_clear(args):
 def main():
     parser = argparse.ArgumentParser(description="Clear Linux data import utility")
 
-    parser.add_argument('-p', '--clear-tool-path', help='Path to Clear Linux Dissector command line application')
+    parser.add_argument('-d', '--debug', help='Enable debug output', action='store_true')
+    parser.add_argument('-p', '--clear-tool-path', help='Path to Clear Linux Dissector command line application', required=True)
     parser.add_argument('-r', '--release', help='Clear Linux release')
     parser.add_argument('-o', '--outdir', default='clr-pkgs', help='Output directory (default "%(default)s")')
     parser.add_argument('-u', '--update', help='Update record to associate changes with')
@@ -72,6 +73,9 @@ def main():
     parser.add_argument('--repo-url', help='Base URL for downloading releases')
 
     args = parser.parse_args()
+
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
 
     ret = import_clear(args)
 
