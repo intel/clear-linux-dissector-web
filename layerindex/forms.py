@@ -22,7 +22,7 @@ import settings
 from layerindex.models import (Branch, ClassicRecipe, ImageComparisonRecipe,
                                LayerBranch, LayerItem, LayerMaintainer,
                                LayerNote, RecipeChange, RecipeChangeset,
-                               SecurityQuestion, UserProfile)
+                               SecurityQuestion, UserProfile, PatchDisposition)
 
 
 import pdb
@@ -368,3 +368,13 @@ class ImageComparisonRecipeForm(forms.ModelForm):
             if cover_pn:
                 cleaned_data['cover_pn'] = ''
         return cleaned_data
+
+class PatchDispositionForm(StyledModelForm):
+    class Meta:
+        model = PatchDisposition
+        fields = ('patch', 'disposition', 'comment')
+        widgets = {
+            'patch': forms.HiddenInput(),
+        }
+
+PatchDispositionFormSet = modelformset_factory(PatchDisposition, form=PatchDispositionForm, extra=0)
