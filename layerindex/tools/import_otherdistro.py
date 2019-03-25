@@ -349,6 +349,52 @@ def get_update_obj(args):
     return updateobj
 
 
+def import_specdir(metapath, layerbranch, existing, updateobj, pwriter):
+    dirlist = os.listdir(metapath)
+    total = len(dirlist)
+    for count, entry in enumerate(dirlist):
+        if os.path.exists(os.path.join(metapath, entry, 'dead.package')):
+            logger.info('Skipping dead package %s' % entry)
+            continue
+        specfiles = glob.glob(os.path.join(metapath, entry, '*.spec'))
+        if specfiles:
+            import_specfiles(specfiles, layerbranch, existing, updateobj, metapath)
+        else:
+            logger.warn('Missing spec file in %s' % os.path.join(metapath, entry))
+        if pwriter:
+            pwriter.write(int(count / total * 100))
+
+
+def import_specfiles(specfiles, layerbranch, existing, updateobj, reldir):
+    from layerindex.models import ClassicRecipe, ComparisonRecipeUpdate
+    recipes = []
+    for specfile in specfiles:
+        specfn = os.path.basename(specfile)
+        specpath = os.path.relpath(os.path.dirname(specfile), reldir)
+        recipe, created = ClassicRecipe.objects.get_or_create(layerbranch=layerbranch, filepath=specpath, filename=specfn)
+        if created:
+            logger.info('Importing %s' % specfn)
+        elif recipe.deleted:
+            logger.info('Restoring and updating %s' % specpath)
+            recipe.deleted = False
+        else:
+            logger.info('Updating %s' % specpath)
+        recipe.layerbranch = layerbranch
+        recipe.filename = specfn
+        recipe.filepath = specpath
+        update_recipe_file(specfile, recipe, reldir)
+        recipe.save()
+        existingentry = (specpath, specfn)
+        if existingentry in existing:
+            existing.remove(existingentry)
+        if updateobj:
+            rupdate, _ = ComparisonRecipeUpdate.objects.get_or_create(update=updateobj, recipe=recipe)
+            rupdate.meta_updated = True
+            rupdate.save()
+        recipes.append(recipe)
+    return recipes
+
+
 def import_pkgspec(args):
     utils.setup_django()
     import settings
@@ -371,43 +417,8 @@ def import_pkgspec(args):
     try:
         with transaction.atomic():
             layerrecipes = ClassicRecipe.objects.filter(layerbranch=layerbranch)
-
             existing = list(layerrecipes.filter(deleted=False).values_list('filepath', 'filename'))
-            dirlist = os.listdir(metapath)
-            total = len(dirlist)
-            for count, entry in enumerate(dirlist):
-                if os.path.exists(os.path.join(metapath, entry, 'dead.package')):
-                    logger.info('Skipping dead package %s' % entry)
-                    continue
-                specfiles = glob.glob(os.path.join(metapath, entry, '*.spec'))
-                if specfiles:
-                    for specfile in specfiles:
-                        specfn = os.path.basename(specfile)
-                        specpath = os.path.relpath(os.path.dirname(specfile), metapath)
-                        recipe, created = ClassicRecipe.objects.get_or_create(layerbranch=layerbranch, filepath=specpath, filename=specfn)
-                        if created:
-                            logger.info('Importing %s' % specfn)
-                        elif recipe.deleted:
-                            logger.info('Restoring and updating %s' % specpath)
-                            recipe.deleted = False
-                        else:
-                            logger.info('Updating %s' % specpath)
-                        recipe.layerbranch = layerbranch
-                        recipe.filename = specfn
-                        recipe.filepath = specpath
-                        update_recipe_file(specfile, recipe, metapath)
-                        recipe.save()
-                        existingentry = (specpath, specfn)
-                        if existingentry in existing:
-                            existing.remove(existingentry)
-                        if updateobj:
-                            rupdate, _ = ComparisonRecipeUpdate.objects.get_or_create(update=updateobj, recipe=recipe)
-                            rupdate.meta_updated = True
-                            rupdate.save()
-                else:
-                    logger.warn('Missing spec file in %s' % os.path.join(metapath, entry))
-                if pwriter:
-                    pwriter.write(int(count / total * 100))
+            import_specdir(metapath, layerbranch, existing, updateobj, pwriter)
 
             if existing:
                 fpaths = sorted(['%s/%s' % (pth, fn) for pth, fn in existing])
@@ -571,6 +582,156 @@ def import_deblist(args):
         return 1
 
 
+def import_clearderiv(args):
+    utils.setup_django()
+    import settings
+    from layerindex.models import LayerItem, LayerBranch, Recipe, ClassicRecipe, Machine, BBAppend, BBClass, ComparisonRecipeUpdate
+    from django.db import transaction
+
+    ret, layerbranch = check_branch_layer(args)
+    if ret:
+        return ret
+
+    updateobj = get_update_obj(args)
+    logdir = getattr(settings, 'TASK_LOG_DIR')
+    if updateobj and updateobj.task_id and logdir:
+        pwriter = utils.ProgressWriter(logdir, updateobj.task_id, logger=logger)
+    else:
+        pwriter = None
+
+    srcpath = args.sourcedir
+    localrpmpath = os.path.join(srcpath, 'src', 'local-rpms')
+    if not os.path.exists(localrpmpath):
+        logger.error('%s does not appear to be an unpacked Clear Linux derivative release source directory' % srcpath)
+        return 1
+
+    # FIXME progress reporting isn't right
+
+    try:
+        with transaction.atomic():
+            layerrecipes = ClassicRecipe.objects.filter(layerbranch=layerbranch)
+            layerrecipes.filter(deleted=True).delete()
+
+            existing = list(layerrecipes.filter(deleted=False).values_list('filepath', 'filename'))
+
+            logger.info('Importing original packages')
+            import_specdir(args.pkgdir, layerbranch, existing, updateobj, pwriter)
+
+            srpmpath = os.path.join(srcpath, 'src', 'src-rpms')
+            srpms = []
+            specpns = []
+            if os.path.exists(srpmpath):
+                logger.info('Importing derivative source RPMs')
+                for root, dirs, files in os.walk(srpmpath):
+                    for f in files:
+                        if f.endswith('.src.rpm'):
+                            fpath = os.path.join(root, f)
+                            srpms.append(fpath)
+
+                extpath = os.path.join(srcpath, 'extracted-sources')
+                for srpm in srpms:
+                    srpmextpath = os.path.join(extpath, os.path.basename(srpm).rsplit('.', 2)[0])
+                    try:
+                        shutil.rmtree(srpmextpath)
+                    except FileNotFoundError:
+                        pass
+                    os.makedirs(srpmextpath)
+                    cmd = 'rpm2cpio %s | cpio -idmv' % srpm
+                    output = subprocess.check_output(cmd, shell=True, cwd=srpmextpath).decode('utf-8').rstrip()
+
+                    specfiles = glob.glob(os.path.join(srpmextpath, '*.spec'))
+                    recipes = import_specfiles(specfiles, layerbranch, existing, updateobj, extpath)
+                    for recipe in recipes:
+                        specpns.append(recipe.pn)
+
+            rpms = []
+            for root, dirs, files in os.walk(localrpmpath):
+                for f in files:
+                    if f.endswith('.rpm'):
+                        fpath = os.path.join(root, f)
+                        rpms.append(fpath)
+
+            srpminfo = {}
+            total = len(rpms)
+            for count, rpm in enumerate(rpms):
+                cmd = ['rpm', '-qpi', rpm]
+                expanded = subprocess.check_output(cmd).decode('utf-8').rstrip()
+                description = []
+                indesc = False
+                rpminfo = {'Package': rpm}
+                for line in expanded.splitlines():
+                    if indesc:
+                        description.append(line)
+                    elif ':' in line:
+                        linesplit = line.split(':', 1)
+                        key = linesplit[0].rstrip()
+                        value = linesplit[1].strip()
+                        if key == 'Description':
+                            indesc = True
+                        else:
+                            rpminfo[key] = value
+                rpminfo['Description'] = ' '.join(description)
+                srpm = rpminfo['Source RPM']
+                if srpm in srpminfo:
+                    if len(rpminfo['Name']) < len(srpminfo[srpm]['Name']):
+                        srpminfo[srpm] = rpminfo.copy()
+                else:
+                    srpminfo[srpm] = rpminfo.copy()
+
+                if pwriter:
+                    pwriter.write(int(count / total * 100))
+
+            logger.info('Importing derivative binary RPMs')
+            srcsrcpath = os.path.join(srcpath, 'src')
+            for vals in srpminfo.values():
+                pkgfn = os.path.basename(vals['Package'])
+                pkgpath = os.path.relpath(os.path.dirname(vals['Package']), srcsrcpath)
+                if vals['Name'] in specpns:
+                    logger.info('Skipping %s (already imported source)' % pkgfn)
+                    break
+                recipe, created = ClassicRecipe.objects.get_or_create(layerbranch=layerbranch, filepath=pkgpath, filename=pkgfn)
+                if created:
+                    logger.info('Importing %s' % pkgfn)
+                else:
+                    logger.info('Updating %s' % pkgfn)
+                recipe.pn = vals['Name']
+                recipe.pv = vals['Version']
+                recipe.section = vals['Group']
+                recipe.license = vals['License']
+                recipe.summary = vals['Summary']
+                recipe.description = vals['Description']
+                recipe.homepage = vals.get('URL', '')
+                recipe.save()
+
+                existingentry = (pkgpath, pkgfn)
+                if existingentry in existing:
+                    existing.remove(existingentry)
+                if updateobj:
+                    rupdate, _ = ComparisonRecipeUpdate.objects.get_or_create(update=updateobj, recipe=recipe)
+                    rupdate.meta_updated = True
+                    rupdate.save()
+
+            if existing:
+                fpaths = sorted(['%s/%s' % (pth, fn) for pth, fn in existing])
+                logger.info('Marking as deleted:\n  %s' % '\n  '.join(fpaths))
+                for entry in existing:
+                    layerrecipes.filter(filepath=entry[0], filename=entry[1]).update(deleted=True)
+
+            layerbranch.vcs_last_fetch = datetime.now()
+            layerbranch.save()
+
+            if args.dry_run:
+                raise DryRunRollbackException()
+    except DryRunRollbackException:
+        pass
+    except:
+        import traceback
+        traceback.print_exc()
+        return 1
+
+    return 0
+
+
 def main():
 
     parser = argparse.ArgumentParser(description='OE Layer Index other distro comparison import tool',
@@ -612,6 +773,18 @@ def main():
     parser_deblist.add_argument('-u', '--update', help='Specify update record to link to')
     parser_deblist.add_argument('-n', '--dry-run', help='Don\'t write any data back to the database', action='store_true')
     parser_deblist.set_defaults(func=import_deblist)
+
+
+    parser_clearderiv = subparsers.add_parser('import-clear-derivative',
+                                           help='Import from a Clear Linux derivative release',
+                                           description='Imports from a Clear Linux derivative release')
+    parser_clearderiv.add_argument('branch', help='Branch to import into')
+    parser_clearderiv.add_argument('layer', help='Layer to import into')
+    parser_clearderiv.add_argument('pkgdir', help='Top level directory containing package subdirectories')
+    parser_clearderiv.add_argument('sourcedir', help='Derivative source directory (unpacked source tarball)')
+    parser_clearderiv.add_argument('-u', '--update', help='Specify update record to link to')
+    parser_clearderiv.add_argument('-n', '--dry-run', help='Don\'t write any data back to the database', action='store_true')
+    parser_clearderiv.set_defaults(func=import_clearderiv)
 
 
     args = parser.parse_args()
