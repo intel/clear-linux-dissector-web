@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% comment %}
+
+  layerindex-web - release comparison page template
+
+  Copyright (C) 2019 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+<!--
+{% block title_append %} - release comparison - {{ from }} to {{ to }}{% endblock %}
+-->
+
+{% block content %}
+{% autoescape on %}
+
+<h2>{{ from }} to {{ to }}</h2>
+
+    <div class="container">
+    <ul>
+    {% for change in changes %}
+    <li>{{ change }}
+    {% endfor %}
+    </ul>
+    </div>
+{% endautoescape %}
+
+{% endblock %}

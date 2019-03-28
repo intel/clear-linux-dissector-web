@@ -16,7 +16,8 @@ from layerindex.views import LayerListView, LayerReviewListView, LayerReviewDeta
     UpdateDetailView, StatsView, publish_view, LayerCheckListView, BBClassCheckListView, TaskStatusView, \
     ComparisonRecipeSelectView, ComparisonRecipeSelectDetailView, ImageCompareView, ImageCompareDetailView, \
     ImageCompareRecipeSearchView, ImageCompareRecipeDetailView, ImageCompareRecipeSelectView, \
-    ImageCompareRecipeSelectDetailView, image_compare_patch_view, task_log_view, task_stop_view, email_test_view
+    ImageCompareRecipeSelectDetailView, image_compare_patch_view, task_log_view, task_stop_view, email_test_view, \
+    VersionCompareSelectView, VersionCompareView
 from layerindex.models import LayerItem, Recipe, RecipeChangeset
 from rest_framework import routers
 from . import restviews
@@ -146,6 +147,16 @@ urlpatterns = [
     url(r'^imagecompare/patch/(?P<comparison>[-\w]+)/(?P<path>.+)$',
         image_compare_patch_view,
         name="image_comparison_patch"),
+
+    url(r'^versioncompare/$',
+        VersionCompareSelectView.as_view(
+            template_name='layerindex/versioncomparisonselect.html'),
+        name="version_comparison_select"),
+    url(r'^versioncompare/(?P<from>[-\w]+)/(?P<to>[-\w]+)/$',
+        VersionCompareView.as_view(
+            template_name='layerindex/versioncomparison.html'),
+        name="version_comparison"),
+
     url(r'^email_test/$',
         email_test_view,
         name='email_test'),

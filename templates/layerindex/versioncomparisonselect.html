@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% comment %}
+
+  layerindex-web - version comparison page template
+
+  Copyright (C) 2019 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+<!--
+{% block title_append %} - version comparison{% endblock %}
+-->
+{% block hero %}
+<!-- Primary message       -->
+        <div class="container">
+            <h2 class="home">Compare Version</h2>
+            <p class="pageDesc">This tool allows you to compare two releases of Clear Linux.</p>
+        </div>
+{% endblock %}
+
+{% block content %}
+{% autoescape on %}
+
+    <div class="container">
+        <!-- Example row of columns -->
+        <div class="row">
+            <div class="col-md-6">
+                <h3 class="insetContent">SELECT RELEASES</h3>
+
+                <form class="form-inline insetContent" enctype="multipart/form-data" method="POST">
+                {% csrf_token %}
+                {% for hidden in form.hidden_fields %}
+                    {{ hidden }}
+                {% endfor %}
+                {% for field in form.visible_fields %}
+                    {% if field.errors %}
+                    <div class="form-group alert alert-danger">
+                    {{ field.errors }}
+                    {% endif %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}" class="labelTitle">{{ field.label }}</label><br>
+                        {{ field }}
+                        <span class="fileInputDesc">
+                            {{ field.help_text }}
+                        </span><br>
+                    {% if field.errors %}
+                    </div>
+                    {% endif %}
+                    </div>
+                {% endfor %}
+                    <div class="control-group">
+                        <div class="controls">
+                            <button type="submit" class="btn btn-success">CREATE COMPARISON</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div> <!-- /container -->
+
+{% endautoescape %}
+
+{% endblock %}

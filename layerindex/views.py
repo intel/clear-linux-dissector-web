@@ -48,7 +48,8 @@ from layerindex.forms import (AdvancedRecipeSearchForm, BulkChangeEditFormSet,
                               ImageComparisonCreateForm,
                               ImageComparisonRecipeForm,
                               LayerMaintainerFormSet, RecipeChangesetForm,
-                              PatchDispositionForm, PatchDispositionFormSet)
+                              PatchDispositionForm, PatchDispositionFormSet,
+                              VersionComparisonForm)
 from layerindex.models import (BBAppend, BBClass, Branch, ClassicRecipe,
                                Distro, DynamicBuildDep, ImageComparison,
                                ImageComparisonRecipe, IncFile, LayerBranch,
@@ -2019,3 +2020,59 @@ def image_compare_patch_view(request, comparison, path):
     response['X-Accel-Redirect'] = smart_str(redirect_path)
     response['Content-Length'] = os.path.getsize(actual_file)
     return response
+
+
+class VersionCompareSelectView(FormView):
+    form_class = VersionComparisonForm
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super(VersionCompareSelectView, self).dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        return HttpResponseRedirect(reverse_lazy('version_comparison', args=(form.cleaned_data['from_branch'].name, form.cleaned_data['to_branch'].name)))
+
+
+class VersionCompareView(TemplateView):
+    def get_context_data(self, **kwargs):
+        from distutils.version import LooseVersion
+        context = super(VersionCompareView, self).get_context_data(**kwargs)
+        from_branch = get_object_or_404(Branch, name=self.kwargs['from'])
+        to_branch = get_object_or_404(Branch, name=self.kwargs['to'])
+        context['from'] = from_branch
+        context['to'] = to_branch
+        from_layerbranch = from_branch.layerbranch_set.first()
+        to_layerbranch = to_branch.layerbranch_set.first()
+        from_recipes = ClassicRecipe.objects.filter(layerbranch=from_layerbranch, deleted=False)
+        to_recipes = ClassicRecipe.objects.filter(layerbranch=to_layerbranch, deleted=False)
+        from_pns = set(from_recipes.values_list('pn', flat=True))
+        to_pns = set(to_recipes.values_list('pn', flat=True))
+        removed = from_pns - to_pns
+        added = to_pns - from_pns
+
+        changes = []
+        for item in sorted(added, key=lambda s: s.lower()):
+            changes.append('Added %s' % item)
+        for item in sorted(removed, key=lambda s: s.lower()):
+            changes.append('Removed %s' % item)
+        for item in sorted(from_pns & to_pns, key=lambda s: s.lower()):
+            item_from_recipes = from_recipes.filter(pn=item)
+            item_to_recipes = to_recipes.filter(pn=item)
+            change = None
+            from_pvs = item_from_recipes.values_list('pv', flat=True)
+            to_pvs = item_to_recipes.values_list('pv', flat=True)
+            if len(from_pvs) == 1 and len(to_pvs) == 1:
+                if from_pvs[0] and to_pvs[0] and from_pvs[0] != to_pvs[0]:
+                    from_ver = LooseVersion(from_pvs[0])
+                    to_ver = LooseVersion(to_pvs[0])
+                    if to_ver > from_ver:
+                        change = 'Upgraded %s from %s to %s' % (item, from_pvs[0], to_pvs[0])
+                    elif from_ver > to_ver:
+                        change = 'Downgraded %s from %s to %s' % (item, from_pvs[0], to_pvs[0])
+            else:
+                change = '%s changed versions: %s to %s' % (item, ', '.join(from_pvs), ', '.join(to_pvs))
+            if change:
+                changes.append(change)
+        context['changes'] = changes
+        return context
+

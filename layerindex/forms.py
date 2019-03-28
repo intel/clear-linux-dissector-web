@@ -347,6 +347,11 @@ class ComparisonRecipeSelectForm(StyledForm):
     oe_layer = forms.ModelChoiceField(label='OE Layer', queryset=LayerItem.objects.filter(comparison=False).filter(status__in=['P', 'X']).order_by('name'), empty_label="(any)", required=False)
 
 
+class VersionComparisonForm(StyledForm):
+    from_branch = forms.ModelChoiceField(label='From', queryset=Branch.objects.filter(comparison=True).filter(hidden=False).order_by('name'))
+    to_branch = forms.ModelChoiceField(label='To', queryset=Branch.objects.filter(comparison=True).filter(hidden=False).order_by('name'))
+
+
 class ImageComparisonCreateForm(forms.Form):
     name = forms.CharField(max_length=50, help_text="Name for the image comparison")
     file = forms.FileField()
