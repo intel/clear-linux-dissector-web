@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% comment %}
+
+  layerindex-web - Front page
+
+  Copyright (C) 2019 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+
+<!--
+{% block title_append %} - OE-Classic{% endblock %}
+-->
+
+{% block content %}
+{% autoescape on %}
+
+        <div class="container-fluid">
+            <div class="row">
+                <a class="btn btn-large btn-primary" href="{% url 'version_comparison_select' %}">Release comparison</a><br><br>
+            </div>
+            <div class="row">
+                <a class="btn btn-large btn-primary" href="{% url 'image_comparison' %}">Image comparison</a><br><br>
+            </div>
+            <div class="row">
+                <a class="btn btn-large btn-primary" href="{% url 'layer_list' 'master' %}">Distro data</a>
+            </div>
+        </div>
+
+{% endautoescape %}
+
+{% endblock %}
+

@@ -38,7 +38,8 @@ router.register(r'layers', restviews.LayerViewSet, 'layers')
 
 urlpatterns = [
     url(r'^$',
-        RedirectView.as_view(url=reverse_lazy('image_comparison'), permanent=False),
+        TemplateView.as_view(
+            template_name='layerindex/frontpage.html'),
         name='frontpage'),
 
     # FIXME: REST API disabled for now
