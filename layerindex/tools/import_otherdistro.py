@@ -796,4 +796,10 @@ def main():
     return ret
 
 if __name__ == "__main__":
-    main()
+    try:
+        ret = main()
+    except Exception:
+        ret = 1
+        import traceback
+        traceback.print_exc()
+    sys.exit(ret)

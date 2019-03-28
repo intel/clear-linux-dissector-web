@@ -39,8 +39,9 @@ def import_clear(args):
         cmd += ['-bundles_url', args.bundles_url]
     if args.repo_url:
         cmd += ['-repo_url', args.repo_url]
+    logger.debug('Executing %s' % cmd)
     return_code = subprocess.call(cmd, env=env, cwd=os.path.abspath(args.outdir))
-    if return_code == 1:
+    if return_code != 0:
         logger.error('Call to dissector failed')
         return 1
 
@@ -49,8 +50,9 @@ def import_clear(args):
     cmd = ['layerindex/tools/import_otherdistro.py', 'import-pkgspec', args.branch, args.layer, pkgdir, '--description', 'Clear Linux %s' % release]
     if args.update:
         cmd += ['-u', args.update]
+    logger.debug('Executing %s' % cmd)
     return_code = subprocess.call(cmd, cwd=cwd)
-    if return_code == 1:
+    if return_code != 0:
         logger.error('Importing data failed')
         return 1
 
@@ -58,8 +60,9 @@ def import_clear(args):
     cmd = ['layerindex/tools/update_classic_status.py', '-b', args.branch, '-l', args.layer, pkgdir, '-d', '-s', ','.join(skiplist)]
     if args.update:
         cmd += ['-u', args.update]
+    logger.debug('Executing %s' % cmd)
     return_code = subprocess.call(cmd, cwd=cwd)
-    if return_code == 1:
+    if return_code != 0:
         logger.error('Updating recipe links failed')
         return 1
 
