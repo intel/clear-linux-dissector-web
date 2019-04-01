@@ -753,6 +753,15 @@ def import_clearderiv(args):
             layerbranch.vcs_last_fetch = datetime.now()
             layerbranch.save()
 
+            if args.description:
+                logger.debug('Setting description to "%s"' % args.description)
+                branch = layerbranch.branch
+                branch.short_description = args.description
+                branch.save()
+                layer = layerbranch.layer
+                layer.summary = args.description
+                layer.save()
+
             if args.dry_run:
                 raise DryRunRollbackException()
     except DryRunRollbackException:
@@ -815,6 +824,7 @@ def main():
     parser_clearderiv.add_argument('layer', help='Layer to import into')
     parser_clearderiv.add_argument('pkgdir', help='Top level directory containing package subdirectories')
     parser_clearderiv.add_argument('sourcedir', help='Derivative source directory (unpacked source tarball)')
+    parser_clearderiv.add_argument('--description', help='Set branch/layer description')
     parser_clearderiv.add_argument('-u', '--update', help='Specify update record to link to')
     parser_clearderiv.add_argument('-n', '--dry-run', help='Don\'t write any data back to the database', action='store_true')
     parser_clearderiv.set_defaults(func=import_clearderiv)
