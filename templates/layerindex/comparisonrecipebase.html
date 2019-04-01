@@ -48,6 +48,7 @@
                     </thead>
                     <tbody>
                         <tr>
+                            {% block name_row %}
                             <th>Name</th>
                             <td>{{ recipe.name }}</td>
                             <td>{% if cover_recipe %}{{ cover_recipe.name }} ({{ recipe.get_cover_status_display }}{% if recipe.cover_comment %} - {{ recipe.cover_comment }}{% endif %}){% else %}{{ recipe.get_cover_status_display }}{% if recipe.cover_comment %} - {{ recipe.cover_comment }}{% endif %}{% endif %}{% block to_recipe_extra %}{% endblock %}
@@ -57,6 +58,7 @@
                             {% endblock %}
                             </div>
                             </td>
+                            {% endblock %}
                         </tr>
                         <tr>
                             <th>Version</th>

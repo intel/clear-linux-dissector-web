@@ -976,3 +976,50 @@ class PatchDisposition(models.Model):
 
     def __str__(self):
         return '%s - %s' % (self.patch, self.get_disposition_display())
+
+
+class VersionComparison(models.Model):
+    from_branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='versioncomparison_from_set')
+    to_branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='versioncomparison_to_set')
+
+    def __str__(self):
+        return '%s to %s' % (self.from_branch, self.to_branch)
+
+
+class VersionComparisonDifference(models.Model):
+    CHANGE_TYPE_CHOICES = (
+        ('A', 'Add'),
+        ('U', 'Upgrade'),
+        ('D', 'Downgrade'),
+        ('V', 'Version changes'),
+        ('R', 'Remove'),
+        ('M', 'Modification'),
+    )
+    comparison = models.ForeignKey(VersionComparison, on_delete=models.CASCADE)
+    from_layerbranch = models.ForeignKey(LayerBranch, on_delete=models.CASCADE, related_name='versioncomparisondifference_from_set')
+    to_layerbranch = models.ForeignKey(LayerBranch, on_delete=models.CASCADE, related_name='versioncomparisondifference_to_set')
+    pn = models.CharField(max_length=100)
+    change_type = models.CharField(max_length=1, choices=CHANGE_TYPE_CHOICES)
+    oldvalue = models.CharField(max_length=255, blank=True)
+    newvalue = models.CharField(max_length=255, blank=True)
+
+    def from_recipe(self):
+        return ClassicRecipe.objects.filter(layerbranch=self.from_layerbranch, pn=self.pn, deleted=False).first()
+
+    def to_recipe(self):
+        return ClassicRecipe.objects.filter(layerbranch=self.to_layerbranch, pn=self.pn, deleted=False).first()
+
+    def __str__(self):
+        if self.change_type == 'A':
+            return 'Added %s' % self.pn
+        elif self.change_type == 'U':
+            return 'Upgraded %s from %s to %s' % (self.pn, self.oldvalue, self.newvalue)
+        elif self.change_type == 'D':
+            return 'Downgraded %s from %s to %s' % (self.pn, self.oldvalue, self.newvalue)
+        elif self.change_type == 'V':
+            return '%s: versions changed from %s to %s' % (self.pn, self.oldvalue, self.newvalue)
+        elif self.change_type == 'R':
+            return 'Removed %s' % self.pn
+        elif self.change_type == 'M':
+            # FIXME
+            return 'Modified %s' % self.pn

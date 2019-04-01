@@ -57,7 +57,8 @@ from layerindex.models import (BBAppend, BBClass, Branch, ClassicRecipe,
                                LayerNote, LayerUpdate, Machine, Patch, Recipe,
                                RecipeChange, RecipeChangeset, Source, StaticBuildDep,
                                Update, SecurityQuestion, SecurityQuestionAnswer,
-                               UserProfile, PatchDisposition)
+                               UserProfile, PatchDisposition, VersionComparison,
+                               VersionComparisonDifference)
 
 
 from . import simplesearch, tasks, utils
@@ -2035,44 +2036,98 @@ class VersionCompareSelectView(FormView):
 
 class VersionCompareView(TemplateView):
     def get_context_data(self, **kwargs):
-        from distutils.version import LooseVersion
         context = super(VersionCompareView, self).get_context_data(**kwargs)
         from_branch = get_object_or_404(Branch, name=self.kwargs['from'])
         to_branch = get_object_or_404(Branch, name=self.kwargs['to'])
         context['from'] = from_branch
         context['to'] = to_branch
-        from_layerbranch = from_branch.layerbranch_set.first()
-        to_layerbranch = to_branch.layerbranch_set.first()
-        from_recipes = ClassicRecipe.objects.filter(layerbranch=from_layerbranch, deleted=False)
-        to_recipes = ClassicRecipe.objects.filter(layerbranch=to_layerbranch, deleted=False)
-        from_pns = set(from_recipes.values_list('pn', flat=True))
-        to_pns = set(to_recipes.values_list('pn', flat=True))
-        removed = from_pns - to_pns
-        added = to_pns - from_pns
 
-        changes = []
-        for item in sorted(added, key=lambda s: s.lower()):
-            changes.append('Added %s' % item)
-        for item in sorted(removed, key=lambda s: s.lower()):
-            changes.append('Removed %s' % item)
-        for item in sorted(from_pns & to_pns, key=lambda s: s.lower()):
-            item_from_recipes = from_recipes.filter(pn=item)
-            item_to_recipes = to_recipes.filter(pn=item)
-            change = None
-            from_pvs = item_from_recipes.values_list('pv', flat=True)
-            to_pvs = item_to_recipes.values_list('pv', flat=True)
-            if len(from_pvs) == 1 and len(to_pvs) == 1:
-                if from_pvs[0] and to_pvs[0] and from_pvs[0] != to_pvs[0]:
-                    from_ver = LooseVersion(from_pvs[0])
-                    to_ver = LooseVersion(to_pvs[0])
-                    if to_ver > from_ver:
-                        change = 'Upgraded %s from %s to %s' % (item, from_pvs[0], to_pvs[0])
-                    elif from_ver > to_ver:
-                        change = 'Downgraded %s from %s to %s' % (item, from_pvs[0], to_pvs[0])
-            else:
-                change = '%s changed versions: %s to %s' % (item, ', '.join(from_pvs), ', '.join(to_pvs))
-            if change:
-                changes.append(change)
-        context['changes'] = changes
+        #  FIXME move to background
+        vercmp = VersionComparison.objects.filter(from_branch=from_branch, to_branch=to_branch).first()
+        if not vercmp:
+            from distutils.version import LooseVersion
+            vercmp = VersionComparison(from_branch=from_branch, to_branch=to_branch)
+            vercmp.save()
+            from_layerbranch = from_branch.layerbranch_set.first()
+            to_layerbranch = to_branch.layerbranch_set.first()
+            from_recipes = ClassicRecipe.objects.filter(layerbranch=from_layerbranch, deleted=False).only('pn')
+            to_recipes = ClassicRecipe.objects.filter(layerbranch=to_layerbranch, deleted=False).only('pn')
+            from_pns = set(from_recipes.values_list('pn', flat=True))
+            to_pns = set(to_recipes.values_list('pn', flat=True))
+            removed = from_pns - to_pns
+            added = to_pns - from_pns
+
+            changes = []
+            for item in sorted(added, key=lambda s: s.lower()):
+                diff = VersionComparisonDifference()
+                diff.comparison = vercmp
+                diff.pn = item
+                diff.from_layerbranch = from_layerbranch
+                diff.to_layerbranch = to_layerbranch
+                diff.change_type = 'A'
+                diff.save()
+
+            for item in sorted(from_pns & to_pns, key=lambda s: s.lower()):
+                item_from_recipes = from_recipes.filter(pn=item)
+                item_to_recipes = to_recipes.filter(pn=item)
+                from_pvs = item_from_recipes.values_list('pv', flat=True)
+                to_pvs = item_to_recipes.values_list('pv', flat=True)
+                # Create a diff (we don't necessarily have to save it)
+                diff = VersionComparisonDifference()
+                diff.comparison = vercmp
+                diff.pn = item
+                diff.from_layerbranch = from_layerbranch
+                diff.to_layerbranch = to_layerbranch
+                if len(from_pvs) == 1 and len(to_pvs) == 1:
+                    if from_pvs[0] and to_pvs[0] and from_pvs[0] != to_pvs[0]:
+                        from_ver = LooseVersion(from_pvs[0])
+                        to_ver = LooseVersion(to_pvs[0])
+                        if to_ver > from_ver:
+                            diff.change_type = 'U'
+                            diff.oldvalue = from_pvs[0]
+                            diff.newvalue = to_pvs[0]
+                            diff.save()
+                        elif from_ver > to_ver:
+                            diff.change_type = 'D'
+                            diff.oldvalue = from_pvs[0]
+                            diff.newvalue = to_pvs[0]
+                            diff.save()
+                else:
+                    diff.change_type = 'V'
+                    diff.oldvalue = ', '.join(from_pvs)
+                    diff.newvalue = ', '.join(to_pvs)
+                    diff.save()
+
+            for item in sorted(removed, key=lambda s: s.lower()):
+                diff = VersionComparisonDifference()
+                diff.comparison = vercmp
+                diff.pn = item
+                diff.from_layerbranch = from_layerbranch
+                diff.to_layerbranch = to_layerbranch
+                diff.change_type = 'R'
+                diff.save()
+
+        context['comparison'] = vercmp
         return context
 
+class VersionCompareRecipeDetailView(TemplateView):
+    def get_context_data(self, **kwargs):
+        context = super(VersionCompareRecipeDetailView, self).get_context_data(**kwargs)
+        diff = get_object_or_404(VersionComparisonDifference, pk=kwargs['diff'])
+        if diff.change_type == 'A':
+            recipe = diff.to_recipe()
+            cover_recipe = None
+        else:
+            recipe = diff.from_recipe()
+            cover_recipe = diff.to_recipe()
+        context['diff'] = diff
+        context['recipe'] = recipe
+        context['cover_recipe'] = cover_recipe
+        context['branch'] = recipe.layerbranch.branch
+        context['layerbranch_desc'] = str(recipe.layerbranch.branch)
+        if cover_recipe:
+            context['to_desc'] = str(cover_recipe.layerbranch.branch)
+            context['recipes'] = [recipe, cover_recipe]
+        else:
+            context['recipes'] = [recipe]
+        return context
