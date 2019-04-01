@@ -2042,6 +2042,9 @@ class VersionCompareView(TemplateView):
         context['from'] = from_branch
         context['to'] = to_branch
 
+        from_image = from_branch.hidden
+        to_image = to_branch.hidden
+
         #  FIXME move to background
         vercmp = VersionComparison.objects.filter(from_branch=from_branch, to_branch=to_branch).first()
         if not vercmp:
@@ -2050,15 +2053,25 @@ class VersionCompareView(TemplateView):
             vercmp.save()
             from_layerbranch = from_branch.layerbranch_set.first()
             to_layerbranch = to_branch.layerbranch_set.first()
-            from_recipes = ClassicRecipe.objects.filter(layerbranch=from_layerbranch, deleted=False).only('pn')
-            to_recipes = ClassicRecipe.objects.filter(layerbranch=to_layerbranch, deleted=False).only('pn')
-            from_pns = set(from_recipes.values_list('pn', flat=True))
-            to_pns = set(to_recipes.values_list('pn', flat=True))
+            if from_image:
+                from_recipes = ImageComparisonRecipe.objects.filter(layerbranch=from_layerbranch).only('pn')
+                from_pns = set(from_recipes.values_list('cover_pn', flat=True))
+            else:
+                from_recipes = ClassicRecipe.objects.filter(layerbranch=from_layerbranch, deleted=False).only('pn')
+                from_pns = set(from_recipes.values_list('pn', flat=True))
+            if to_image:
+                to_recipes = ImageComparisonRecipe.objects.filter(layerbranch=to_layerbranch).only('pn')
+                to_pns = set(to_recipes.values_list('cover_pn', flat=True))
+            else:
+                to_recipes = ClassicRecipe.objects.filter(layerbranch=to_layerbranch, deleted=False).only('pn')
+                to_pns = set(to_recipes.values_list('pn', flat=True))
             removed = from_pns - to_pns
             added = to_pns - from_pns
 
             changes = []
             for item in sorted(added, key=lambda s: s.lower()):
+                if not item:
+                    continue
                 diff = VersionComparisonDifference()
                 diff.comparison = vercmp
                 diff.pn = item
@@ -2068,8 +2081,14 @@ class VersionCompareView(TemplateView):
                 diff.save()
 
             for item in sorted(from_pns & to_pns, key=lambda s: s.lower()):
-                item_from_recipes = from_recipes.filter(pn=item)
-                item_to_recipes = to_recipes.filter(pn=item)
+                if from_image:
+                    item_from_recipes = from_recipes.filter(cover_pn=item)
+                else:
+                    item_from_recipes = from_recipes.filter(pn=item)
+                if to_image:
+                    item_to_recipes = to_recipes.filter(cover_pn=item)
+                else:
+                    item_to_recipes = to_recipes.filter(pn=item)
                 from_pvs = item_from_recipes.values_list('pv', flat=True)
                 to_pvs = item_to_recipes.values_list('pv', flat=True)
                 # Create a diff (we don't necessarily have to save it)
@@ -2099,6 +2118,8 @@ class VersionCompareView(TemplateView):
                     diff.save()
 
             for item in sorted(removed, key=lambda s: s.lower()):
+                if not item:
+                    continue
                 diff = VersionComparisonDifference()
                 diff.comparison = vercmp
                 diff.pn = item

@@ -1004,10 +1004,16 @@ class VersionComparisonDifference(models.Model):
     newvalue = models.CharField(max_length=255, blank=True)
 
     def from_recipe(self):
-        return ClassicRecipe.objects.filter(layerbranch=self.from_layerbranch, pn=self.pn, deleted=False).first()
+        if self.comparison.from_branch.hidden:
+            return ImageComparisonRecipe.objects.filter(layerbranch=self.from_layerbranch, cover_pn=self.pn).first()
+        else:
+            return ClassicRecipe.objects.filter(layerbranch=self.from_layerbranch, pn=self.pn, deleted=False).first()
 
     def to_recipe(self):
-        return ClassicRecipe.objects.filter(layerbranch=self.to_layerbranch, pn=self.pn, deleted=False).first()
+        if self.comparison.to_branch.hidden:
+            return ImageComparisonRecipe.objects.filter(layerbranch=self.to_layerbranch, cover_pn=self.pn).first()
+        else:
+            return ClassicRecipe.objects.filter(layerbranch=self.to_layerbranch, pn=self.pn, deleted=False).first()
 
     def __str__(self):
         if self.change_type == 'A':

@@ -348,8 +348,8 @@ class ComparisonRecipeSelectForm(StyledForm):
 
 
 class VersionComparisonForm(StyledForm):
-    from_branch = forms.ModelChoiceField(label='From', queryset=Branch.objects.filter(comparison=True).filter(hidden=False).order_by('name'))
-    to_branch = forms.ModelChoiceField(label='To', queryset=Branch.objects.filter(comparison=True).filter(hidden=False).order_by('name'))
+    from_branch = forms.ModelChoiceField(label='From', queryset=Branch.objects.filter(comparison=True).order_by('name'))
+    to_branch = forms.ModelChoiceField(label='To', queryset=Branch.objects.filter(comparison=True).order_by('name'))
 
 
 class ImageComparisonCreateForm(forms.Form):
