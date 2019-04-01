@@ -67,6 +67,12 @@ def import_clear(args):
         data = urllib.request.urlopen(rq).read()
         release = data.decode('utf-8').strip()
 
+    if args.layer:
+        layername = args.layer
+    else:
+        # Use same name as branch
+        layername = args.branch
+
     logger.debug('Fetching Clear Linux release %s' % release)
 
     pkgsrcdir = os.path.join(args.outdir, release, 'source')
@@ -97,9 +103,9 @@ def import_clear(args):
         cwd = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
         pkgdir = os.path.join(args.outdir, release, 'source')
         if args.derivative:
-            cmd = ['layerindex/tools/import_otherdistro.py', 'import-clear-derivative', args.branch, args.layer, pkgsrcdir, args.derivative, '--description', '%s %s' % (args.name, release)]
+            cmd = ['layerindex/tools/import_otherdistro.py', 'import-clear-derivative', args.branch, layername, pkgsrcdir, args.derivative, '--description', '%s %s' % (args.name, release)]
         else:
-            cmd = ['layerindex/tools/import_otherdistro.py', 'import-pkgspec', args.branch, args.layer, pkgsrcdir, '--description', '%s %s' % (args.name, release)]
+            cmd = ['layerindex/tools/import_otherdistro.py', 'import-pkgspec', args.branch, layername, pkgsrcdir, '--description', '%s %s' % (args.name, release)]
         if args.update:
             cmd += ['-u', args.update]
         logger.debug('Executing %s' % cmd)
@@ -112,7 +118,7 @@ def import_clear(args):
             shutil.move(tmpsrcdir, pkgsrcdir)
 
     skiplist = ['helloworld']
-    cmd = ['layerindex/tools/update_classic_status.py', '-b', args.branch, '-l', args.layer, '-d', '-s', ','.join(skiplist)]
+    cmd = ['layerindex/tools/update_classic_status.py', '-b', args.branch, '-l', layername, '-d', '-s', ','.join(skiplist)]
     if args.update:
         cmd += ['-u', args.update]
     logger.debug('Executing %s' % cmd)
@@ -134,8 +140,8 @@ def main():
     parser.add_argument('-n', '--name', default='Clear Linux', help='Name of distribution (default "%(default)s")')
     parser.add_argument('-o', '--outdir', default='clr-pkgs', help='Output directory (default "%(default)s")')
     parser.add_argument('-u', '--update', help='Update record to associate changes with')
-    parser.add_argument('-b', '--branch', default='clearlinux', help='Branch to use (default "%(default)s")')
-    parser.add_argument('-l', '--layer', default='clearlinux', help='Layer to use (default "%(default)s")')
+    parser.add_argument('-b', '--branch', help='Branch to use (default "%(default)s")', required=True)
+    parser.add_argument('-l', '--layer', help='Layer to use (defaults to same name as specified branch)')
     parser.add_argument('--bundles-url', help='Base URL for downloading release archives of clr-bundles')
     parser.add_argument('--repo-url', help='Base URL for downloading releases')
 
