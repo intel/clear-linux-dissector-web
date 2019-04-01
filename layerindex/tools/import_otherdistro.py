@@ -364,7 +364,7 @@ def get_update_obj(args):
     return updateobj
 
 
-def import_specdir(metapath, layerbranch, existing, updateobj, pwriter):
+def import_specdir(metapath, layerbranch, existing, updateobj, pwriter, pn_overwrite=False):
     dirlist = os.listdir(metapath)
     total = len(dirlist)
     speccount = 0
@@ -374,7 +374,7 @@ def import_specdir(metapath, layerbranch, existing, updateobj, pwriter):
             continue
         specfiles = glob.glob(os.path.join(metapath, entry, '*.spec'))
         if specfiles:
-            import_specfiles(specfiles, layerbranch, existing, updateobj, metapath)
+            import_specfiles(specfiles, layerbranch, existing, updateobj, metapath, pn_overwrite=pn_overwrite)
             speccount += len(specfiles)
         else:
             logger.warn('Missing spec file in %s' % os.path.join(metapath, entry))
@@ -383,13 +383,18 @@ def import_specdir(metapath, layerbranch, existing, updateobj, pwriter):
     return speccount
 
 
-def import_specfiles(specfiles, layerbranch, existing, updateobj, reldir):
+def import_specfiles(specfiles, layerbranch, existing, updateobj, reldir, pn_overwrite=False):
     from layerindex.models import ClassicRecipe, ComparisonRecipeUpdate
     recipes = []
     for specfile in specfiles:
         specfn = os.path.basename(specfile)
         specpath = os.path.relpath(os.path.dirname(specfile), reldir)
-        recipe, created = ClassicRecipe.objects.get_or_create(layerbranch=layerbranch, filepath=specpath, filename=specfn)
+        if pn_overwrite:
+            recipe, created = ClassicRecipe.objects.get_or_create(layerbranch=layerbranch, pn=os.path.splitext(specfn)[0])
+            recipe.filepath = specpath
+            recipe.filename = specfn
+        else:
+            recipe, created = ClassicRecipe.objects.get_or_create(layerbranch=layerbranch, filepath=specpath, filename=specfn)
         if created:
             logger.info('Importing %s' % specfn)
         elif recipe.deleted:
@@ -637,7 +642,7 @@ def import_clearderiv(args):
             existing = list(layerrecipes.filter(deleted=False).values_list('filepath', 'filename'))
 
             logger.info('Importing original packages')
-            import_specdir(args.pkgdir, layerbranch, existing, updateobj, pwriter)
+            import_specdir(args.pkgdir, layerbranch, existing, updateobj, pwriter, pn_overwrite=True)
 
             srpmpath = os.path.join(srcpath, 'src', 'src-rpms')
             srpms = []
@@ -662,7 +667,7 @@ def import_clearderiv(args):
                     output = subprocess.check_output(cmd, shell=True, cwd=srpmextpath).decode('utf-8').rstrip()
 
                     specfiles = glob.glob(os.path.join(srpmextpath, '*.spec'))
-                    recipes = import_specfiles(specfiles, layerbranch, existing, updateobj, extpath)
+                    recipes = import_specfiles(specfiles, layerbranch, existing, updateobj, extpath, pn_overwrite=True)
                     for recipe in recipes:
                         specpns.append(recipe.pn)
 
