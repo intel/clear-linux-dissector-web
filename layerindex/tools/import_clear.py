@@ -103,9 +103,9 @@ def import_clear(args):
         cwd = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
         pkgdir = os.path.join(args.outdir, release, 'source')
         if args.derivative:
-            cmd = ['layerindex/tools/import_otherdistro.py', 'import-clear-derivative', args.branch, layername, pkgsrcdir, args.derivative, '--description', '%s %s' % (args.name, release)]
+            cmd = ['layerindex/tools/import_otherdistro.py', 'import-clear-derivative', args.branch, layername, pkgsrcdir, args.derivative, '--description', '%s %s' % (args.name, release), '--relative-path', args.outdir]
         else:
-            cmd = ['layerindex/tools/import_otherdistro.py', 'import-pkgspec', args.branch, layername, pkgsrcdir, '--description', '%s %s' % (args.name, release)]
+            cmd = ['layerindex/tools/import_otherdistro.py', 'import-pkgspec', args.branch, layername, pkgsrcdir, '--description', '%s %s' % (args.name, release), '--relative-path', args.outdir]
         if args.update:
             cmd += ['-u', args.update]
         logger.debug('Executing %s' % cmd)

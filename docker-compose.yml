@@ -17,6 +17,7 @@ services:
     volumes:
      - layersmeta:/opt/workdir
      - patchvolume:/opt/imagecompare-patches:z
+     - srcvolume:/opt/sources:z
     environment:
      #- "SECRET_KEY=<set this here>"
      - "DATABASE_USER=root"
@@ -45,6 +46,7 @@ services:
     volumes:
      - layersstatic:/usr/share/nginx/html:ro
      - patchvolume:/opt/www/protected/imagecompare-patches:ro
+     - srcvolume:/opt/www/protected/sources:ro
      - ./docker/certs:/opt/cert:ro
      - certbotwww:/var/www/certbot:ro
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
@@ -65,6 +67,8 @@ services:
     image: halstead/layerindex-app
     volumes:
      - layersmeta:/opt/workdir
+     - patchvolume:/opt/imagecompare-patches:z
+     - srcvolume:/opt/sources:z
     environment:
      #- "SECRET_KEY=<set this here>"
      - "DATABASE_PASSWORD=testingpw"
@@ -89,4 +93,5 @@ volumes:
   layersmeta:
   layersstatic:
   patchvolume:
+  srcvolume:
   certbotwww:

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% comment %}
+
+  layerindex-web - version comparison file diff page template
+
+  Copyright (C) 2019 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+<!--
+{% block title_append %} - {{ fdiff.difference.comparison }} - {{ fdiff.difference.pn }} - Package source diff{% endblock %}
+-->
+
+{% block head_extra %}
+<link rel="stylesheet" type="text/css" href="{% static "css/diff2html.css" %}">
+<script type="text/javascript" src="{% static "js/diff2html.js" %}"></script>
+{% endblock %}
+
+
+{% block content %}
+{% autoescape on %}
+
+    <ul class="breadcrumb">
+        <li><a href="{% url 'version_comparison' fdiff.difference.comparison.from_branch.name fdiff.difference.comparison.to_branch.name %}">{{ fdiff.difference.comparison }}</a></li>
+        <li><a href="{% url 'version_comparison_recipe' fdiff.difference.id %}">{{ fdiff.difference.pn }}</a></li>
+        <li class="active">Package source diff</li>
+    </ul>
+
+    <div id="diffview">
+        <div id="diffview-status" class="well well-lg" style="text-align: center;">
+            <h2>Generating diff...</h2>
+            <br>
+            <br>
+            <i class="glyphicon glyphicon-hourglass" style="color:darkgrey; font-size: 50px;" aria-hidden="true"></i>
+        </div>
+    </div> <!-- /container -->
+
+{% endautoescape %}
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        var diff_status = 'I';
+        function showDiff() {
+            $.ajax({
+            url: "{% url "version_comparison_diff_ajax" fdiff.id %}",
+            cache: false
+            }).done(function( data, status, xhr ) {
+                diff_status = xhr.getResponseHeader('X-Status')
+                if(diff_status == 'S') {
+                    var diffHtml = Diff2Html.getPrettyHtml(
+                        data,
+                        {inputFormat: 'diff', showFiles: true, matching: 'lines', outputFormat: 'line-by-line'}
+                    );
+                    $("#diffview").html(diffHtml);
+                }
+                else if(diff_status == 'F') {
+                    $("#diffview-status").html("<h2>Failed</h2>");
+                }
+            }).always(function () {
+                if(diff_status == 'I') {
+                    window.setTimeout(showDiff, 1000);
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            showDiff();
+        });
+    </script>
+{% endblock %}
+

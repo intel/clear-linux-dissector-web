@@ -290,6 +290,9 @@ TOOLS_LOG_DIR = ""
 # File serving method (can be "direct" or "nginx")
 FILE_SERVE_METHOD = "direct"
 
+# Path to package sources for other distros (used when doing release comparisons)
+VERSION_COMPARE_SOURCE_DIR = ""
+
 # Path and URL prefix for handling patches imported with image comparison data
 IMAGE_COMPARE_PATCH_DIR = BASE_DIR + "/static/patches"
 IMAGE_COMPARE_PATCH_URL_PREFIX = "/layerindex/imagecompare/patch/"

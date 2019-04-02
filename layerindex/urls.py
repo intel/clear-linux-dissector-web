@@ -17,7 +17,8 @@ from layerindex.views import LayerListView, LayerReviewListView, LayerReviewDeta
     ComparisonRecipeSelectView, ComparisonRecipeSelectDetailView, ImageCompareView, ImageCompareDetailView, \
     ImageCompareRecipeSearchView, ImageCompareRecipeDetailView, ImageCompareRecipeSelectView, \
     ImageCompareRecipeSelectDetailView, image_compare_patch_view, task_log_view, task_stop_view, email_test_view, \
-    VersionCompareSelectView, VersionCompareView, VersionCompareRecipeDetailView
+    VersionCompareSelectView, VersionCompareView, VersionCompareRecipeDetailView, VersionCompareFileDiffView, \
+    version_compare_diff_view
 from layerindex.models import LayerItem, Recipe, RecipeChangeset
 from rest_framework import routers
 from . import restviews
@@ -157,10 +158,17 @@ urlpatterns = [
         VersionCompareView.as_view(
             template_name='layerindex/versioncomparison.html'),
         name="version_comparison"),
-    url(r'^versioncompare/recipe/(?P<diff>[-\w]+)/$',
+    url(r'^versioncompare/recipe/(?P<id>[-\w]+)/$',
         VersionCompareRecipeDetailView.as_view(
             template_name='layerindex/versioncomparisonrecipe.html'),
         name="version_comparison_recipe"),
+    url(r'^versioncompare/diff/(?P<id>[-\w]+)/$',
+        VersionCompareFileDiffView.as_view(
+            template_name='layerindex/versioncomparisonfilediff.html'),
+        name="version_comparison_diff"),
+    url(r'^versioncompare/diff_file/(?P<diff_id>[-\w]+)/$',
+        version_compare_diff_view,
+        name="version_comparison_diff_ajax"),
 
     url(r'^email_test/$',
         email_test_view,

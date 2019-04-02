@@ -239,6 +239,7 @@ class LayerBranch(models.Model):
     vcs_last_commit = models.DateTimeField('Last commit date', blank=True, null=True)
     actual_branch = models.CharField('Actual Branch', max_length=80, blank=True, help_text='Name of the actual branch in the repository matching the core branch')
     yp_compatible_version = models.ForeignKey(YPCompatibleVersion, verbose_name='Yocto Project Compatible version', null=True, blank=True, on_delete=models.SET_NULL, help_text='Which version of the Yocto Project Compatible program has this layer been approved for for?')
+    local_path = models.CharField(max_length=255, blank=True, help_text='Local subdirectory where layer data can be found')
 
     updated = models.DateTimeField(auto_now=True)
 
@@ -1016,6 +1017,28 @@ class VersionComparisonDifference(models.Model):
         else:
             return ClassicRecipe.objects.filter(layerbranch=self.to_layerbranch, pn=self.pn, deleted=False).first()
 
+    def get_comparison_paths(self):
+        # FIXME handle image comparisons
+        if self.change_type in ['A', 'V', 'R']:
+            return None, None
+        import settings
+        srcdir = getattr(settings, 'VERSION_COMPARE_SOURCE_DIR')
+        from_recipe = self.from_recipe()
+        to_recipe = self.to_recipe()
+        from_path = os.path.join(srcdir, self.from_layerbranch.local_path, from_recipe.filepath)
+        to_path = os.path.join(srcdir, self.to_layerbranch.local_path, to_recipe.filepath)
+        return from_path, to_path
+
+    def package_sources_available(self):
+        # FIXME handle image comparisons
+        if self.change_type in ['A', 'V', 'R']:
+            return False
+        import settings
+        srcdir = getattr(settings, 'VERSION_COMPARE_SOURCE_DIR')
+        from_path = os.path.join(srcdir, self.from_layerbranch.local_path)
+        to_path = os.path.join(srcdir, self.to_layerbranch.local_path)
+        return os.path.exists(from_path) and os.path.exists(to_path)
+
     def __str__(self):
         if self.change_type == 'A':
             return 'Added %s' % self.pn
@@ -1030,3 +1053,36 @@ class VersionComparisonDifference(models.Model):
         elif self.change_type == 'M':
             # FIXME
             return 'Modified %s' % self.pn
+
+
+class VersionComparisonFileDiff(models.Model):
+    STATUS_CHOICES = (
+        ('I', 'In progress'),
+        ('F', 'Failed'),
+        ('S', 'Succeeded'),
+    )
+    difference = models.ForeignKey(VersionComparisonDifference, on_delete=models.CASCADE)
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='I')
+
+    def get_diff_path(self):
+        import settings
+        internal_dir = getattr(settings, 'IMAGE_COMPARE_PATCH_DIR')
+        return os.path.join(internal_dir, 'version-compare', str(self.difference.comparison.id), '%d.diff' % self.id)
+
+    def get_redirect_path(self):
+        import settings
+        internal_prefix = getattr(settings, 'IMAGE_COMPARE_PATCH_INTERNAL_URL_PREFIX')
+        return os.path.join(internal_prefix, 'version-compare', str(self.difference.comparison.id), '%d.diff' % self.id)
+
+    def __str__(self):
+        return str(self.difference)
+
+@receiver(models.signals.post_delete, sender=VersionComparisonFileDiff)
+def delete_image_compare_patches(sender, instance, *args, **kwargs):
+    # Ensure generated diffs get deleted
+
+    fdiff_file = instance.get_diff_path()
+    try:
+        os.remove(fdiff_file)
+    except FileNotFoundError:
+        pass

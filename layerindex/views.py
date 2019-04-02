@@ -58,7 +58,7 @@ from layerindex.models import (BBAppend, BBClass, Branch, ClassicRecipe,
                                RecipeChange, RecipeChangeset, Source, StaticBuildDep,
                                Update, SecurityQuestion, SecurityQuestionAnswer,
                                UserProfile, PatchDisposition, VersionComparison,
-                               VersionComparisonDifference)
+                               VersionComparisonDifference, VersionComparisonFileDiff)
 
 
 from . import simplesearch, tasks, utils
@@ -2137,7 +2137,7 @@ class VersionCompareView(TemplateView):
 class VersionCompareRecipeDetailView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(VersionCompareRecipeDetailView, self).get_context_data(**kwargs)
-        diff = get_object_or_404(VersionComparisonDifference, pk=kwargs['diff'])
+        diff = get_object_or_404(VersionComparisonDifference, pk=kwargs['id'])
         if diff.change_type == 'A':
             recipe = diff.to_recipe()
             cover_recipe = None
@@ -2154,4 +2154,49 @@ class VersionCompareRecipeDetailView(TemplateView):
             context['recipes'] = [recipe, cover_recipe]
         else:
             context['recipes'] = [recipe]
+        context['package_sources_available'] = diff.package_sources_available()
         return context
+
+class VersionCompareFileDiffView(TemplateView):
+    def get_context_data(self, **kwargs):
+        context = super(VersionCompareFileDiffView, self).get_context_data(**kwargs)
+        diff = get_object_or_404(VersionComparisonDifference, pk=kwargs['id'])
+        fdiff, created = VersionComparisonFileDiff.objects.get_or_create(difference=diff)
+        if created or fdiff.status == 'F':
+            fdiff.status = 'I'
+            fdiff.save()
+            try:
+                tasks.generate_diff.apply_async((fdiff.id,))
+            except:
+                fdiff.status = 'F'
+                raise
+        context['fdiff'] = fdiff
+        return context
+
+
+def version_compare_diff_view(request, diff_id):
+    if not request.user.is_authenticated():
+        raise PermissionDenied
+
+    fdiff = get_object_or_404(VersionComparisonFileDiff, pk=diff_id)
+    if fdiff.status == 'S':
+        actual_file = fdiff.get_diff_path()
+        if not os.path.exists(actual_file):
+            raise Http404;
+
+        if getattr(settings, 'FILE_SERVE_METHOD', 'direct') == 'nginx':
+            from django.utils.encoding import smart_str
+            response = HttpResponse(content_type='text/plain')
+            redirect_path = fdiff.get_redirect_path()
+            response['X-Accel-Redirect'] = smart_str(redirect_path)
+            response['Content-Length'] = os.path.getsize(actual_file)
+        else:
+            from django.http import FileResponse
+            response = FileResponse(open(actual_file, 'rb'), content_type='text/plain')
+    elif fdiff.status == 'I':
+        response = HttpResponse('loading')
+    else:
+        response = HttpResponse('failed')
+    response['X-Status'] = fdiff.status
+    return response
+        
