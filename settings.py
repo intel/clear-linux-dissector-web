@@ -287,9 +287,12 @@ TASK_LOG_DIR = "/tmp/layerindex-task-logs"
 # Full path to directory where rrs tools stores logs
 TOOLS_LOG_DIR = ""
 
+# File serving method (can be "direct" or "nginx")
+FILE_SERVE_METHOD = "direct"
+
 # Path and URL prefix for handling patches imported with image comparison data
 IMAGE_COMPARE_PATCH_DIR = BASE_DIR + "/static/patches"
-IMAGE_COMPARE_PATCH_URL_PREFIX = "/static/patches/"
+IMAGE_COMPARE_PATCH_URL_PREFIX = "/layerindex/imagecompare/patch/"
 
 LOGIN_EXEMPT_URLS = (
     '^/accounts/register/',

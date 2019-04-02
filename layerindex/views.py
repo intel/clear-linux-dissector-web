@@ -2006,20 +2006,23 @@ def image_compare_patch_view(request, comparison, path):
 
     from django.utils.encoding import smart_str
 
-    internal_prefix = getattr(settings, 'IMAGE_COMPARE_PATCH_INTERNAL_URL_PREFIX')
     internal_dir = getattr(settings, 'IMAGE_COMPARE_PATCH_DIR')
 
-    file_name = os.path.basename(path)
-    redirect_path = os.path.join(internal_prefix, comparison, path)
     actual_file = os.path.join(internal_dir, comparison, path)
     if not os.path.exists(actual_file):
         raise Http404;
 
-    response = HttpResponse(content_type='application/force-download')
-    response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(file_name)
-    # Note, X-Accel-Redirect is nginx-specific, this view won't work without it
-    response['X-Accel-Redirect'] = smart_str(redirect_path)
-    response['Content-Length'] = os.path.getsize(actual_file)
+    if getattr(settings, 'FILE_SERVE_METHOD', 'direct') == 'nginx':
+        internal_prefix = getattr(settings, 'IMAGE_COMPARE_PATCH_INTERNAL_URL_PREFIX')
+        redirect_path = os.path.join(internal_prefix, comparison, path)
+        response = HttpResponse(content_type='application/force-download')
+        file_name = os.path.basename(path)
+        response['Content-Disposition'] = 'attachment; filename=%s' % smart_str(file_name)
+        response['X-Accel-Redirect'] = smart_str(redirect_path)
+        response['Content-Length'] = os.path.getsize(actual_file)
+    else:
+        from django.http import FileResponse
+        response = FileResponse(open(actual_file, 'rb'), content_type='application/force-download')
     return response
 
 

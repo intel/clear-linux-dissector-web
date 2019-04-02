@@ -295,6 +295,9 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 #CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 
+# File serving method (can be "direct" or "nginx")
+FILE_SERVE_METHOD = "nginx"
+
 # Path and URL prefix for handling patches imported with image comparison data
 IMAGE_COMPARE_PATCH_DIR = "/opt/imagecompare-patches"
 IMAGE_COMPARE_PATCH_URL_PREFIX = "/layerindex/imagecompare/patch/"
