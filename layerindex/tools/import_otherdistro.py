@@ -316,6 +316,7 @@ def update_recipe_file(path, recipe, repodir, raiseexceptions=False):
         else:
             logger.warning('%s: description appears to be garbage' % path)
             recipe.description = ''
+        recipe.sha256sum = utils.sha256_file(path)
         recipe.save()
 
         saved_patches = []
@@ -341,6 +342,10 @@ def update_recipe_file(path, recipe, repodir, raiseexceptions=False):
                     patch.applied = False
             patch.src_path = patchfn
             patch.apply_order = index
+            try:
+                patch.sha256sum = utils.sha256_file(os.path.join(os.path.dirname(path), patchfn))
+            except FileNotFoundError:
+                patch.sha256sum = ''
             patch.save()
             saved_patches.append(patch.id)
         recipe.patch_set.exclude(id__in=saved_patches).delete()

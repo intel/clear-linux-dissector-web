@@ -570,6 +570,7 @@ class Patch(models.Model):
     apply_order = models.IntegerField(blank=True, null=True)
     applied = models.BooleanField(default=True)
     striplevel = models.IntegerField(default=1)
+    sha256sum = models.CharField(max_length=64, blank=True)
 
     class Meta:
         verbose_name_plural = 'Patches'
@@ -677,6 +678,7 @@ class ClassicRecipe(Recipe):
     classic_category = models.CharField('OE-Classic Category', max_length=100, blank=True)
     deleted = models.BooleanField(default=False)
     needs_attention = models.BooleanField(default=False)
+    sha256sum = models.CharField(max_length=64, blank=True)
 
     class Meta:
         permissions = (

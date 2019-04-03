@@ -2071,7 +2071,7 @@ class VersionCompareView(TemplateView):
             removed = from_pns - to_pns
             added = to_pns - from_pns
 
-            changes = []
+            modifications = []
             for item in sorted(added, key=lambda s: s.lower()):
                 if not item:
                     continue
@@ -2114,11 +2114,50 @@ class VersionCompareView(TemplateView):
                             diff.oldvalue = from_pvs[0]
                             diff.newvalue = to_pvs[0]
                             diff.save()
+                    else:
+                        item_from_recipe = item_from_recipes.first()
+                        item_to_recipe = item_to_recipes.first()
+                        changed = False
+                        if item_from_recipe.sha256sum != item_to_recipe.sha256sum:
+                            changed = True
+                        else:
+                            # Check patches
+                            from_patches = set(item_from_recipe.patch_set.filter(applied=True).values_list('src_path', flat=True))
+                            to_patches = set(item_to_recipe.patch_set.filter(applied=True).values_list('src_path', flat=True))
+                            if from_patches.symmetric_difference(to_patches):
+                                changed = True
+                            else:
+                                for src_path in from_patches.union(to_patches):
+                                    from_patch = item_from_recipe.patch_set.filter(src_path=src_path).first()
+                                    to_patch = item_to_recipe.patch_set.filter(src_path=src_path).first()
+                                    if from_patch.sha256sum != to_patch.sha256sum:
+                                        changed = True
+                                        break
+                        if not changed:
+                            # Check sources
+                            from_sources = set(item_from_recipe.source_set.all().values_list('url', flat=True))
+                            to_sources = set(item_to_recipe.source_set.all().values_list('url', flat=True))
+                            if from_sources.symmetric_difference(to_sources):
+                                changed = True
+                            else:
+                                for url in from_sources.union(to_sources):
+                                    from_source = item_from_recipe.source_set.filter(url=url).first()
+                                    to_source = item_to_recipe.source_set.filter(url=url).first()
+                                    if from_source.sha256sum != to_source.sha256sum:
+                                        changed = True
+                                        break
+                        if changed:
+                            # Defer saving modifications until after upgrades
+                            diff.change_type = 'M'
+                            modifications.append(diff)
                 else:
                     diff.change_type = 'V'
                     diff.oldvalue = ', '.join(from_pvs)
                     diff.newvalue = ', '.join(to_pvs)
                     diff.save()
+
+            for diff in modifications:
+                diff.save()
 
             for item in sorted(removed, key=lambda s: s.lower()):
                 if not item:
