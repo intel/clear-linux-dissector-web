@@ -117,15 +117,16 @@ def import_clear(args):
         if tmpsrcdir and os.path.exists(tmpsrcdir):
             shutil.move(tmpsrcdir, pkgsrcdir)
 
-    skiplist = ['helloworld']
-    cmd = ['layerindex/tools/update_classic_status.py', '-b', args.branch, '-l', layername, '-d', '-s', ','.join(skiplist)]
-    if args.update:
-        cmd += ['-u', args.update]
-    logger.debug('Executing %s' % cmd)
-    return_code = subprocess.call(cmd, cwd=cwd)
-    if return_code != 0:
-        logger.error('Updating recipe links failed')
-        return 1
+    if not args.no_status:
+        skiplist = ['helloworld']
+        cmd = ['layerindex/tools/update_classic_status.py', '-b', args.branch, '-l', layername, '-d', '-s', ','.join(skiplist)]
+        if args.update:
+            cmd += ['-u', args.update]
+        logger.debug('Executing %s' % cmd)
+        return_code = subprocess.call(cmd, cwd=cwd)
+        if return_code != 0:
+            logger.error('Updating recipe links failed')
+            return 1
 
     return 0
 
@@ -144,6 +145,7 @@ def main():
     parser.add_argument('-l', '--layer', help='Layer to use (defaults to same name as specified branch)')
     parser.add_argument('--bundles-url', help='Base URL for downloading release archives of clr-bundles')
     parser.add_argument('--repo-url', help='Base URL for downloading releases')
+    parser.add_argument('--no-status', help='Skip updating status', action='store_true')
 
     args = parser.parse_args()
 
