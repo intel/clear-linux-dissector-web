@@ -396,3 +396,26 @@ border: 1px solid #DDDDDD;
 padding: 8px;
 }
 
+.animated-hourglass {
+    color: darkgrey;
+    font-size: 50px;
+    animation: flip 3s infinite;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotate(0);
+  }
+  40% {
+    transform: rotate(180deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  90% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
