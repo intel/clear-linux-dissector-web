@@ -1,0 +1,22 @@
+{% autoescape on %}
+    <ul>
+    {% for diff in comparison.versioncomparisondifference_set.all %}
+    <li>
+    {% if diff.change_type == 'A' %}
+        Added <a href="{% url 'version_comparison_recipe' diff.id %}">{{ diff.pn }}</a>
+    {% elif diff.change_type == 'U' %}
+        Upgraded <a href="{% url 'version_comparison_recipe' diff.id %}">{{ diff.pn }}</a> from {{ diff.oldvalue }} to {{ diff.newvalue }}
+    {% elif diff.change_type == 'D' %}
+        Downgraded <a href="{% url 'version_comparison_recipe' diff.id %}">{{ diff.pn }}</a> from {{ diff.oldvalue }} to {{ diff.newvalue }}
+    {% elif diff.change_type == 'V' %}
+        {{ diff.pn }}: versions changed from {{ diff.oldvalue }} to {{ diff.newvalue }}
+    {% elif diff.change_type == 'R' %}
+        Removed <a href="{% url 'version_comparison_recipe' diff.id %}">{{ diff.pn }}</a>
+    {% elif diff.change_type == 'M' %}
+        Modified <a href="{% url 'version_comparison_recipe' diff.id %}">{{ diff.pn }}</a>
+    {% endif %}
+    </li>
+    {% endfor %}
+    </ul>
+    </div>
+{% endautoescape %}

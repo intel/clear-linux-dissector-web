@@ -985,8 +985,14 @@ class PatchDisposition(models.Model):
 
 
 class VersionComparison(models.Model):
+    STATUS_CHOICES = (
+        ('I', 'In progress'),
+        ('F', 'Failed'),
+        ('S', 'Succeeded'),
+    )
     from_branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='versioncomparison_from_set')
     to_branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='versioncomparison_to_set')
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, default='I')
 
     def __str__(self):
         return '%s to %s' % (self.from_branch, self.to_branch)

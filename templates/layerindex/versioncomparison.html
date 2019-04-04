@@ -12,35 +12,50 @@
 {% endcomment %}
 
 <!--
-{% block title_append %} - release comparison - {{ from }} to {{ to }}{% endblock %}
+{% block title_append %} - release comparison - {{ from_branch }} to {{ to_branch }}{% endblock %}
 -->
 
 {% block content %}
 {% autoescape on %}
 
-<h2>{{ from }} to {{ to }}</h2>
+<h2>{{ from_branch }} to {{ to_branch }}</h2>
 
-    <div class="container">
-    <ul>
-    {% for diff in comparison.versioncomparisondifference_set.all %}
-    <li>
-    {% if diff.change_type == 'A' %}
-        Added <a href="{% url 'version_comparison_recipe' diff.id %}">{{ diff.pn }}</a>
-    {% elif diff.change_type == 'U' %}
-        Upgraded <a href="{% url 'version_comparison_recipe' diff.id %}">{{ diff.pn }}</a> from {{ diff.oldvalue }} to {{ diff.newvalue }}
-    {% elif diff.change_type == 'D' %}
-        Downgraded <a href="{% url 'version_comparison_recipe' diff.id %}">{{ diff.pn }}</a> from {{ diff.oldvalue }} to {{ diff.newvalue }}
-    {% elif diff.change_type == 'V' %}
-        {{ diff.pn }}: versions changed from {{ diff.oldvalue }} to {{ diff.newvalue }}
-    {% elif diff.change_type == 'R' %}
-        Removed <a href="{% url 'version_comparison_recipe' diff.id %}">{{ diff.pn }}</a>
-    {% elif diff.change_type == 'M' %}
-        Modified <a href="{% url 'version_comparison_recipe' diff.id %}">{{ diff.pn }}</a>
-    {% endif %}
-    </li>
-    {% endfor %}
-    </ul>
+    <div class="container" id="comparisonview">
+        <div id="comparisonview-status" class="well well-lg" style="text-align: center;">
+            <h2>Generating comparison...</h2>
+            <br>
+            <br>
+            <i class="glyphicon glyphicon-hourglass" style="color:darkgrey; font-size: 50px;" aria-hidden="true"></i>
+        </div>
     </div>
 {% endautoescape %}
 
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        var comparison_status = '0';
+        function showComparison() {
+            $.ajax({
+            url: "{% url "version_comparison_ajax" from_branch.name to_branch.name %}",
+            cache: false
+            }).done(function( data, status, xhr ) {
+                comparison_status = xhr.getResponseHeader('X-Status')
+                if(comparison_status == 'S') {
+                    $("#comparisonview").html(data);
+                }
+                else if(comparison_status == 'F') {
+                    $("#comparisonview-status").html("<h2>Failed</h2><p>Generating comparison failed, please contact your administrator</p>");
+                }
+            }).always(function () {
+                if(comparison_status == 'I') {
+                    window.setTimeout(showComparison, 1000);
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            showComparison();
+        });
+    </script>
 {% endblock %}
