@@ -18,6 +18,10 @@
 {% block content %}
 {% autoescape on %}
 
+<div id="comparison-buttons" class="pull-right" style="display: none;">
+    <a href="{% url 'version_comparison_regenerate' from_branch.name to_branch.name %}" class="btn btn-default">Regenerate</a>
+</div>
+
 <h2>{{ from_branch }} to {{ to_branch }}</h2>
 
     <div class="container" id="comparisonview">
@@ -43,6 +47,7 @@
                 comparison_status = xhr.getResponseHeader('X-Status')
                 if(comparison_status == 'S') {
                     $("#comparisonview").html(data);
+                    $("#comparison-buttons").show()
                 }
                 else if(comparison_status == 'F') {
                     $("#comparisonview-status").html("<h2>Failed</h2><p>Generating comparison failed, please contact your administrator</p>");

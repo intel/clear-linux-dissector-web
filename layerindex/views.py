@@ -2134,4 +2134,12 @@ def version_compare_diff_view(request, diff_id):
         response = HttpResponse('failed')
     response['X-Status'] = fdiff.status
     return response
-        
+
+
+def version_compare_regenerate_view(request, from_branch, to_branch):
+    if not request.user.is_authenticated():
+        raise PermissionDenied
+
+    vercmp = get_object_or_404(VersionComparison, from_branch__name=from_branch, to_branch__name=to_branch)
+    vercmp.delete()
+    return HttpResponseRedirect(reverse_lazy('version_comparison', kwargs={'from': from_branch, 'to': to_branch}))
