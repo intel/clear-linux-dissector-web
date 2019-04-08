@@ -17,6 +17,7 @@ services:
     volumes:
      - layersmeta:/opt/workdir
      - patchvolume:/opt/imagecompare-patches:z
+     - logvolume:/opt/layerindex-task-logs:z
      - srcvolume:/opt/sources:z
     environment:
      #- "SECRET_KEY=<set this here>"
@@ -68,6 +69,7 @@ services:
     volumes:
      - layersmeta:/opt/workdir
      - patchvolume:/opt/imagecompare-patches:z
+     - logvolume:/opt/layerindex-task-logs:z
      - srcvolume:/opt/sources:z
     environment:
      #- "SECRET_KEY=<set this here>"
@@ -94,5 +96,6 @@ volumes:
   layersmeta:
   layersstatic:
   patchvolume:
+  logvolume:
   srcvolume:
   certbotwww:
