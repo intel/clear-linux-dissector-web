@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% comment %}
+
+  layerindex-web - comparison import page template
+
+  Copyright (C) 2019 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+<!--
+{% block title_append %} - distro data import{% endblock %}
+-->
+{% block hero %}
+        <div class="container">
+            <h2 class="home">Distro Data Import</h2>
+            <p class="pageDesc">This tool allows you to import distribution package data.</p>
+        </div>
+{% endblock %}
+
+{% block content %}
+{% autoescape on %}
+
+    <div class="container">
+        <form class="form insetContent" enctype="multipart/form-data" method="POST">
+    {% csrf_token %}
+    {% for hidden in form.hidden_fields %}
+        {{ hidden }}
+    {% endfor %}
+    {% for field in form.visible_fields %}
+        <div class="row">
+        {% if field.errors %}
+        <div class="form-group alert alert-danger">
+        {{ field.errors }}
+        {% endif %}
+
+        {% if field.name == 'release' %}
+        <div id="group_{{ field.name }}" class="form-group">
+            <label for="{{ field.id_for_label }}" class="labelTitle">{{ field.label }}</label><br>
+            {{ field }}
+            <input type="checkbox" name="latest" {% if form.latest.value %} checked{% endif %} style="margin-left:6px" id="id_latest" /> <label for="{{ form.latest.id_for_label }}" class="labelTitle">{{ form.latest.label }}</label>
+        </div>
+        {% elif field.name == 'latest' %}
+        {% else %}
+        <div id="group_{{ field.name }}" class="form-group">
+            <label for="{{ field.id_for_label }}" class="labelTitle">{{ field.label }}</label><br>
+            {% if field.name == 'import_type' %}
+                {% for choice, desc in form.fields.import_type.choices %}
+                <div class="col-md-3">
+                <label for="id_{{ field.name }}_{{ forloop.counter0 }}"><input type="radio" name="{{ field.name }}" value="{{ choice }}" required id="id_{{ field.name }}_{{ forloop.counter0 }}" {% if choice == field.value %}checked{% endif%} />
+ {{ desc }}</label>
+                </div>
+                {% endfor %}
+            {% elif field.name == 'destination' %}
+                {% for choice, desc in form.fields.destination.choices %}
+                <div class="col-md-3">
+                <label for="id_{{ field.name }}_{{ forloop.counter0 }}"><input type="radio" name="{{ field.name }}" value="{{ choice }}" required id="id_{{ field.name }}_{{ forloop.counter0 }}" {% if choice == field.value %}checked{% endif%} />
+ {{ desc }}</label>
+                </div>
+                {% endfor %}
+            {% else %}
+            {{ field }}
+            {% endif %}
+            <span class="fileInputDesc">
+                {{ field.help_text }}
+            </span><br>
+        </div>
+        {% endif %}
+
+        {% if field.errors %}
+        </div>
+        {% endif %}
+        </div>
+    {% endfor %}
+    <div class="control-group">
+        <div class="controls">
+            <button type="submit" class="btn btn-success">IMPORT</button>
+        </div>
+    </div>
+</form>
+    </div> <!-- /container -->
+    
+    
+    
+{% endautoescape %}
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        function update_fields() {
+            import_type = $('input[name="import_type"]:checked').val();
+            if( import_type == 'D' ) {
+                $('#group_url').show();
+                $('#group_release').hide();
+                $('#id_url').prop('required', true);
+            }
+            else {
+                $('#group_url').hide();
+                $('#group_release').show();
+                $('#id_url').prop('required', false);
+            }
+            destination = $('input[name="destination"]:checked').val();
+            if( destination == 'E' ) {
+                $('#group_branch').show();
+                $('#group_name').hide();
+                $('#group_short_description').hide();
+                $('#id_branch').prop('required', true);
+                $('#id_name').prop('required', false);
+            }
+            else {
+                $('#group_branch').hide();
+                $('#group_name').show();
+                $('#group_short_description').show();
+                $('#id_branch').prop('required', false);
+                $('#id_name').prop('required', true);
+            }
+            latest = $('input[name="latest"]').is(':checked');
+            $('#id_release').prop('disabled', latest);
+            $('#id_release').prop('required', !latest);
+        }
+
+        $('input[type=radio]').change(function() {
+            update_fields();
+        });
+        $('input[type=checkbox]').change(function() {
+            update_fields();
+        });
+
+        $(document).ready(function() {
+            update_fields();
+        });
+    </script>
+{% endblock %}

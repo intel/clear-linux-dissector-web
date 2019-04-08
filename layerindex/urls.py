@@ -18,7 +18,8 @@ from layerindex.views import LayerListView, LayerReviewListView, LayerReviewDeta
     ImageCompareRecipeSearchView, ImageCompareRecipeDetailView, ImageCompareRecipeSelectView, \
     ImageCompareRecipeSelectDetailView, image_compare_patch_view, task_log_view, task_stop_view, email_test_view, \
     VersionCompareSelectView, VersionCompareView, VersionCompareRecipeDetailView, VersionCompareFileDiffView, \
-    version_compare_diff_view, VersionCompareContentView, version_compare_regenerate_view
+    version_compare_diff_view, VersionCompareContentView, version_compare_regenerate_view, ComparisonImportView, \
+    FrontPageView
 from layerindex.models import LayerItem, Recipe, RecipeChangeset
 from rest_framework import routers
 from . import restviews
@@ -39,7 +40,7 @@ router.register(r'layers', restviews.LayerViewSet, 'layers')
 
 urlpatterns = [
     url(r'^$',
-        TemplateView.as_view(
+        FrontPageView.as_view(
             template_name='layerindex/frontpage.html'),
         name='frontpage'),
 
@@ -126,6 +127,10 @@ urlpatterns = [
         ComparisonRecipeSelectDetailView.as_view(
             template_name='layerindex/comparisonrecipeselectdetail.html'),
         name='comparison_select_detail'),
+    url(r'^comparison/import/$',
+        ComparisonImportView.as_view(
+            template_name='layerindex/comparisonimport.html'),
+        name="comparison_import"),
     url(r'^imagecompare/$',
         ImageCompareView.as_view(
             template_name='layerindex/imagecompare.html'),

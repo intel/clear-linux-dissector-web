@@ -49,7 +49,7 @@ from layerindex.forms import (AdvancedRecipeSearchForm, BulkChangeEditFormSet,
                               ImageComparisonRecipeForm,
                               LayerMaintainerFormSet, RecipeChangesetForm,
                               PatchDispositionForm, PatchDispositionFormSet,
-                              VersionComparisonForm)
+                              VersionComparisonForm, ComparisonImportForm)
 from layerindex.models import (BBAppend, BBClass, Branch, ClassicRecipe,
                                Distro, DynamicBuildDep, ImageComparison,
                                ImageComparisonRecipe, IncFile, LayerBranch,
@@ -2143,3 +2143,73 @@ def version_compare_regenerate_view(request, from_branch, to_branch):
     vercmp = get_object_or_404(VersionComparison, from_branch__name=from_branch, to_branch__name=to_branch)
     vercmp.delete()
     return HttpResponseRedirect(reverse_lazy('version_comparison', kwargs={'from': from_branch, 'to': to_branch}))
+
+
+class ComparisonImportView(FormView):
+    form_class = ComparisonImportForm
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not self.request.user.is_authenticated():
+            raise PermissionDenied
+
+        if not request.user.has_perm('layerindex.update_comparison_branch'):
+            raise PermissionDenied
+
+        return super(ComparisonImportView, self).dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        from celery import uuid
+
+        if form.cleaned_data['destination'] == 'E':
+            branch = form.cleaned_data['branch']
+            if branch.hidden or not branch.comparison:
+                raise Http404
+            branch_name = branch.name
+            # Try to split out non-versioned part of description if any
+            desc = branch.short_description
+            descsplit = desc.rsplit(' ', 1)
+            try:
+                verpart = int(descsplit[-1])
+            except ValueError:
+                verpart = 0
+            if verpart > 1000:
+                desc = descsplit[0]
+            else:
+                desc = None
+        else:
+            branch_name = form.cleaned_data['name']
+            desc = form.cleaned_data['short_description']
+
+        srcdir = settings.VERSION_COMPARE_SOURCE_DIR
+        dissector_path = settings.DISSECTOR_BINDIR
+
+        task_id = uuid()
+        # Create this here first, because inside the task we don't have all of the required info
+        update = Update(task_id=task_id)
+        update.started = datetime.now()
+        update.triggered_by = self.request.user
+        update.save()
+        update_id = update.id
+
+        cmd = ['layerindex/tools/import_clear.py', '-u', str(update_id), '-p', dissector_path, '-o', srcdir, '-b', branch_name]
+
+        if form.cleaned_data['import_type'] == 'D':
+            cmd += ['-g', form.cleaned_data['url']]
+        else:
+            if not form.cleaned_data['latest']:
+                release = form.cleaned_data['release']
+                cmd += ['-r', str(release)]
+
+        if desc:
+            cmd += ['-n', desc]
+
+        res = tasks.run_update_command.apply_async((branch_name, cmd), task_id=task_id)
+        return HttpResponseRedirect(reverse_lazy('task_status', kwargs={'task_id': task_id}))
+
+
+class FrontPageView(TemplateView):
+    def get_context_data(self, **kwargs):
+        context = super(FrontPageView, self).get_context_data(**kwargs)
+        context['can_import_comparison'] = self.request.user.has_perm('layerindex.update_comparison_branch')
+        return context

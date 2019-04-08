@@ -298,6 +298,9 @@ SECURE_BROWSER_XSS_FILTER = True
 # File serving method (can be "direct" or "nginx")
 FILE_SERVE_METHOD = "nginx"
 
+# Path to Go-based dissector command-line tools
+DISSECTOR_BINDIR = "/opt/dissector"
+
 # Path to package sources for other distros (used when doing release comparisons)
 VERSION_COMPARE_SOURCE_DIR = "/opt/sources"
 

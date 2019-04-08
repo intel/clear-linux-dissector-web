@@ -26,8 +26,13 @@
                 <a class="btn btn-large btn-primary" href="{% url 'image_comparison' %}">Image comparison</a><br><br>
             </div>
             <div class="row">
-                <a class="btn btn-large btn-primary" href="{% url 'layer_list' 'master' %}">Distro data</a>
+                <a class="btn btn-large btn-primary" href="{% url 'layer_list' 'master' %}">Distro data</a><br><br>
             </div>
+            {% if can_import_comparison %}
+            <div class="row">
+                <a class="btn btn-large btn-primary" href="{% url 'comparison_import' %}">Import distro data</a><br><br>
+            </div>
+            {% endif %}
         </div>
 
 {% endautoescape %}

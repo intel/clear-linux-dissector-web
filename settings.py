@@ -290,6 +290,9 @@ TOOLS_LOG_DIR = ""
 # File serving method (can be "direct" or "nginx")
 FILE_SERVE_METHOD = "direct"
 
+# Path to Go-based dissector command-line tools
+DISSECTOR_BINDIR = ""
+
 # Path to package sources for other distros (used when doing release comparisons)
 VERSION_COMPARE_SOURCE_DIR = ""
 
