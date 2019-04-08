@@ -419,3 +419,8 @@ padding: 8px;
     transform: rotate(360deg);
   }
 }
+
+.vertical-scroll {
+    height: 400px;
+    overflow-y: scroll;
+}
