@@ -1731,29 +1731,26 @@ class ImageCompareView(FormView):
         if not patchdir:
             raise Exception('IMAGE_COMPARE_PATCH_DIR not set')
 
-        jsdata = None
+        jsdata = []
         tmpoutdir = tempfile.mkdtemp(prefix='layerindex-')
         try:
+            def file_cb(fn, tarinfo):
+                if fn == 'data.json':
+                    with tar.extractfile(tarinfo) as f:
+                        tstream = codecs.getreader("utf-8")(f)
+                        jsd = json.load(tstream, object_pairs_hook=OrderedDict)
+                        jsdata.append(jsd)
+
             with tarfile.open(None, "r:gz", self.request.FILES['file']) as tar:
-                for tarinfo in tar:
-                    if tarinfo.isfile():
-                        fn = os.path.basename(tarinfo.name)
-                        if fn == 'data.json':
-                            with tar.extractfile(tarinfo) as f:
-                                tstream = codecs.getreader("utf-8")(f)
-                                jsdata = json.load(tstream, object_pairs_hook=OrderedDict)
-                        if '../' in fn or fn.startswith('/'):
-                            # Nope!
-                            return HttpResponse('Invalid image comparison tarball')
-                    elif not tarinfo.isdir():
-                        # Disallow symlinks / devices etc.
-                        return HttpResponse('Invalid image comparison tarball')
+                if not utils.check_tar_contents(tar, file_cb):
+                    return HttpResponse('Invalid image comparison tarball')
                 tar.extractall(tmpoutdir)
 
             # FIXME recipe file links may not work because versions may not match up (might have built an older version)
 
             comparison = None
             if jsdata:
+                jsdata = jsdata[0]
                 with transaction.atomic():
                     branch = Branch()
                     # FIXME give this a unique name

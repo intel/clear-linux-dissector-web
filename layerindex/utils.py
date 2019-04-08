@@ -477,6 +477,20 @@ def sha256_file(ifn):
             shash.update(line)
     return shash.hexdigest()
 
+def check_tar_contents(tar, file_cb=None):
+    for tarinfo in tar:
+        if tarinfo.isfile():
+            fn = os.path.basename(tarinfo.name)
+            if '../' in fn or fn.startswith('/'):
+                # Nope!
+                return False
+            if file_cb is not None:
+                file_cb(fn, tarinfo)
+        elif not tarinfo.isdir():
+            # Disallow symlinks / devices etc.
+            return False
+    return True
+
 def timesince2(date, date2=None):
     # Based on http://www.didfinishlaunchingwithoptions.com/a-better-timesince-template-filter-for-django/
     if date2 is None:
