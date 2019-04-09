@@ -109,9 +109,8 @@ def write_bbappend(args, recipe, cover_recipe, cover_layerdir, rd):
         logger.info('%s: version %s != %s' % (cover_recipe.pn, recipe.pv, cover_recipe.pv))
 
     srcfiles = {}
+    patches = []
     for patch in recipe.patch_set.filter(Q(patchdisposition__isnull=True) | Q(patchdisposition__disposition='A')):
-        if patch.path.endswith('.nopatch'):
-            continue
         pfn = os.path.join(args.srcdir, patch.path)
         sha256sum = hash_patch(pfn)
         if sha256sum in cover_patch_hashes:
@@ -122,11 +121,35 @@ def write_bbappend(args, recipe, cover_recipe, cover_layerdir, rd):
                 pa.comment = 'Set automatically by export_layer'
                 pa.save()
                 continue
+        if not patch.applied:
+            if not PatchDisposition.objects.filter(patch=patch).exists():
+                logger.info('Marking patch %s as invalid (since it is not being applied)' % patch)
+                pa = PatchDisposition(patch=patch)
+                pa.disposition = 'I'
+                pa.comment = 'Set automatically by export_layer (as patch is not being applied)'
+                pa.save()
+                continue
         srcfiles[pfn] = None
+        params = []
+        if patch.striplevel != 1:
+            params.append('striplevel=%s' % patch.striplevel)
+        patches.append((pfn, params))
 
     vals = {}
     if vals or srcfiles:
-        oe.recipeutils.bbappend_recipe(rd, args.outdir, srcfiles, None, wildcardver=True, extralines=vals)
+        bbappend, _ = oe.recipeutils.bbappend_recipe(rd, args.outdir, srcfiles, None, wildcardver=True, extralines=vals)
+        if patches:
+            # FIXME this should be made possible within bbappend_recipe()
+            pvalues = {}
+            srcuri = []
+            for pfn, params in patches:
+                if params:
+                    paramstr = ';' + (';'.join(params))
+                else:
+                    paramstr = ''
+                srcuri.append('file://%s%s' % (os.path.basename(pfn), paramstr))
+            pvalues['SRC_URI'] = ('+=', ' '.join(srcuri))
+            oe.recipeutils.patch_recipe_file(bbappend, pvalues, patch=False)
 
 
 def export_layer(args):
