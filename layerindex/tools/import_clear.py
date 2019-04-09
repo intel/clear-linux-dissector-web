@@ -159,6 +159,7 @@ def import_clear(args):
             return 1
     finally:
         if tmpsrcdir and os.path.exists(tmpsrcdir):
+            shutil.rmtree(pkgsrcdir)
             shutil.move(tmpsrcdir, pkgsrcdir)
 
     if not args.no_status:
