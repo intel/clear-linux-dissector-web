@@ -17,6 +17,7 @@ import errno
 import shutil
 import codecs
 import re
+import math
 from datetime import datetime
 from bs4 import BeautifulSoup
 
@@ -476,6 +477,15 @@ def sha256_file(ifn):
         for line in f:
             shash.update(line)
     return shash.hexdigest()
+
+def human_filesize(numbytes):
+    if numbytes == 0:
+        return '0 B'
+    n = math.floor(math.log(numbytes, 1024))
+    p = math.pow(1024, n)
+    s = round(numbytes / p, 2)
+    units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+    return "%s %s" % (s, units[n])
 
 def check_tar_contents(tar, file_cb=None):
     for tarinfo in tar:

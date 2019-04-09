@@ -15,6 +15,7 @@ import urllib.request
 import json
 import shutil
 import tempfile
+import tarfile
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -24,39 +25,82 @@ logger = utils.logger_create('ClearImport')
 
 
 def import_derivative(args):
-    srcpath = args.derivative
-    imagefile = 'release-image-config.json'
-    with open(os.path.join(srcpath, 'src', 'build', imagefile), 'r') as f:
-        dt = json.load(f)
-    bundles = dt.get('Bundles', [])
-    if not bundles:
-        logger.error('No bundles found in %s' % imagefile)
-        return None, None, None
-    localbundles = {}
-    stdbundles = []
-    for bundle in bundles:
-        bundlefn = os.path.join(srcpath, 'src', 'bundles', bundle)
-        if os.path.exists(bundlefn):
-            pkgs = []
-            with open(bundlefn, 'r') as f:
-                for line in f:
-                    if line and not line.startswith('#'):
-                        pkgs.append(line.rstrip())
-            localbundles[bundle] = pkgs
-        elif bundle not in stdbundles:
-            stdbundles.append(bundle)
+    tempdir = tempfile.mkdtemp()
+    try:
+        def extract_tar(tarballfn):
+            with tarfile.open(tarballfn, 'r') as tar:
+                if not utils.check_tar_contents(tar):
+                    logger.error('Invalid source tarball')
+                    return None
+                tar.extractall(tempdir)
+            for entry in os.listdir(tempdir):
+                pth = os.path.join(tempdir, entry)
+                if os.path.isdir(pth):
+                    return pth
+            logger.error('No directory found after extracting source tarball')
+            return None
 
-    release = str(dt.get('Version', ''))
-    if not release:
-        logger.error('No version specified in %s' % imagefile)
-        return None, None, None
+        if '://' in args.derivative:
+            def reporthook(blocknum, blocksize, total):
+                downloaded = blocknum * blocksize
+                if total > 0:
+                    percent = downloaded * 100 / total
+                    s = "\r %d%% %s / %s    " % (
+                        percent, utils.human_filesize(downloaded), utils.human_filesize(total))
+                    sys.stderr.write(s)
+                    if downloaded >= total:
+                        sys.stderr.write("\n")
+                else:
+                    sys.stderr.write("Downloaded %s\n" % utils.human_filesize(downloaded))
 
-    return release, stdbundles, localbundles
+            tarball = os.path.join(tempdir, 'tmpsrc.tar.gz')
+            logger.info('Retrieving source tarball')
+            urllib.request.urlretrieve(args.derivative, tarball, reporthook)
+            srcpath = extract_tar(tarball)
+            if not srcpath:
+                return None, None, None
+        elif args.derivative.endswith(('.tar.gz', '.tgz', '.tar.bz2', '.tar.xz')):
+            srcpath = extract_tar(args.derivative)
+            if not srcpath:
+                return None, None, None
+        else:
+            srcpath = args.derivative
+
+        imagefile = 'release-image-config.json'
+        with open(os.path.join(srcpath, 'src', 'build', imagefile), 'r') as f:
+            dt = json.load(f)
+        bundles = dt.get('Bundles', [])
+        if not bundles:
+            logger.error('No bundles found in %s' % imagefile)
+            return None, None, None
+        localbundles = {}
+        stdbundles = []
+        for bundle in bundles:
+            bundlefn = os.path.join(srcpath, 'src', 'bundles', bundle)
+            if os.path.exists(bundlefn):
+                pkgs = []
+                with open(bundlefn, 'r') as f:
+                    for line in f:
+                        if line and not line.startswith('#'):
+                            pkgs.append(line.rstrip())
+                localbundles[bundle] = pkgs
+            elif bundle not in stdbundles:
+                stdbundles.append(bundle)
+
+        release = str(dt.get('Version', ''))
+        if not release:
+            logger.error('No version specified in %s' % imagefile)
+            return None, None, None
+    finally:
+        #shutil.rmtree(tempdir)
+        pass
+
+    return release, stdbundles, localbundles, srcpath
 
 
 def import_clear(args):
     if args.derivative:
-        release, stdbundles, localbundles = import_derivative(args)
+        release, stdbundles, localbundles, srcpath = import_derivative(args)
         if not release:
             return 1
     elif args.release:
@@ -103,7 +147,7 @@ def import_clear(args):
         cwd = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
         pkgdir = os.path.join(args.outdir, release, 'source')
         if args.derivative:
-            cmd = ['layerindex/tools/import_otherdistro.py', 'import-clear-derivative', args.branch, layername, pkgsrcdir, args.derivative, '--description', '%s %s' % (args.name, release), '--relative-path', args.outdir]
+            cmd = ['layerindex/tools/import_otherdistro.py', 'import-clear-derivative', args.branch, layername, pkgsrcdir, srcpath, '--description', '%s %s' % (args.name, release), '--relative-path', args.outdir]
         else:
             cmd = ['layerindex/tools/import_otherdistro.py', 'import-pkgspec', args.branch, layername, pkgsrcdir, '--description', '%s %s' % (args.name, release), '--relative-path', args.outdir]
         if args.update:
