@@ -1210,6 +1210,7 @@ class ClassicRecipeSearchView(RecipeSearchView):
         else:
             layer_ids = []
         has_patches = self.request.GET.get('has_patches', '')
+        patch_disposition = self.request.GET.get('patch_disposition', '')
         needs_attention = self.request.GET.get('needs_attention', '')
         qreversed = self.request.GET.get('reversed', '')
         init_qs = ClassicRecipe.objects.filter(layerbranch__branch__name=self.kwargs['branch']).filter(deleted=False)
@@ -1242,6 +1243,13 @@ class ClassicRecipeSearchView(RecipeSearchView):
             else:
                 init_qs = init_qs.filter(patch__isnull=True)
             filtered = True
+        if patch_disposition.strip():
+            if not self.request.user.has_perm('layerindex.patch_disposition'):
+                raise PermissionDenied
+            if patch_disposition == '-':
+                init_qs = init_qs.filter(patch__isnull=False).filter(patch__patchdisposition__isnull=True).distinct()
+            else:
+                init_qs = init_qs.filter(patch__patchdisposition__disposition=patch_disposition).distinct()
         if needs_attention.strip():
             if needs_attention == '1':
                 init_qs = init_qs.filter(needs_attention=True)
@@ -1293,6 +1301,8 @@ class ClassicRecipeSearchView(RecipeSearchView):
         else:
             searched = False
             search_form = ClassicRecipeSearchForm()
+        if not self.request.user.has_perm('layerindex.patch_disposition'):
+            del search_form.fields['patch_disposition']
         context['compare'] = self.request.GET.get('compare', False)
         context['reversed'] = self.request.GET.get('reversed', False)
         context['search_form'] = search_form
