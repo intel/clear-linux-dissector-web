@@ -2208,5 +2208,6 @@ class ComparisonImportView(FormView):
 class FrontPageView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(FrontPageView, self).get_context_data(**kwargs)
+        context['first_comparison_branch'] = Branch.objects.filter(comparison=True, hidden=False).order_by('sort_priority', 'id').first()
         context['can_import_comparison'] = self.request.user.has_perm('layerindex.update_comparison_branch')
         return context
