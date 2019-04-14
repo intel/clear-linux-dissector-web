@@ -12,30 +12,50 @@
 
 
 <!--
-{% block title_append %} - OE-Classic{% endblock %}
+{% block title_append %}{% endblock %}
 -->
 
 {% block content %}
 {% autoescape on %}
-
+        <br>
         <div class="container-fluid">
             <div class="row">
-                <a class="btn btn-large btn-primary" href="{% url 'version_comparison_select' %}">Release comparison</a><br><br>
-            </div>
+                <div class="col-md-3">
+                    {% if first_comparison_branch %}
+                    <a class="btn btn-large btn-primary" href="{% url 'comparison_recipe_search' first_comparison_branch.name %}">Distro data</a>
+                    {% else %}
+                    <a class="btn btn-large btn-primary" href="{% url 'layer_list' 'master' %}">Distro data</a>
+                    {% endif %}
+                </div>
+                <div class="col-md-8">
+                    <p>View distribution data</p>
+                </div>
+            </div><br><br>
             <div class="row">
-                <a class="btn btn-large btn-primary" href="{% url 'image_comparison' %}">Image comparison</a><br><br>
-            </div>
+                <div class="col-md-3">
+                    <a class="btn btn-large btn-primary" href="{% url 'image_comparison' %}">Image comparison</a>
+                </div>
+                <div class="col-md-8">
+                    <p>Import and compare custom image to Clear Linux</p>
+                </div>
+            </div><br><br>
             <div class="row">
-                {% if first_comparison_branch %}
-                <a class="btn btn-large btn-primary" href="{% url 'comparison_recipe_search' first_comparison_branch.name %}">Distro data</a><br><br>
-                {% else %}
-                <a class="btn btn-large btn-primary" href="{% url 'layer_list' 'master' %}">Distro data</a><br><br>
-                {% endif %}
-            </div>
+                <div class="col-md-3">
+                    <a class="btn btn-large btn-primary" href="{% url 'version_comparison_select' %}">Release comparison</a>
+                </div>
+                <div class="col-md-8">
+                    <p>Compare two Clear Linux releases</p>
+                </div>
+            </div><br><br>
             {% if can_import_comparison %}
             <div class="row">
-                <a class="btn btn-large btn-primary" href="{% url 'comparison_import' %}">Import distro data</a><br><br>
-            </div>
+                <div class="col-md-3">
+                    <a class="btn btn-large btn-primary" href="{% url 'comparison_import' %}">Import distro data</a>
+                </div>
+                <div class="col-md-8">
+                    <p>Import Clear Linux distribution data</p>
+                </div>
+            </div><br><br>
             {% endif %}
         </div>
 
