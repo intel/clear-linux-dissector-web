@@ -1816,10 +1816,18 @@ class ImageCompareView(FormView):
                         for key,value in jsrecipe.items():
                             if key in ['filepath', 'layer', 'inherits', 'patches', 'source_urls', 'DEPENDS', 'PACKAGECONFIG', 'packageconfig_opts']:
                                 continue
+                            if key.startswith('EXTRA_OE'):
+                                continue
                             keylower = key.lower()
                             if value and hasattr(recipe, keylower):
                                 setattr(recipe, keylower, value)
                         recipe.inherits = ' '.join(jsrecipe.get('inherits', []))
+                        for confvar in ['EXTRA_OEMESON', 'EXTRA_OECMAKE', 'EXTRA_OESCONS', 'EXTRA_OECONF']:
+                            recipe.configopts = jsrecipe.get(confvar, '')
+                            if recipe.configopts:
+                                break
+                        else:
+                            recipe.configopts = ''
 
                         # Cover info
                         cover_recipe = ClassicRecipe.objects.filter(layerbranch__branch=comparison.to_branch).filter(cover_layerbranch__layer__name=recipe.layerbranch.layer.name).filter(cover_pn=pn).first()

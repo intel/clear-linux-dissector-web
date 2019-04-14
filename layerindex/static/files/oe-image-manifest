@@ -108,7 +108,11 @@ def export_recipe_info(args):
                'PROVIDES',
                'BBCLASSEXTEND',
                'DEPENDS',
-               'PACKAGECONFIG']
+               'PACKAGECONFIG',
+               'EXTRA_OECONF',
+               'EXTRA_OESCONS',
+               'EXTRA_OECMAKE',
+               'EXTRA_OEMESON']
 
     def handle_value(value):
         if value:
