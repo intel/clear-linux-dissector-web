@@ -18,7 +18,7 @@
 <!-- Primary message       -->
         <div class="container">
             <h2 class="home">Compare Image</h2>
-            <p class="pageDesc">This tool allows you to compare the contents of an image (based on a manifest) with packages in another distribution.<br>To get started, either resume an existing comparison or create a new one.</p>
+            <p class="pageDesc">This tool allows you to compare the contents of an image created with OpenEmbedded / Yocto Project tools (based on a manifest) with packages in Clear Linux.<br>To get started, either create a new comparison or resume an existing one.</p>
         </div>
 {% endblock %}
 
@@ -33,7 +33,7 @@
                 <div class="content">
                     <p class="insetContent">Download the <a href="{% static "files/oe-image-manifest" %}">oe-image-manifest-script</a></p>
                     <ul class="bullet">
-                        <li>Copy/move it to the <span class="hilite">scripts</span> subdirectory of your build system.</li>
+                        <li>Copy/move it to the <span class="hilite">scripts</span> subdirectory of your build system. <br><b>Note:</b> the image you wish to compare must have been built with this same build system instance.</li>
                         <li>Make it executable<br>
                             <div class="hilite">chmod +x scripts/oe-image-manifest</div>
                         </li>
