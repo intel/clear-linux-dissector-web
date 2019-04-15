@@ -1716,6 +1716,11 @@ class ImageCompareView(FormView):
     def dispatch(self, request, *args, **kwargs):
         return super(ImageCompareView, self).dispatch(request, *args, **kwargs)
 
+    def get_form_kwargs(self):
+        kwargs = super(ImageCompareView, self).get_form_kwargs()
+        kwargs.update(request=self.request)
+        return kwargs
+
     def form_valid(self, form):
         import tarfile
         import tempfile
@@ -1753,10 +1758,17 @@ class ImageCompareView(FormView):
                 jsdata = jsdata[0]
                 with transaction.atomic():
                     branch = Branch()
-                    # FIXME give this a unique name
-                    branch.name = form.cleaned_data['name'].replace(' ', '_')
+                    origname = form.cleaned_data['name'].replace(' ', '_')
+                    name = origname
+                    i = 1
+                    while Branch.objects.filter(name=name).exists():
+                        i += 1
+                        name = '%s_%d' % (origname, i)
+                    branch.name = name
                     branch.bitbake_branch = 'N/A'
                     branch.short_description = 'Image comparison %s' % form.cleaned_data['name']
+                    if i > 1:
+                        branch.short_description += ' (%d)' % i
                     branch.updates_enabled = False
                     branch.comparison = True
                     branch.hidden = True

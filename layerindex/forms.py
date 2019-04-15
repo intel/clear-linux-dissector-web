@@ -22,7 +22,8 @@ import settings
 from layerindex.models import (Branch, ClassicRecipe, ImageComparisonRecipe,
                                LayerBranch, LayerItem, LayerMaintainer,
                                LayerNote, RecipeChange, RecipeChangeset,
-                               SecurityQuestion, UserProfile, PatchDisposition)
+                               SecurityQuestion, UserProfile, PatchDisposition,
+                               ImageComparison)
 
 
 import pdb
@@ -356,6 +357,25 @@ class ImageComparisonCreateForm(forms.Form):
     name = forms.CharField(max_length=50, help_text="Name for the image comparison")
     file = forms.FileField()
     to_branch = forms.ModelChoiceField(queryset=Branch.objects.filter(comparison=True).filter(hidden=False).order_by('name'))
+
+    def __init__(self, *args, request=None, **kwargs):
+        super(ImageComparisonCreateForm, self).__init__(*args, **kwargs)
+        self.request = request
+
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip()
+        if name:
+            if re.compile(r'[^\w\d., -]').search(name):
+                raise forms.ValidationError("Name must only contain alphanumeric characters, spaces, ., - and ,")
+            if name.startswith('-'):
+                raise forms.ValidationError("Name must not start with a dash")
+            if name.endswith('-'):
+                raise forms.ValidationError("Name must not end with a dash")
+            if '--' in name:
+                raise forms.ValidationError("Name cannot contain consecutive dashes")
+            if ImageComparison.objects.filter(name=name, user=self.request.user).exists():
+                raise forms.ValidationError('You already have an image comparison of this name')
+        return name
 
 
 class ImageComparisonRecipeForm(forms.ModelForm):
