@@ -58,21 +58,25 @@ def import_derivative(args):
             urllib.request.urlretrieve(args.derivative, tarball, reporthook)
             srcpath = extract_tar(tarball)
             if not srcpath:
-                return None, None, None
+                return None, None, None, None
         elif args.derivative.endswith(('.tar.gz', '.tgz', '.tar.bz2', '.tar.xz')):
             srcpath = extract_tar(args.derivative)
             if not srcpath:
-                return None, None, None
+                return None, None, None, None
         else:
             srcpath = args.derivative
 
         imagefile = 'release-image-config.json'
-        with open(os.path.join(srcpath, 'src', 'build', imagefile), 'r') as f:
-            dt = json.load(f)
+        try:
+            with open(os.path.join(srcpath, 'src', 'build', imagefile), 'r') as f:
+                dt = json.load(f)
+        except FileNotFoundError:
+            logger.error('Tarball unpacked but did not contain src/build/release-image-config.json - is this actually a Clear Linux derivative source tarball?')
+            return None, None, None, None
         bundles = dt.get('Bundles', [])
         if not bundles:
             logger.error('No bundles found in %s' % imagefile)
-            return None, None, None
+            return None, None, None, None
         localbundles = {}
         stdbundles = []
         for bundle in bundles:
@@ -90,10 +94,9 @@ def import_derivative(args):
         release = str(dt.get('Version', ''))
         if not release:
             logger.error('No version specified in %s' % imagefile)
-            return None, None, None
+            return None, None, None, None
     finally:
-        #shutil.rmtree(tempdir)
-        pass
+        shutil.rmtree(tempdir)
 
     return release, stdbundles, localbundles, srcpath
 
@@ -120,15 +123,17 @@ def import_clear(args):
     logger.debug('Fetching Clear Linux release %s' % release)
 
     pkgsrcdir = os.path.join(args.outdir, release, 'source')
+    tmpsrcdir = None
     if args.derivative:
         if os.path.exists(pkgsrcdir):
             tmpsrcdir = tempfile.mkdtemp(dir=os.path.join(args.outdir, release))
             shutil.move(pkgsrcdir, tmpsrcdir)
-    else:
-        tmpsrcdir = None
     try:
         env = os.environ.copy()
         if args.clear_tool_path:
+            if not os.path.exists(os.path.join(args.clear_tool_path, 'dissector')):
+                logger.error('No dissector executable found in specified path')
+                return 1
             env['PATH'] = args.clear_tool_path + ':' + env['PATH']
         if args.derivative:
             cmd = ['dissector', '-clear_version', release] + stdbundles
