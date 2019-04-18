@@ -83,6 +83,9 @@ class Branch(models.Model):
         verbose_name_plural = "Branches"
         ordering = ['sort_priority']
 
+    def is_image_comparison(self):
+        return self.imagecomparison_from_set.exists()
+
     def __str__(self):
         if self.comparison and self.short_description:
             return self.short_description
@@ -1017,13 +1020,13 @@ class VersionComparisonDifference(models.Model):
     newvalue = models.CharField(max_length=255, blank=True)
 
     def from_recipe(self):
-        if self.comparison.from_branch.hidden:
+        if self.comparison.from_branch.is_image_comparison():
             return ImageComparisonRecipe.objects.filter(layerbranch=self.from_layerbranch, cover_pn=self.pn).first()
         else:
             return ClassicRecipe.objects.filter(layerbranch=self.from_layerbranch, pn=self.pn, deleted=False).first()
 
     def to_recipe(self):
-        if self.comparison.to_branch.hidden:
+        if self.comparison.to_branch.is_image_comparison():
             return ImageComparisonRecipe.objects.filter(layerbranch=self.to_layerbranch, cover_pn=self.pn).first()
         else:
             return ClassicRecipe.objects.filter(layerbranch=self.to_layerbranch, pn=self.pn, deleted=False).first()

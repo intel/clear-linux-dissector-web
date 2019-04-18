@@ -2180,7 +2180,7 @@ class ComparisonImportView(FormView):
 
         if form.cleaned_data['destination'] == 'E':
             branch = form.cleaned_data['branch']
-            if branch.hidden or not branch.comparison:
+            if branch.is_image_comparison() or not branch.comparison:
                 raise Http404
             branch_name = branch.name
             # Try to split out non-versioned part of description if any

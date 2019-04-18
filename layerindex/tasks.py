@@ -81,8 +81,8 @@ def generate_version_comparison(vercmp_id):
     try:
         from_branch = vercmp.from_branch
         to_branch = vercmp.to_branch
-        from_image = from_branch.imagecomparison_from_set.exists()
-        to_image = to_branch.imagecomparison_from_set.exists()
+        from_image = from_branch.is_image_comparison()
+        to_image = to_branch.is_image_comparison()
         with transaction.atomic():
             from_layerbranch = from_branch.layerbranch_set.first()
             to_layerbranch = to_branch.layerbranch_set.first()
