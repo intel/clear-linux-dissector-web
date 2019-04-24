@@ -821,7 +821,7 @@ def import_clearderiv(args):
                 pkgpath = os.path.relpath(os.path.dirname(vals['Package']), srcsrcpath)
                 if vals['Name'] in specpns:
                     logger.info('Skipping %s (already imported source)' % pkgfn)
-                    break
+                    continue
                 recipe, created = ClassicRecipe.objects.get_or_create(layerbranch=layerbranch, filepath=pkgpath, filename=pkgfn)
                 if created:
                     logger.info('Importing %s' % pkgfn)
