@@ -785,9 +785,11 @@ def import_clearderiv(args):
                         fpath = os.path.join(root, f)
                         rpms.append(fpath)
 
+            logger.info('Importing derivative binary RPMs')
             srpminfo = {}
             total = len(rpms)
             for count, rpm in enumerate(rpms):
+                logger.debug('Processing %s' % rpm) 
                 cmd = ['rpm', '-qpi', rpm]
                 expanded = subprocess.check_output(cmd).decode('utf-8').rstrip()
                 description = []
@@ -809,13 +811,14 @@ def import_clearderiv(args):
                 if srpm in srpminfo:
                     if len(rpminfo['Name']) < len(srpminfo[srpm]['Name']):
                         srpminfo[srpm] = rpminfo.copy()
+                    else:
+                        logger.debug('Skipping %s (main package already present)' % rpm) 
                 else:
                     srpminfo[srpm] = rpminfo.copy()
 
                 if pwriter:
                     pwriter.write(int(count / total * 100))
 
-            logger.info('Importing derivative binary RPMs')
             srcsrcpath = os.path.join(srcpath, 'src')
             for vals in srpminfo.values():
                 pkgfn = os.path.basename(vals['Package'])

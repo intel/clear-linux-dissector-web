@@ -163,6 +163,8 @@ def import_clear(args):
             cmd = ['layerindex/tools/import_otherdistro.py', 'import-pkgspec', args.branch, layername, pkgsrcdir, '--description', '%s %s' % (args.name, release), '--relative-path', args.outdir]
         if args.update:
             cmd += ['-u', args.update]
+        if args.debug:
+            cmd.insert(1, '-d')
         logger.debug('Executing %s' % cmd)
         return_code = subprocess.call(cmd, cwd=cwd)
         if return_code != 0:

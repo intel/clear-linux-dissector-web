@@ -2209,7 +2209,7 @@ class ComparisonImportView(FormView):
         update.save()
         update_id = update.id
 
-        cmd = ['layerindex/tools/import_clear.py', '-u', str(update_id), '-p', dissector_path, '-o', srcdir, '-b', branch_name]
+        cmd = ['layerindex/tools/import_clear.py', '-d', '-u', str(update_id), '-p', dissector_path, '-o', srcdir, '-b', branch_name]
 
         if form.cleaned_data['import_type'] == 'D':
             cmd += ['-g', form.cleaned_data['url']]
