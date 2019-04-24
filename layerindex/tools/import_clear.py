@@ -147,6 +147,14 @@ def import_clear(args):
             logger.error('Call to dissector failed')
             return 1
 
+        if args.derivative:
+            # Now move the source tree somewhere more permanent (so we can do file diffs)
+            pkgnewsrcdir = os.path.join(args.outdir, 'derivative_%s' % args.branch)
+            if os.path.exists(pkgnewsrcdir):
+                shutil.rmtree(pkgnewsrcdir)
+            shutil.move(pkgsrcdir, pkgnewsrcdir)
+            pkgsrcdir = pkgnewsrcdir
+
         cwd = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
         pkgdir = os.path.join(args.outdir, release, 'source')
         if args.derivative:
@@ -163,7 +171,6 @@ def import_clear(args):
     finally:
         shutil.rmtree(tempdir)
         if tmpsrcdir and os.path.exists(tmpsrcdir):
-            shutil.rmtree(pkgsrcdir)
             shutil.move(tmpsrcdir, pkgsrcdir)
 
     if not args.no_status:

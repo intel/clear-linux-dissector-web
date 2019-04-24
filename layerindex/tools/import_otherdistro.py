@@ -761,7 +761,8 @@ def import_clearderiv(args):
                             fpath = os.path.join(root, f)
                             srpms.append(fpath)
 
-                extpath = os.path.join(srcpath, 'extracted-sources')
+                # We assume it's OK to put stuff in the package source directory
+                extpath = args.pkgdir
                 for srpm in srpms:
                     srpmextpath = os.path.join(extpath, os.path.basename(srpm).rsplit('.', 2)[0])
                     try:
