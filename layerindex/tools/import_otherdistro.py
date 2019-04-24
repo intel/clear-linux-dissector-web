@@ -834,6 +834,7 @@ def import_clearderiv(args):
                 recipe.summary = vals['Summary']
                 recipe.description = vals['Description']
                 recipe.homepage = vals.get('URL', '')
+                recipe.deleted = False
                 recipe.save()
 
                 existingentry = (pkgpath, pkgfn)
