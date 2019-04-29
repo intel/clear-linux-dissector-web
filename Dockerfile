@@ -42,6 +42,17 @@ RUN apt-get update \
     && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
 	&& locale-gen en_US.UTF-8 \
 	&& update-locale \
+    && wget https://dl.google.com/go/go1.12.4.linux-amd64.tar.gz \
+    && tar xv -C /usr/local -f go*.tar.gz \
+    && rm go*.tar.gz \
+    && git clone https://github.com/intel/clear-linux-dissector \
+    && cd clear-linux-dissector \
+    && GOROOT=/usr/local/go PATH=/usr/local/go/bin:$PATH make \
+    && GOROOT=/usr/local/go PATH=/usr/local/go/bin:$PATH make install DESTDIR=inst \
+    && cp -a inst/usr/bin /opt/dissector \
+    && cd .. \
+    && rm -rf clear-linux-dissector \
+    && rm -rf /usr/local/go \
     && pip3 install gunicorn \
     && pip install setuptools \
     && pip3 install setuptools \
