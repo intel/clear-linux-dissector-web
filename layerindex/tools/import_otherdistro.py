@@ -19,6 +19,7 @@ import glob
 import shutil
 import subprocess
 import string
+import shlex
 from distutils.version import LooseVersion
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
@@ -770,7 +771,7 @@ def import_clearderiv(args):
                     except FileNotFoundError:
                         pass
                     os.makedirs(srpmextpath)
-                    cmd = 'rpm2cpio %s | cpio -idmv' % srpm
+                    cmd = 'rpm2cpio %s | cpio -idmv' % shlex.quote(srpm)
                     output = subprocess.check_output(cmd, shell=True, cwd=srpmextpath).decode('utf-8').rstrip()
 
                     specfiles = glob.glob(os.path.join(srpmextpath, '*.spec'))
