@@ -8,6 +8,7 @@ Changes:
 * Require Python 3.4.3 to run dockersetup.py
 * Added dissector command-line tool to docker app container; this is compiled when building the container.
 * Re-generate SSL configuration when running "./dockersetup.py -u" in case base configuration has been updated
+* Display version number in footer
 
 Currently known issues:
 - If you are redirected to the login page from a deep link within the application due to not being logged in or your session having timed out, after logging in you are not redirected back to the main page.

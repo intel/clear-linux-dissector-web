@@ -8,6 +8,7 @@ from layerindex.models import Branch, LayerItem, SiteNotice
 from django.contrib.sites.models import Site
 from django.db.models import Q
 from datetime import datetime
+from layerindex import APP_VERSION
 
 def layerindex_context(request):
     import settings
@@ -28,4 +29,5 @@ def layerindex_context(request):
         'notices': SiteNotice.objects.filter(disabled=False).filter(Q(expires__isnull=True) | Q(expires__gte=datetime.now())),
         'comparison_branches': Branch.objects.filter(comparison=True).exclude(hidden=True),
         'login_return_url': login_return_url,
+        'app_version': APP_VERSION,
     }
