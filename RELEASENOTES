@@ -1,0 +1,15 @@
+Clear Linux Dissector Release Notes
+===================================
+
+Release 0.1: 3rd May 2019
+-------------------------
+
+Changes:
+* Require Python 3.4.3 to run dockersetup.py
+* Added dissector command-line tool to docker app container; this is compiled when building the container.
+* Re-generate SSL configuration when running "./dockersetup.py -u" in case base configuration has been updated
+
+Currently known issues:
+- If you are redirected to the login page from a deep link within the application due to not being logged in or your session having timed out, after logging in you are not redirected back to the main page.
+- Clicking on "Import" to import a new release sometimes does not return immediately due to an as-yet undiagnosed internal communication issue with Celery. Clicking on the button again (waiting a few seconds between) until it does return the task progress page works around the issue.
+- "Stop" button on task progress does not completely stop underlying import task
