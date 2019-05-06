@@ -679,6 +679,10 @@ class ClassicRecipe(Recipe):
         ('A', 'Already handled'),
         ('N', 'Not needed'),
     ]
+    EXPORT_CLASS_CHOICES = [
+        ('T', 'Target only'),
+        ('A', 'All'),
+    ]
     cover_layerbranch = models.ForeignKey(LayerBranch, verbose_name='Covering layer', blank=True, null=True, limit_choices_to = {'branch__name': 'master'}, on_delete=models.SET_NULL)
     cover_pn = models.CharField('Covering recipe', max_length=100, blank=True)
     cover_status = models.CharField(max_length=1, choices=COVER_STATUS_CHOICES, default='U')
@@ -689,6 +693,7 @@ class ClassicRecipe(Recipe):
     needs_attention = models.BooleanField(default=False)
     sha256sum = models.CharField(max_length=64, blank=True)
     export = models.CharField(max_length=1, choices=EXPORT_CHOICES, default='X')
+    export_class = models.CharField(max_length=1, choices=EXPORT_CLASS_CHOICES, default='T')
 
     class Meta:
         permissions = (

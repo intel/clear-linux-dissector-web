@@ -135,6 +135,10 @@ def write_bbappend(args, recipe, cover_recipe, cover_layerdir, rd):
             params.append('striplevel=%s' % patch.striplevel)
         patches.append((pfn, params))
 
+    # FIXME this hack shouldn't be necessary!
+    oe.recipeutils.list_vars.append('SRC_URI_append')
+    oe.recipeutils.list_vars.append('SRC_URI_append_class-target')
+
     vals = {}
     if vals or srcfiles:
         bbappend, _ = oe.recipeutils.bbappend_recipe(rd, args.outdir, srcfiles, None, wildcardver=True, extralines=vals)
@@ -148,7 +152,14 @@ def write_bbappend(args, recipe, cover_recipe, cover_layerdir, rd):
                 else:
                     paramstr = ''
                 srcuri.append('file://%s%s' % (os.path.basename(pfn), paramstr))
-            pvalues['SRC_URI'] = ('+=', ' '.join(srcuri))
+            if recipe.export_class == 'T':
+                srcurivar = 'SRC_URI_append_class-target'
+            else:
+                srcurivar = 'SRC_URI_append'
+            # FIXME we need to use += here because any leading space gets stripped off (!)
+            pvalues[srcurivar] = ('+=', ' '.join(srcuri))
+            # FIXME this hack probably shouldn't be needed either
+            pvalues['SRC_URI'] = None
             oe.recipeutils.patch_recipe_file(bbappend, pvalues, patch=False)
 
 
