@@ -216,7 +216,7 @@ def export_layer(args):
             logger.info('Exporting ' + str(branch))
 
             cover_layerbranch = None
-            recipequery = ClassicRecipe.objects.filter(layerbranch=layerbranch, deleted=False, cover_status='D')
+            recipequery = ClassicRecipe.objects.filter(layerbranch=layerbranch, deleted=False, cover_status='D', export='X')
             if args.cover_layers:
                 recipequery = recipequery.filter(cover_layerbranch__layer__name__in=args.cover_layers.split(','))
             for recipe in recipequery.order_by('cover_layerbranch', 'pn'):

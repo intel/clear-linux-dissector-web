@@ -70,6 +70,14 @@
                         {% endif %}
                         {% endblock %}
 
+                {% block patch_table_heading %}
+                <h2>Patches</h2>
+                {% if can_disposition_patches and recipe.patch_set.exists and recipe.no_export_reason %}
+                <div class="alert alert-warning">
+                    <b>NOTE:</b> This recipe will not be exported: {{ recipe.no_export_reason }}
+                </div>
+                {% endif %}
+                {% endblock %}
                                     {% block patch_status_heading %}
                                     {% if rcp.layerbranch.branch.comparison %}
                                         {% if can_disposition_patches %}

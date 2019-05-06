@@ -674,6 +674,11 @@ class ClassicRecipe(Recipe):
         ('E', 'Equivalent functionality'),
         ('D', 'Direct match'),
     ]
+    EXPORT_CHOICES = [
+        ('X', 'Export'),
+        ('A', 'Already handled'),
+        ('N', 'Not needed'),
+    ]
     cover_layerbranch = models.ForeignKey(LayerBranch, verbose_name='Covering layer', blank=True, null=True, limit_choices_to = {'branch__name': 'master'}, on_delete=models.SET_NULL)
     cover_pn = models.CharField('Covering recipe', max_length=100, blank=True)
     cover_status = models.CharField(max_length=1, choices=COVER_STATUS_CHOICES, default='U')
@@ -683,6 +688,7 @@ class ClassicRecipe(Recipe):
     deleted = models.BooleanField(default=False)
     needs_attention = models.BooleanField(default=False)
     sha256sum = models.CharField(max_length=64, blank=True)
+    export = models.CharField(max_length=1, choices=EXPORT_CHOICES, default='X')
 
     class Meta:
         permissions = (
@@ -719,6 +725,13 @@ class ClassicRecipe(Recipe):
             return Recipe.objects.filter(layerbranch=self.cover_layerbranch).filter(pn=self.cover_pn).first()
         else:
             return None
+
+    def no_export_reason(self):
+        if self.cover_status != 'D':
+            return 'cover status is "%s" (not "Direct match")' % self.get_cover_status_display()
+        elif self.export != 'X':
+            return 'export is set to "%s"' % self.get_export_display()
+        return ''
 
 
 class ComparisonRecipeUpdate(models.Model):
