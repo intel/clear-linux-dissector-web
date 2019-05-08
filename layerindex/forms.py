@@ -347,6 +347,7 @@ class ClassicRecipeSearchForm(StyledForm):
     oe_layer = forms.ModelChoiceField(label='OE Layer', queryset=LayerItem.objects.filter(comparison=False).filter(status__in=['P', 'X']).order_by('name'), empty_label="(any)", required=False)
     has_patches = forms.ChoiceField(label='Patches', choices=PATCH_CHOICES, required=False)
     patch_disposition = forms.ChoiceField(label='Patch disposition', choices=PATCH_DISPOSITION_CHOICES, required=False)
+    patch_name = forms.CharField(max_length=255, required=False)
     cover_status = forms.ChoiceField(label='Status', choices=COVER_STATUS_CHOICES, required=False)
     cover_verified = forms.ChoiceField(label='Verified', choices=VERIFIED_CHOICES, required=False)
     needs_attention = forms.ChoiceField(label='Needs attention', choices=ATTENTION_CHOICES, required=False)

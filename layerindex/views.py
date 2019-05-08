@@ -1211,6 +1211,7 @@ class ClassicRecipeSearchView(RecipeSearchView):
             layer_ids = []
         has_patches = self.request.GET.get('has_patches', '')
         patch_disposition = self.request.GET.get('patch_disposition', '')
+        patch_name = self.request.GET.get('patch_name', '')
         needs_attention = self.request.GET.get('needs_attention', '')
         qreversed = self.request.GET.get('reversed', '')
         init_qs = ClassicRecipe.objects.filter(layerbranch__branch__name=self.kwargs['branch']).filter(deleted=False)
@@ -1250,6 +1251,10 @@ class ClassicRecipeSearchView(RecipeSearchView):
                 init_qs = init_qs.filter(patch__isnull=False).filter(patch__patchdisposition__isnull=True).distinct()
             else:
                 init_qs = init_qs.filter(patch__patchdisposition__disposition=patch_disposition).distinct()
+            filtered = True
+        if patch_name.strip():
+            init_qs = init_qs.filter(patch__path__icontains=patch_name).distinct()
+            filtered = True
         if needs_attention.strip():
             if needs_attention == '1':
                 init_qs = init_qs.filter(needs_attention=True)
