@@ -1022,36 +1022,54 @@ class VersionComparisonDifference(models.Model):
 
     def from_recipe(self):
         if self.comparison.from_branch.is_image_comparison():
-            return ImageComparisonRecipe.objects.filter(layerbranch=self.from_layerbranch, cover_pn=self.pn).first()
+            if self.comparison.to_branch.is_image_comparison():
+                return ImageComparisonRecipe.objects.filter(layerbranch=self.from_layerbranch, pn=self.pn).first()
+            else:
+                return ImageComparisonRecipe.objects.filter(layerbranch=self.from_layerbranch, cover_pn=self.pn).first()
         else:
             return ClassicRecipe.objects.filter(layerbranch=self.from_layerbranch, pn=self.pn, deleted=False).first()
 
     def to_recipe(self):
         if self.comparison.to_branch.is_image_comparison():
-            return ImageComparisonRecipe.objects.filter(layerbranch=self.to_layerbranch, cover_pn=self.pn).first()
+            if self.comparison.from_branch.is_image_comparison():
+                return ImageComparisonRecipe.objects.filter(layerbranch=self.to_layerbranch, pn=self.pn).first()
+            else:
+                return ImageComparisonRecipe.objects.filter(layerbranch=self.to_layerbranch, cover_pn=self.pn).first()
         else:
             return ClassicRecipe.objects.filter(layerbranch=self.to_layerbranch, pn=self.pn, deleted=False).first()
 
     def get_comparison_paths(self):
-        # FIXME handle image comparisons
         if self.change_type in ['A', 'V', 'R']:
             return None, None
         import settings
         srcdir = getattr(settings, 'VERSION_COMPARE_SOURCE_DIR')
+        isrcdir = getattr(settings, 'IMAGE_COMPARE_PATCH_DIR')
         from_recipe = self.from_recipe()
         to_recipe = self.to_recipe()
-        from_path = os.path.join(srcdir, self.from_layerbranch.local_path, from_recipe.filepath)
-        to_path = os.path.join(srcdir, self.to_layerbranch.local_path, to_recipe.filepath)
+        if self.comparison.from_branch.is_image_comparison():
+            from_path = os.path.join(isrcdir, self.from_layerbranch.local_path, from_recipe.pn)
+        else:
+            from_path = os.path.join(srcdir, self.from_layerbranch.local_path, from_recipe.filepath)
+        if self.comparison.to_branch.is_image_comparison():
+            to_path = os.path.join(isrcdir, self.to_layerbranch.local_path, to_recipe.pn)
+        else:
+            to_path = os.path.join(srcdir, self.to_layerbranch.local_path, to_recipe.filepath)
         return from_path, to_path
 
     def package_sources_available(self):
-        # FIXME handle image comparisons
         if self.change_type in ['A', 'V', 'R']:
             return False
         import settings
         srcdir = getattr(settings, 'VERSION_COMPARE_SOURCE_DIR')
-        from_path = os.path.join(srcdir, self.from_layerbranch.local_path)
-        to_path = os.path.join(srcdir, self.to_layerbranch.local_path)
+        isrcdir = getattr(settings, 'IMAGE_COMPARE_PATCH_DIR')
+        if self.comparison.from_branch.is_image_comparison():
+            from_path = os.path.join(isrcdir, self.from_layerbranch.local_path)
+        else:
+            from_path = os.path.join(srcdir, self.from_layerbranch.local_path)
+        if self.comparison.to_branch.is_image_comparison():
+            to_path = os.path.join(isrcdir, self.to_layerbranch.local_path)
+        else:
+            to_path = os.path.join(srcdir, self.to_layerbranch.local_path)
         return os.path.exists(from_path) and os.path.exists(to_path)
 
     def __str__(self):

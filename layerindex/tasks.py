@@ -90,16 +90,24 @@ def generate_version_comparison(vercmp_id):
             to_layerbranch = to_branch.layerbranch_set.first()
             if from_image:
                 from_recipes = ImageComparisonRecipe.objects.filter(layerbranch=from_layerbranch).only('pn')
-                from_pns = set(from_recipes.values_list('cover_pn', flat=True))
             else:
                 from_recipes = ClassicRecipe.objects.filter(layerbranch=from_layerbranch, deleted=False).only('pn')
+
+            if from_image and not to_image:
+                from_pns = set(from_recipes.values_list('cover_pn', flat=True))
+            else:
                 from_pns = set(from_recipes.values_list('pn', flat=True))
+
             if to_image:
                 to_recipes = ImageComparisonRecipe.objects.filter(layerbranch=to_layerbranch).only('pn')
-                to_pns = set(to_recipes.values_list('cover_pn', flat=True))
             else:
                 to_recipes = ClassicRecipe.objects.filter(layerbranch=to_layerbranch, deleted=False).only('pn')
+
+            if to_image and not from_image:
+                to_pns = set(to_recipes.values_list('cover_pn', flat=True))
+            else:
                 to_pns = set(to_recipes.values_list('pn', flat=True))
+
             removed = from_pns - to_pns
             added = to_pns - from_pns
 
@@ -116,11 +124,11 @@ def generate_version_comparison(vercmp_id):
                 diff.save()
 
             for item in sorted(from_pns & to_pns, key=lambda s: s.lower()):
-                if from_image:
+                if from_image and not to_image:
                     item_from_recipes = from_recipes.filter(cover_pn=item)
                 else:
                     item_from_recipes = from_recipes.filter(pn=item)
-                if to_image:
+                if to_image and not from_image:
                     item_to_recipes = to_recipes.filter(cover_pn=item)
                 else:
                     item_to_recipes = to_recipes.filter(pn=item)

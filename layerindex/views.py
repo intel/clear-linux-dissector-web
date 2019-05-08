@@ -1776,7 +1776,7 @@ class ImageCompareView(FormView):
 
                     # Have a function to create layers on the fly so that we don't create any we don't need to
                     layerbranches = {}
-                    def get_layerbranch(layername):
+                    def get_layerbranch(layername, local_path):
                         layerbranch = layerbranches.get(layername, None)
                         if layerbranch:
                             return layerbranch
@@ -1798,6 +1798,7 @@ class ImageCompareView(FormView):
                         layerbranch.branch = branch
                         layerbranch.vcs_subdir = jslayer.get('vcs_subdir', '')
                         layerbranch.actual_branch = jslayer.get('actual_branch', '')
+                        layerbranch.local_path = local_path
                         layerbranch.save()
                         layerbranches[layername] = layerbranch
                         return layerbranch
@@ -1809,9 +1810,11 @@ class ImageCompareView(FormView):
                     comparison.to_branch = form.cleaned_data['to_branch']
                     comparison.save()
 
+                    local_path = str(comparison.id)
+
                     # Copy patch files
                     extdir = os.path.join(tmpoutdir, os.listdir(tmpoutdir)[0])
-                    comppatchdir = os.path.join(patchdir, str(comparison.id))
+                    comppatchdir = os.path.join(patchdir, local_path)
                     os.makedirs(comppatchdir)
                     for entry in os.listdir(extdir):
                         # We skip out the json file by only copying directories
@@ -1822,7 +1825,7 @@ class ImageCompareView(FormView):
                     for pn, jsrecipe in jsdata['recipes'].items():
                         recipe = ImageComparisonRecipe()
                         recipe.comparison = comparison
-                        recipe.layerbranch = get_layerbranch(jsrecipe['layer'])
+                        recipe.layerbranch = get_layerbranch(jsrecipe['layer'], local_path)
                         recipe.filepath = os.path.dirname(jsrecipe['filepath'])
                         recipe.filename = os.path.basename(jsrecipe['filepath'])
                         for key,value in jsrecipe.items():
