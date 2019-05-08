@@ -214,6 +214,7 @@ def export_recipe_info(args):
                 fpth = rd.getVar('FILE')
                 layerdir = oe.recipeutils.find_layerdir(fpth)
                 rvalues[pn]['filepath'] = os.path.relpath(fpth, layerdir)
+                rvalues[pn]['sha256sum'] = bb.utils.sha256_file(fpth)
                 for varname in varlist:
                     rvalues[pn][varname] = handle_value(rd.getVar(varname))
 

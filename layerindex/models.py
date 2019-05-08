@@ -928,6 +928,7 @@ class ImageComparisonRecipe(Recipe):
     cover_pn = models.CharField('Covering recipe', max_length=100, blank=True)
     cover_status = models.CharField(max_length=1, choices=COVER_STATUS_CHOICES, default='U')
     cover_comment = models.TextField(blank=True)
+    sha256sum = models.CharField(max_length=64, blank=True)
 
     def get_cover_recipe(self):
         if self.cover_layerbranch and self.cover_pn:

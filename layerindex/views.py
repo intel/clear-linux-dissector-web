@@ -1850,6 +1850,8 @@ class ImageCompareView(FormView):
                             # FIXME cover_status might not match
                             recipe.cover_status = cover_recipe.cover_status
 
+                        recipe.sha256sum = jsrecipe.get('filepath', '')
+
                         recipe.save()
 
                         # Take care of dependencies
@@ -1869,7 +1871,9 @@ class ImageCompareView(FormView):
                             # FIXME handle bbappends - this is will only work for patches in the original recipe (also fetched patches)
                             patch.src_path = os.path.relpath(patch.path, recipe.filepath)
                             try:
-                                patch.read_status_from_file(os.path.join(comppatchdir, pn, os.path.basename(patch.path)))
+                                patchfn = os.path.join(comppatchdir, pn, os.path.basename(patch.path))
+                                patch.read_status_from_file(patchfn)
+                                patch.sha256sum = utils.sha256_file(patchfn)
                             except Exception as e:
                                 print('Failed to read patch status for %s: %s' % (patch.path, e))
                             patch.save()
