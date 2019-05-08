@@ -2057,6 +2057,11 @@ class VersionCompareSelectView(FormView):
     def dispatch(self, request, *args, **kwargs):
         return super(VersionCompareSelectView, self).dispatch(request, *args, **kwargs)
 
+    def get_form_kwargs(self):
+        kwargs = super(VersionCompareSelectView, self).get_form_kwargs()
+        kwargs.update(request=self.request)
+        return kwargs
+
     def form_valid(self, form):
         return HttpResponseRedirect(reverse_lazy('version_comparison', args=(form.cleaned_data['from_branch'].name, form.cleaned_data['to_branch'].name)))
 
@@ -2071,6 +2076,13 @@ class VersionCompareContentView(TemplateView):
         context = super(VersionCompareContentView, self).get_context_data(**kwargs)
         from_branch = get_object_or_404(Branch, name=self.kwargs['from'])
         to_branch = get_object_or_404(Branch, name=self.kwargs['to'])
+        if from_branch.is_image_comparison():
+            if not from_branch.imagecomparison_from_set.filter(user=self.request.user).exists():
+                raise PermissionDenied
+        if to_branch.is_image_comparison():
+            # Note: imagecomparison_from_set is *not* a mistake below!
+            if not to_branch.imagecomparison_from_set.filter(user=self.request.user).exists():
+                raise PermissionDenied
         vercmp, created = VersionComparison.objects.get_or_create(from_branch=from_branch, to_branch=to_branch)
         if created or vercmp.status == 'F':
             vercmp.status = 'I'
@@ -2089,6 +2101,13 @@ class VersionCompareView(TemplateView):
         context = super(VersionCompareView, self).get_context_data(**kwargs)
         from_branch = get_object_or_404(Branch, name=self.kwargs['from'])
         to_branch = get_object_or_404(Branch, name=self.kwargs['to'])
+        if from_branch.is_image_comparison():
+            if not from_branch.imagecomparison_from_set.filter(user=self.request.user).exists():
+                raise PermissionDenied
+        if to_branch.is_image_comparison():
+            # Note: imagecomparison_from_set is *not* a mistake below!
+            if not to_branch.imagecomparison_from_set.filter(user=self.request.user).exists():
+                raise PermissionDenied
         context['from_branch'] = from_branch
         context['to_branch'] = to_branch
         return context

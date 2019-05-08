@@ -9,6 +9,7 @@ from collections import OrderedDict
 
 from captcha.fields import CaptchaField
 from django import forms
+from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.validators import EmailValidator, RegexValidator, URLValidator
@@ -349,8 +350,15 @@ class ComparisonRecipeSelectForm(StyledForm):
 
 
 class VersionComparisonForm(StyledForm):
-    from_branch = forms.ModelChoiceField(label='From', queryset=Branch.objects.filter(comparison=True).order_by('name'))
-    to_branch = forms.ModelChoiceField(label='To', queryset=Branch.objects.filter(comparison=True).order_by('name'))
+    from_branch = forms.ModelChoiceField(label='From', queryset=Branch.objects.none())
+    to_branch = forms.ModelChoiceField(label='To', queryset=Branch.objects.none())
+
+    def __init__(self, *args, request=None, **kwargs):
+        super(VersionComparisonForm, self).__init__(*args, **kwargs)
+        qs = Branch.objects.filter(Q(imagecomparison_from_set__isnull=False, imagecomparison_from_set__user=request.user) | Q(imagecomparison_from_set__isnull=True)).distinct().order_by('sort_priority', 'name')
+        self.fields['from_branch'].queryset = qs
+        self.fields['to_branch'].queryset = qs
+        self.request = request
 
 
 class ImageComparisonCreateForm(forms.Form):
