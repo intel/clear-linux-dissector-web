@@ -1,6 +1,21 @@
 Clear Linux Dissector Release Notes
 ===================================
 
+Release 0.3 (beta): 13 May 2019
+-------------------------------
+
+Changes:
+* Fix "internal server error" when checking Comparison checkbox on Distro Data search form
+* Fix volume / file permissions within Docker containers
+* Update pinned Python dependencies
+
+Currently known issues:
+- If you are redirected to the login page from a deep link within the application due to not being logged in or your session having timed out, after logging in you are not redirected back to the main page.
+- Clicking on "Import" to import a new release sometimes does not return immediately due to an as-yet undiagnosed internal communication issue with Celery. Clicking on the button again (waiting a few seconds between) until it does return the task progress page works around the issue.
+- "Stop" button on task progress does not completely stop underlying import task
+- On systems with SELinux enabled (e.g. default in Fedora), patch files imported through the "Image Comparison" feature will initially have the wrong security labels, which means that they will not be accessible through the web interface until the app container is restarted.
+
+
 Release 0.2: 8th May 2019
 -------------------------
 
@@ -8,12 +23,6 @@ Changes:
 * Handle Release Comparison of two previously imported Image comparisons - this effectively enables comparing two images built with Yocto Project tools.
 * Ensure Release Comparison only allows selecting image comparison branches owned by the logged-in user
 * Allow searching ClassicRecipe objects by cover_pn in admin interface
-
-Currently known issues:
-- If you are redirected to the login page from a deep link within the application due to not being logged in or your session having timed out, after logging in you are not redirected back to the main page.
-- Clicking on "Import" to import a new release sometimes does not return immediately due to an as-yet undiagnosed internal communication issue with Celery. Clicking on the button again (waiting a few seconds between) until it does return the task progress page works around the issue.
-- "Stop" button on task progress does not completely stop underlying import task
-- On systems with SELinux enabled (e.g. default in Fedora), patch files imported through the "Image Comparison" feature will initially have the wrong security labels, which means that they will not be accessible through the web interface until the app container is restarted.
 
 
 Release 0.1: 3rd May 2019
