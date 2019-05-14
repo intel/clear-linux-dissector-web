@@ -302,7 +302,7 @@ OpenEmbedded layer index software maintained by the Yocto Project.
 
 The latest version of the code can always be found here:
 
-  http://github.com/clearlinux/clr-dissector-web
+  https://github.com/intel/clear-linux-dissector-web
 
 Contributions are welcome. Please send changes in the form of pull requests
 on the github repository linked above.
