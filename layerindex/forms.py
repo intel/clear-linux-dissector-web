@@ -27,8 +27,6 @@ from layerindex.models import (Branch, ClassicRecipe, ImageComparisonRecipe,
                                ImageComparison)
 
 
-import pdb
-
 class StyledForm(forms.Form):
     # Ensure form-control class for Bootstrap 3 is applied to Django-generated widgets
     def __init__(self, *args, **kwargs):
