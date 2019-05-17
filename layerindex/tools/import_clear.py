@@ -133,14 +133,15 @@ def import_clear(args):
                 logger.error('No dissector executable found in specified path')
                 return 1
             env['PATH'] = args.clear_tool_path + ':' + env['PATH']
-        if args.derivative:
-            cmd = ['dissector', '-clear_version', release] + stdbundles
-        else:
-            cmd = ['dissector', '-clear_version', release, '-all']
+        cmd = ['dissector', '-clear_version', release]
         if args.bundles_url:
             cmd += ['-bundles_url', args.bundles_url]
         if args.repo_url:
             cmd += ['-repo_url', args.repo_url]
+        if args.derivative:
+            cmd += stdbundles
+        else:
+            cmd.append('-all')
         logger.debug('Executing %s' % cmd)
         return_code = subprocess.call(cmd, env=env, cwd=os.path.abspath(args.outdir))
         if return_code != 0:
