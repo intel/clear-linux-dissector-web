@@ -78,7 +78,8 @@ def generate_version_comparison(vercmp_id):
     from distutils.version import LooseVersion
     utils.setup_django()
     from django.db import transaction
-    from layerindex.models import VersionComparison, VersionComparisonDifference, ImageComparisonRecipe, ClassicRecipe
+    from layerindex.models import ClassicRecipe
+    from dissector.models import VersionComparison, VersionComparisonDifference, ImageComparisonRecipe
     vercmp = VersionComparison.objects.get(id=vercmp_id)
     try:
         from_branch = vercmp.from_branch
@@ -220,7 +221,7 @@ def generate_version_comparison(vercmp_id):
 @tasks.task
 def generate_diff(file_diff_id):
     utils.setup_django()
-    from layerindex.models import VersionComparisonFileDiff
+    from dissector.models import VersionComparisonFileDiff
     fdiff = VersionComparisonFileDiff.objects.get(id=file_diff_id)
     try:
         fdiff_file = fdiff.get_diff_path()

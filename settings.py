@@ -149,6 +149,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'layerindex',
+    'dissector',
     'django_registration',
     'reversion',
     'reversion_compare',

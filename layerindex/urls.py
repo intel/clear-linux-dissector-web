@@ -14,12 +14,7 @@ from layerindex.views import LayerListView, LayerReviewListView, LayerReviewDeta
     bulk_change_edit_view, bulk_change_patch_view, BulkChangeDeleteView, RecipeDetailView, RedirectParamsView, \
     ClassicRecipeSearchView, ClassicRecipeDetailView, ClassicRecipeStatsView, LayerUpdateDetailView, UpdateListView, \
     UpdateDetailView, StatsView, publish_view, LayerCheckListView, BBClassCheckListView, TaskStatusView, \
-    ComparisonRecipeSelectView, ComparisonRecipeSelectDetailView, ImageCompareView, ImageCompareDetailView, \
-    ImageCompareRecipeSearchView, ImageCompareRecipeDetailView, ImageCompareRecipeSelectView, \
-    ImageCompareRecipeSelectDetailView, image_compare_patch_view, task_log_view, task_stop_view, email_test_view, \
-    VersionCompareSelectView, VersionCompareView, VersionCompareRecipeDetailView, VersionCompareFileDiffView, \
-    version_compare_diff_view, VersionCompareContentView, version_compare_regenerate_view, ComparisonImportView, \
-    FrontPageView
+    ComparisonRecipeSelectView, ComparisonRecipeSelectDetailView, task_log_view, task_stop_view, email_test_view
 from layerindex.models import LayerItem, Recipe, RecipeChangeset
 from rest_framework import routers
 from . import restviews
@@ -39,11 +34,6 @@ router.register(r'classes', restviews.ClassViewSet)
 router.register(r'layers', restviews.LayerViewSet, 'layers')
 
 urlpatterns = [
-    url(r'^$',
-        FrontPageView.as_view(
-            template_name='layerindex/frontpage.html'),
-        name='frontpage'),
-
     # FIXME: REST API disabled for now
     #url(r'^api/', include(router.urls)),
 
@@ -127,61 +117,6 @@ urlpatterns = [
         ComparisonRecipeSelectDetailView.as_view(
             template_name='layerindex/comparisonrecipeselectdetail.html'),
         name='comparison_select_detail'),
-    url(r'^comparison/import/$',
-        ComparisonImportView.as_view(
-            template_name='layerindex/comparisonimport.html'),
-        name="comparison_import"),
-    url(r'^imagecompare/$',
-        ImageCompareView.as_view(
-            template_name='layerindex/imagecompare.html'),
-        name="image_comparison"),
-    url(r'^imagecompare/search/(?P<pk>[-\w]+)/$',
-        ImageCompareRecipeSearchView.as_view(
-            template_name='layerindex/imagecomparesearch.html'),
-        name='image_comparison_search'),
-    url(r'^imagecompare/recipe/(?P<pk>[-\w]+)/$',
-        ImageCompareRecipeDetailView.as_view(
-            template_name='layerindex/imagecomparerecipe.html'),
-        name='image_comparison_recipe'),
-    url(r'^imagecompare/selectdetail/(?P<selectfor>[-\w]+)/(?P<pk>[-\w]+)/$',
-        ImageCompareRecipeSelectDetailView.as_view(
-            template_name='layerindex/comparisonrecipeselectdetail.html'),
-        name='image_comparison_select_detail'),
-    url(r'^imagecompare/select/(?P<pk>[-\w]+)/(?P<branch>[-\w]+)/$',
-        ImageCompareRecipeSelectView.as_view(
-            template_name='layerindex/comparisonrecipeselect.html'),
-        name='image_comparison_select'),
-    url(r'^imagecompare/patch/(?P<comparison>[-\w]+)/(?P<path>.+)$',
-        image_compare_patch_view,
-        name="image_comparison_patch"),
-
-    url(r'^versioncompare/$',
-        VersionCompareSelectView.as_view(
-            template_name='layerindex/versioncomparisonselect.html'),
-        name="version_comparison_select"),
-    url(r'^versioncompare/comparison/(?P<from>[-\w]+)/(?P<to>[-\w]+)/$',
-        VersionCompareView.as_view(
-            template_name='layerindex/versioncomparison.html'),
-        name="version_comparison"),
-    url(r'^versioncompare/comparison_content/(?P<from>[-\w]+)/(?P<to>[-\w]+)/$',
-        VersionCompareContentView.as_view(
-            template_name='layerindex/versioncomparisoncontent.html'),
-        name="version_comparison_ajax"),
-    url(r'^versioncompare/regenerate/(?P<from_branch>[-\w]+)/(?P<to_branch>[-\w]+)/$',
-        version_compare_regenerate_view,
-        name="version_comparison_regenerate"),
-
-    url(r'^versioncompare/recipe/(?P<id>[-\w]+)/$',
-        VersionCompareRecipeDetailView.as_view(
-            template_name='layerindex/versioncomparisonrecipe.html'),
-        name="version_comparison_recipe"),
-    url(r'^versioncompare/diff/(?P<id>[-\w]+)/$',
-        VersionCompareFileDiffView.as_view(
-            template_name='layerindex/versioncomparisonfilediff.html'),
-        name="version_comparison_diff"),
-    url(r'^versioncompare/diff_file/(?P<diff_id>[-\w]+)/$',
-        version_compare_diff_view,
-        name="version_comparison_diff_ajax"),
 
     url(r'^email_test/$',
         email_test_view,

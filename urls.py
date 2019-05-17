@@ -16,6 +16,7 @@ admin.autodiscover()
 import settings
 
 urlpatterns = [
+    url(r'^layerindex/', include('dissector.urls')),
     url(r'^layerindex/', include('layerindex.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^accounts/password_reset/$',
