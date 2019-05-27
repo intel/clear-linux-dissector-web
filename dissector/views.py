@@ -492,6 +492,7 @@ class VersionCompareFileDiffView(TemplateView):
                 tasks.generate_diff.apply_async((fdiff.id,))
             except:
                 fdiff.status = 'F'
+                fdiff.save()
                 raise
         context['fdiff'] = fdiff
         return context
