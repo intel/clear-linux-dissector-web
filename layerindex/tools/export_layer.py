@@ -227,6 +227,10 @@ def export_layer(args):
         logger.error('Output directory %s is not a layer (it must already be created)' % (outlayerdir,))
         return 1
 
+    if args.patch and not os.path.exists(os.path.join(args.outdir, '.git')):
+        logger.error('Output directory must be a git repository if specifying -p/--patch')
+        return 1
+
     for entry in os.listdir(outlayerdir):
         entrypath = os.path.join(outlayerdir, entry)
         if entry.startswith('recipes') and os.path.isdir(entrypath):
@@ -287,6 +291,34 @@ def export_layer(args):
     finally:
         utils.unlock_file(lockfile)
 
+    if args.patch:
+        if args.patch.endswith('.gz'):
+            patch = args.patch[:-3]
+        else:
+            patch = args.patch
+        cmd = ['git', 'add', '-A', '.']
+        logger.debug('Executing %s' % cmd)
+        return_code = subprocess.call(cmd, cwd=os.path.abspath(args.outdir))
+        if return_code != 0:
+            logger.error('git add failed')
+            return 1
+
+        cmd = ['git', 'diff', '--cached', '-p']
+        with open(patch, 'w') as f:
+            logger.debug('Executing %s' % cmd)
+            return_code = subprocess.call(cmd, cwd=os.path.abspath(args.outdir), stdout=f)
+            if return_code != 0:
+                logger.error('git diff failed')
+                return 1
+
+        if args.patch.endswith('.gz'):
+            cmd = ['gzip', patch]
+            logger.debug('Executing %s' % cmd)
+            return_code = subprocess.call(cmd, cwd=os.path.abspath(args.outdir))
+            if return_code != 0:
+                logger.error('gzip failed')
+                return 1
+
     return 0
 
 def main():
@@ -301,6 +333,7 @@ def main():
     parser.add_argument('-f', '--fetch-layer', help='Fetch the specified git repository into the output directory first')
     parser.add_argument('-r', '--fetch-revision', help='Checkout the specified branch/tag/revision (in conjunction with -f/--fetch-layer)')
     parser.add_argument('-s', '--subdir', help='Specify subdirectory for layer')
+    parser.add_argument('-p', '--patch', help='Create a patch to update the layer')
 
     args = parser.parse_args()
 
