@@ -12,6 +12,7 @@ import argparse
 import subprocess
 import logging
 import re
+import shutil
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -87,7 +88,7 @@ def compare_url_list(urls1, urls2):
     return normalise_list(urls1) == normalise_list(urls2)
 
 
-def write_bbappend(args, recipe, cover_recipe, cover_layerdir, rd):
+def write_bbappend(args, layerdir, recipe, cover_recipe, cover_layerdir, rd):
     import oe.recipeutils
     from django.db.models import Q
     from layerindex.models import PatchDisposition
@@ -141,7 +142,7 @@ def write_bbappend(args, recipe, cover_recipe, cover_layerdir, rd):
 
     vals = {}
     if vals or srcfiles:
-        bbappend, _ = oe.recipeutils.bbappend_recipe(rd, args.outdir, srcfiles, None, wildcardver=True, extralines=vals)
+        bbappend, _ = oe.recipeutils.bbappend_recipe(rd, layerdir, srcfiles, None, wildcardver=True, extralines=vals)
         if patches:
             # FIXME this should be made possible within bbappend_recipe()
             pvalues = {}
@@ -191,9 +192,45 @@ def export_layer(args):
         logger.error('Layer %s does not currently exist on branch %s' % (args.layer, args.branch))
         return 1
 
-    if not os.path.exists(os.path.join(args.outdir, 'conf', 'layer.conf')):
-        logger.error('Output directory %s is not a layer (use "bitbake-layers create-layer" to create it first)' % (args.outdir))
+    if args.subdir:
+        subdir = args.subdir.lstrip(os.sep)
+        outlayerdir = os.path.join(args.outdir, subdir)
+    else:
+        outlayerdir = args.outdir
+
+    if args.fetch_layer:
+        try:
+            # Note: we do mean args.outdir here and not outlayerdir
+            os.makedirs(args.outdir)
+        except FileExistsError:
+            pass
+        if os.path.exists(outlayerdir) and os.listdir(outlayerdir):
+            logger.error('Output subdirectory %s is not empty - cannot fetch into it' % outlayerdir)
+            return 1
+        cmd = ['git', 'clone', args.fetch_layer, '.']
+        logger.debug('Executing %s' % cmd)
+        # Note: we do mean args.outdir here and not outlayerdir
+        return_code = subprocess.call(cmd, cwd=os.path.abspath(args.outdir))
+        if return_code != 0:
+            logger.error('Fetch of %s failed' % args.fetch_layer)
+            return 1
+        if args.fetch_revision:
+            cmd = ['git', 'checkout', args.fetch_revision]
+            logger.debug('Executing %s' % cmd)
+            # Note: we do mean args.outdir here and not outlayerdir
+            return_code = subprocess.call(cmd, cwd=os.path.abspath(args.outdir))
+            if return_code != 0:
+                logger.error('Checkout of %s failed' % args.fetch_revision)
+                return 1
+
+    if not os.path.exists(os.path.join(outlayerdir, 'conf', 'layer.conf')):
+        logger.error('Output directory %s is not a layer (it must already be created)' % (outlayerdir,))
         return 1
+
+    for entry in os.listdir(outlayerdir):
+        entrypath = os.path.join(outlayerdir, entry)
+        if entry.startswith('recipes') and os.path.isdir(entrypath):
+            shutil.rmtree(entrypath)
 
     master_branch = utils.get_branch('master')
     fetchdir = settings.LAYER_FETCH_DIR
@@ -214,7 +251,7 @@ def export_layer(args):
             utils.setup_core_layer_sys_path(settings, master_branch.name)
 
             # Start writing out log
-            logfile = os.path.join(args.outdir, 'export_layer.log')
+            logfile = os.path.join(outlayerdir, 'export_layer.log')
             try:
                 os.remove(logfile)
             except FileNotFoundError:
@@ -241,10 +278,10 @@ def export_layer(args):
                     utils.checkout_layer_branch(cover_layerbranch, layerfetchdir)
                     cover_layerdir = os.path.join(layerfetchdir, cover_layerbranch.vcs_subdir)
                     config_data_copy = recipeparse.setup_layer(tinfoil.config_data, fetchdir, cover_layerdir, cover_layerbranch.layer, cover_layerbranch, logger)
-                    config_data_copy.setVar('BBLAYERS', ' '.join([cover_layerdir, args.outdir]))
+                    config_data_copy.setVar('BBLAYERS', ' '.join([cover_layerdir, outlayerdir]))
                 recipefile = str(os.path.join(layerfetchdir, cover_layerbranch.vcs_subdir, cover_recipe.filepath, cover_recipe.filename))
                 rd = tinfoil.parse_recipe_file(recipefile, appends=False, config_data=config_data_copy)
-                write_bbappend(args, recipe, cover_recipe, cover_layerdir, rd)
+                write_bbappend(args, outlayerdir, recipe, cover_recipe, cover_layerdir, rd)
         finally:
             tinfoil.shutdown()
     finally:
@@ -261,6 +298,9 @@ def main():
     parser.add_argument('-b', '--branch', default='clearlinux', help='Branch to use (default "%(default)s")')
     parser.add_argument('-l', '--layer', help='Layer to use (defaults to same name as branch)')
     parser.add_argument('-L', '--cover-layers', help='Limit to specific covering layers (comma-separated list)')
+    parser.add_argument('-f', '--fetch-layer', help='Fetch the specified git repository into the output directory first')
+    parser.add_argument('-r', '--fetch-revision', help='Checkout the specified branch/tag/revision (in conjunction with -f/--fetch-layer)')
+    parser.add_argument('-s', '--subdir', help='Specify subdirectory for layer')
 
     args = parser.parse_args()
 
