@@ -41,12 +41,13 @@ from pkg_resources import parse_version
 import settings
 from dissector.forms import (ImageComparisonCreateForm,
                               ImageComparisonRecipeForm,
-                              VersionComparisonForm, ComparisonImportForm)
+                              VersionComparisonForm, ComparisonImportForm,
+                              ComparisonLayerExportForm)
 from dissector.models import (ImageComparison, ImageComparisonRecipe,
                                VersionComparison, VersionComparisonDifference,
                                VersionComparisonFileDiff)
 from layerindex.models import (Branch, LayerItem, LayerBranch, ClassicRecipe,
-                              Source, Patch, Update)
+                              Source, Patch, Update, UpdateFile)
 from layerindex.views import (ClassicRecipeSearchView, ClassicRecipeDetailView,
                               ClassicRecipeLinkWrapper)
 
@@ -613,4 +614,80 @@ class FrontPageView(TemplateView):
         context = super(FrontPageView, self).get_context_data(**kwargs)
         context['first_comparison_branch'] = Branch.objects.filter(comparison=True, hidden=False).order_by('sort_priority', 'id').first()
         context['can_import_comparison'] = self.request.user.has_perm('layerindex.update_comparison_branch')
+        context['can_export_comparison'] = self.request.user.has_perm('dissector.export_comparison_branch')
+        return context
+
+
+class ComparisonLayerExportView(FormView):
+    form_class = ComparisonLayerExportForm
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not self.request.user.is_authenticated():
+            raise PermissionDenied
+
+        if not request.user.has_perm('dissector.export_comparison_branch'):
+            raise PermissionDenied
+
+        return super(ComparisonLayerExportView, self).dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        import tarfile
+        import tempfile
+        import shutil
+        from celery import uuid
+
+        outdir = tempfile.mkdtemp(prefix='layerexport-')
+
+        task_id = uuid()
+
+        srcdir = settings.VERSION_COMPARE_SOURCE_DIR
+
+        update = Update(task_id=task_id)
+        update.started = datetime.now()
+        update.triggered_by = self.request.user
+        update.save()
+
+        updatefile = UpdateFile(update=update)
+        updatefile.filename = 'layerupdate.patch.gz'
+        updatefile.save()
+
+        branch = form.cleaned_data['branch']
+        layerbranch = branch.layerbranch_set.filter(layer__name=branch.name).first()
+        srcpath = os.path.join(srcdir, layerbranch.local_path)
+        patchfilepath = updatefile.get_filepath()
+        if not patchfilepath:
+            raise Exception('Patch file path empty - is UPDATE_FILES_DIR set?')
+        try:
+            os.makedirs(os.path.dirname(patchfilepath))
+        except FileExistsError:
+            pass
+
+        cmd = ['layerindex/tools/export_layer.py', 
+               srcpath,
+               outdir,
+               '-b', branch.name,
+               '-f', form.cleaned_data['source_url'],
+               '-p', patchfilepath]
+
+        subdir = form.cleaned_data['subdir']
+        if subdir:
+            cmd += ['-s', subdir]
+
+        source_revision = form.cleaned_data['source_revision']
+        if source_revision:
+            cmd += ['-r', source_revision]
+
+        oe_layers = form.cleaned_data['oe_layer']
+        if oe_layers:
+            cmd += ['-L', ','.join(oe_layers)]
+
+        print(cmd)
+
+        res = tasks.run_update_command.apply_async((branch.name, cmd), task_id=task_id)
+        return HttpResponseRedirect(reverse_lazy('task_status', kwargs={'task_id': task_id}))
+
+    def get_context_data(self, **kwargs):
+        context = super(ComparisonLayerExportView, self).get_context_data(**kwargs)
+        context['selectedlayers_display'] = ' (all)'
         return context

@@ -57,6 +57,16 @@
                 </div>
             </div><br><br>
             {% endif %}
+            {% if can_export_comparison %}
+            <div class="row">
+                <div class="col-md-3">
+                    <a class="btn btn-large btn-primary" href="{% url 'comparison_layer_export' %}">Export comparison branch</a>
+                </div>
+                <div class="col-md-8">
+                    <p>Export comparison branch as a layer</p>
+                </div>
+            </div><br><br>
+            {% endif %}
         </div>
 
 {% endautoescape %}

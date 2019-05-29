@@ -19,7 +19,7 @@ from django_registration.validators import (DEFAULT_RESERVED_NAMES,
                                             validate_confusables)
 
 import settings
-from layerindex.models import Branch
+from layerindex.models import Branch, LayerItem
 from dissector.models import (ImageComparisonRecipe,
                                ImageComparison)
 
@@ -148,3 +148,34 @@ class ComparisonImportForm(forms.Form):
             if Branch.objects.filter(name=name).exists():
                 raise forms.ValidationError('A branch of this name already exists - select "Update existing branch" instead if that is what you want to do')
         return name
+
+
+class ComparisonLayerExportForm(forms.Form):
+    branch = NameBranchChoiceField(queryset=Branch.objects.filter(comparison=True).filter(hidden=False).order_by('name'), required=False)
+    source_url = forms.CharField(label='Source layer URL', max_length=255, help_text='URL to fetch layer to update', widget=forms.URLInput)
+    source_revision = forms.CharField(label='Source layer revision', max_length=255, help_text='Branch/tag/revision to fetch layer to update (optional)', required=False)
+    subdir = forms.CharField(label='Subdirectory', max_length=50, help_text='Subdirectory within repository (optional)', required=False)
+    oe_layer = forms.CharField(label='OE Layers', max_length=1024, required=False)
+
+    def clean_oe_layer(self):
+        oe_layers = self.cleaned_data['oe_layer'].strip()
+        layers = []
+        if oe_layers:
+            try:
+                layer_ids = [int(i) for i in oe_layers.split(',')]
+            except ValueError:
+                raise forms.ValidationError('Invalid layer id')
+            layers = LayerItem.objects.filter(comparison=False, status__in=['P', 'X'], id__in=layer_ids).values_list('name', flat=True)
+            if len(layers) != len(layer_ids):
+                raise forms.ValidationError('Invalid layer id')
+        return layers
+
+    def clean_source_url(self):
+        source_url = self.cleaned_data['source_url'].strip()
+        if not '://' in source_url:
+            raise forms.ValidationError('Invalid URL')
+        if source_url.startswith('/'):
+            raise forms.ValidationError('Invalid URL')
+        if source_url.startswith('file:'):
+            raise forms.ValidationError('file: URLs not permitted')
+        return source_url
