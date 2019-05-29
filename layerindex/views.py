@@ -54,7 +54,7 @@ from layerindex.models import (BBAppend, BBClass, Branch, ClassicRecipe,
                                LayerNote, LayerUpdate, Machine, Patch, Recipe,
                                RecipeChange, RecipeChangeset, Source, StaticBuildDep,
                                Update, SecurityQuestion, SecurityQuestionAnswer,
-                               UserProfile, PatchDisposition)
+                               UserProfile, PatchDisposition, UpdateFile)
 
 
 from . import tasks, utils
@@ -800,6 +800,11 @@ class UpdateDetailView(DetailView):
         update = self.get_object()
         if update:
             context['layerupdates'] = update.layerupdate_set.order_by('-started')
+            existingfiles = []
+            for updatefile in update.updatefile_set.all():
+                if updatefile.exists():
+                    existingfiles.append(updatefile)
+            context['updatefiles'] = existingfiles
         return context
 
 
@@ -1547,6 +1552,7 @@ class TaskStatusView(TemplateView):
         context['result'] = AsyncResult(task_id)
         context['update'] = get_object_or_404(Update, task_id=task_id)
         context['log_url'] = reverse_lazy('task_log', args=(task_id,))
+        context['files_url'] = reverse_lazy('task_files', args=(task_id,))
         return context
 
 def task_log_view(request, task_id):
@@ -1608,6 +1614,34 @@ def task_stop_view(request, task_id):
     result = AsyncResult(task_id)
     result.revoke(terminate=True, signal=signal.SIGUSR2)
     return HttpResponse('terminated')
+
+class TaskFilesView(TemplateView):
+    def get_context_data(self, **kwargs):
+        context = super(TaskFilesView, self).get_context_data(**kwargs)
+        task_id = self.kwargs['task_id']
+        update = get_object_or_404(Update, task_id=task_id)
+        existingfiles = []
+        for updatefile in update.updatefile_set.all():
+            if updatefile.exists():
+                existingfiles.append(updatefile)
+        context['updatefiles'] = existingfiles
+        return context
+
+def update_file_download_view(request, pk):
+    if not request.user.is_authenticated():
+        raise PermissionDenied
+
+    updatefile = get_object_or_404(UpdateFile, pk=pk)
+
+    actual_file = updatefile.get_filepath()
+    if not os.path.exists(actual_file):
+        raise Http404;
+
+    # FIXME this is not optimal, but good enough for now
+    from django.http import FileResponse
+    response = FileResponse(open(actual_file, 'rb'), content_type='application/force-download')
+    response['Content-Disposition'] = 'attachment; filename="%s"' % updatefile.filename
+    return response
 
 
 def email_test_view(request):

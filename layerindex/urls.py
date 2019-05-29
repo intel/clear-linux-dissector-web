@@ -14,7 +14,8 @@ from layerindex.views import LayerListView, LayerReviewListView, LayerReviewDeta
     bulk_change_edit_view, bulk_change_patch_view, BulkChangeDeleteView, RecipeDetailView, RedirectParamsView, \
     ClassicRecipeSearchView, ClassicRecipeDetailView, ClassicRecipeStatsView, LayerUpdateDetailView, UpdateListView, \
     UpdateDetailView, StatsView, publish_view, LayerCheckListView, BBClassCheckListView, TaskStatusView, \
-    ComparisonRecipeSelectView, ComparisonRecipeSelectDetailView, task_log_view, task_stop_view, email_test_view
+    ComparisonRecipeSelectView, ComparisonRecipeSelectDetailView, task_log_view, task_stop_view, email_test_view, \
+    TaskFilesView, update_file_download_view
 from layerindex.models import LayerItem, Recipe, RecipeChangeset
 from rest_framework import routers
 from . import restviews
@@ -78,6 +79,9 @@ urlpatterns = [
         UpdateDetailView.as_view(
             template_name='layerindex/updatedetail.html'),
         name='update'),
+    url(r'^updatefile/(?P<pk>[-\w]+)/$',
+        update_file_download_view,
+        name='update_file_download'),
     url(r'^history/$',
         HistoryListView.as_view(
             template_name='layerindex/history.html'),
@@ -138,6 +142,10 @@ urlpatterns = [
     url(r'^stoptask/(?P<task_id>[-\w]+)/$',
         task_stop_view,
         name='task_stop'),
+    url(r'^taskfiles/(?P<task_id>[-\w]+)/$',
+        TaskFilesView.as_view(
+            template_name='layerindex/taskfiles.html'),
+        name='task_files'),
     url(r'^ajax/layerchecklist/(?P<branch>[-., \w]+)/$',
         LayerCheckListView.as_view(
             template_name='layerindex/layerchecklist.html'),

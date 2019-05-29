@@ -32,6 +32,15 @@
     <pre>{{ update.log }}</pre>
 {% endif %}
 
+{% if updatefiles %}
+<h3>Downloads</h3>
+<ul>
+{% for updatefile in updatefiles %}
+    <li><a href="{% url 'update_file_download' updatefile.id %}">{{ updatefile.filename }}</a> ({{ updatefile.filesize|human_filesize }})</li>
+{% endfor %}
+</ul>
+{% endif %}
+
 {% for layerupdate in layerupdates %}
     <table class="table table-bordered">
         <thead>

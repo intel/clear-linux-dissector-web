@@ -34,6 +34,9 @@
 <button id="stopbutton" class="btn btn-danger pull-right">Stop</button>
 {% endif %}
 
+<div id="filelist">
+</div>
+
 {% if update.comparisonrecipeupdate_set.exists %}
 <h3>Updated comparison recipes</h3>
 <ul>
@@ -106,6 +109,7 @@
                 else if(done == '1') {
                     $("#status-label").html('SUCCEEDED');
                     $("#status-label").addClass('label-success');
+                    updateFiles();
                 }
             }
         }).always(function () {
@@ -115,6 +119,15 @@
             }
             else {
                 window.setTimeout(updateLog, 1000);
+            }
+        });
+    }
+
+    function updateFiles() {
+        $.ajax({
+            url: '{{ files_url }}',
+            success: function( data, code, xhr ) {
+                $("#filelist").html(data)
             }
         });
     }
@@ -132,6 +145,8 @@
     $(document).ready(function() {
         {% if not update.finished %}
         updateLog();
+        {% else %}
+        updateFiles();
         {% endif %}
     });
 </script>

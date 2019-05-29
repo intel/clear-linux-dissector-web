@@ -1,0 +1,19 @@
+{% load extrafilters %}
+
+{% comment %}
+
+  layerindex-web - task files page
+
+  Copyright (C) 2019 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+{% if updatefiles %}
+<h2>Downloads</h2>
+<ul>
+{% for updatefile in updatefiles %}
+    <li><a href="{% url 'update_file_download' updatefile.id %}">{{ updatefile.filename }}</a> ({{ updatefile.filesize|human_filesize }})</li>
+{% endfor %}
+</ul>
+{% endif %}
