@@ -38,6 +38,12 @@ class VersionComparisonForm(StyledForm):
         self.fields['to_branch'].queryset = qs
         self.request = request
 
+    def clean(self):
+        cleaned_data = super(VersionComparisonForm, self).clean()
+        if cleaned_data['from_branch'] == cleaned_data['to_branch']:
+            raise forms.ValidationError({'to_branch': 'From and to branches cannot be the same'})
+        return cleaned_data
+
 
 class ImageComparisonCreateForm(forms.Form):
     name = forms.CharField(max_length=50, help_text="Name for the image comparison")
