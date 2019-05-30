@@ -197,7 +197,7 @@ class VersionComparisonFileDiff(models.Model):
         return os.path.join(internal_prefix, 'version-compare', str(self.difference.comparison.id), '%d.diff' % self.id)
 
     def __str__(self):
-        return str(self.difference)
+        return '%s (%s)' % (str(self.difference), self.get_status_display())
 
 @receiver(models.signals.post_delete, sender=VersionComparisonFileDiff)
 def delete_image_compare_patches(sender, instance, *args, **kwargs):
