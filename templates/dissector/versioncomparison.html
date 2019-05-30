@@ -52,6 +52,8 @@
                 else if(comparison_status == 'F') {
                     $("#comparisonview-status").html("<h2>Failed</h2><p>Generating comparison failed, please contact your administrator</p>");
                 }
+            }).fail(function () {
+                $("#comparisonview-status").html("<h2>Failed</h2><p>Generating comparison failed, please contact your administrator</p>");
             }).always(function () {
                 if(comparison_status == 'I') {
                     window.setTimeout(showComparison, 1000);
