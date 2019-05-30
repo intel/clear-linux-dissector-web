@@ -238,7 +238,7 @@ def generate_diff(file_diff_id):
         from_path = os.path.relpath(from_path, srcdir)
         to_path = os.path.relpath(to_path, srcdir)
         try:
-            utils.runcmd("diff -udNr %s %s | sed '/^Binary files/d' > %s" % (shlex.quote(from_path), shlex.quote(to_path), shlex.quote(fdiff_file)), destdir=srcdir, shell=True)
+            utils.runcmd("git diff --no-index -M %s %s | sed '/^Binary files/d' > %s" % (shlex.quote(from_path), shlex.quote(to_path), shlex.quote(fdiff_file)), destdir=srcdir, shell=True)
         except subprocess.CalledProcessError as e:
             if e.returncode != 1:
                 raise
