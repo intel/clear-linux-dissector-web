@@ -42,7 +42,7 @@ urlpatterns = [
         ImageCompareRecipeSelectDetailView.as_view(
             template_name='layerindex/comparisonrecipeselectdetail.html'),
         name='image_comparison_select_detail'),
-    url(r'^imagecompare/select/(?P<pk>[-\w]+)/(?P<branch>[-\w]+)/$',
+    url(r'^imagecompare/select/(?P<pk>[-\w]+)/(?P<branch>[-., \w]+)/$',
         ImageCompareRecipeSelectView.as_view(
             template_name='layerindex/comparisonrecipeselect.html'),
         name='image_comparison_select'),
@@ -54,15 +54,15 @@ urlpatterns = [
         VersionCompareSelectView.as_view(
             template_name='dissector/versioncomparisonselect.html'),
         name="version_comparison_select"),
-    url(r'^versioncompare/comparison/(?P<from>[-\w]+)/(?P<to>[-\w]+)/$',
+    url(r'^versioncompare/comparison/(?P<from>[-., \w]+)/(?P<to>[-., \w]+)/$',
         VersionCompareView.as_view(
             template_name='dissector/versioncomparison.html'),
         name="version_comparison"),
-    url(r'^versioncompare/comparison_content/(?P<from>[-\w]+)/(?P<to>[-\w]+)/$',
+    url(r'^versioncompare/comparison_content/(?P<from>[-., \w]+)/(?P<to>[-., \w]+)/$',
         VersionCompareContentView.as_view(
             template_name='dissector/versioncomparisoncontent.html'),
         name="version_comparison_ajax"),
-    url(r'^versioncompare/regenerate/(?P<from_branch>[-\w]+)/(?P<to_branch>[-\w]+)/$',
+    url(r'^versioncompare/regenerate/(?P<from_branch>[-., \w]+)/(?P<to_branch>[-., \w]+)/$',
         version_compare_regenerate_view,
         name="version_comparison_regenerate"),
 
