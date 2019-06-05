@@ -365,5 +365,3 @@ class PatchDispositionForm(StyledModelForm):
         widgets = {
             'patch': forms.HiddenInput(),
         }
-
-PatchDispositionFormSet = modelformset_factory(PatchDisposition, form=PatchDispositionForm, extra=0)

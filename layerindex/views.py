@@ -47,7 +47,7 @@ from layerindex.forms import (AdvancedRecipeSearchForm, BulkChangeEditFormSet,
                               ComparisonRecipeSelectForm, EditLayerForm,
                               EditNoteForm, EditProfileForm,
                               LayerMaintainerFormSet, RecipeChangesetForm,
-                              PatchDispositionForm, PatchDispositionFormSet)
+                              PatchDispositionForm)
 from layerindex.models import (BBAppend, BBClass, Branch, ClassicRecipe,
                                Distro, DynamicBuildDep, IncFile, LayerBranch,
                                LayerDependency, LayerItem, LayerMaintainer,
@@ -1346,6 +1346,14 @@ class ClassicRecipeSearchView(RecipeSearchView):
         return context
 
 
+def _can_disposition_patches(request):
+    if request.user.is_authenticated():
+        if not request.user.has_perm('layerindex.patch_disposition'):
+            return False
+    else:
+        return False
+    return True
+
 
 class ClassicRecipeDetailView(SuccessMessageMixin, DetailView):
     model = ClassicRecipe
@@ -1354,14 +1362,6 @@ class ClassicRecipeDetailView(SuccessMessageMixin, DetailView):
     def _can_edit(self):
         if self.request.user.is_authenticated():
             if not self.request.user.has_perm('layerindex.edit_classic'):
-                return False
-        else:
-            return False
-        return True
-
-    def _can_disposition_patches(self):
-        if self.request.user.is_authenticated():
-            if not self.request.user.has_perm('layerindex.patch_disposition'):
                 return False
         else:
             return False
@@ -1383,44 +1383,27 @@ class ClassicRecipeDetailView(SuccessMessageMixin, DetailView):
         context['to_desc'] = 'OpenEmbedded'
         context['recipes'] = [recipe, cover_recipe]
 
-        context['can_disposition_patches'] = self._can_disposition_patches()
+        context['can_disposition_patches'] = _can_disposition_patches(self.request)
         if context['can_disposition_patches']:
-            nodisposition_ids = list(recipe.patch_set.filter(patchdisposition__isnull=True).values_list('id', flat=True))
-            patch_initial = [{'patch': p} for p in nodisposition_ids]
-            patch_formset = PatchDispositionFormSet(queryset=PatchDisposition.objects.filter(patch__recipe=recipe), initial=patch_initial, prefix='patchdispositiondialog')
-            patch_formset.extra = len(patch_initial)
-            context['patch_formset'] = patch_formset
+            context['patch_form'] = PatchDispositionForm(prefix='dispositionform')
         return context
 
-    def post(self, request, *args, **kwargs):
-        if not self._can_disposition_patches():
-            raise PermissionDenied
 
-        recipe = get_object_or_404(ClassicRecipe, pk=self.kwargs['pk'])
-        # What follows is a bit hacky, because we are receiving the form fields
-        # for just one of the forms in the formset which isn't really supported
-        # by Django
-        for field in request.POST:
-            if field.startswith('patchdispositiondialog'):
-                prefix = '-'.join(field.split('-')[:2])
-                instance = None
-                patchdisposition_id = request.POST.get('%s-id' % prefix, '')
-                if patchdisposition_id != '':
-                    instance = get_object_or_404(PatchDisposition, pk=int(patchdisposition_id))
+def patch_disposition_update_view(request):
+    if not _can_disposition_patches(request):
+        raise PermissionDenied
 
-                form = PatchDispositionForm(request.POST, prefix=prefix, instance=instance)
-                if form.is_valid():
-                    instance = form.save(commit=False)
-                    instance.user = request.user
-                    instance.save()
-                    messages.success(request, 'Changes to patch %s saved successfully.' % instance.patch.src_path)
-                    return HttpResponseRedirect(reverse('comparison_recipe', args=(recipe.id,)))
-                else:
-                    # FIXME this is ugly because HTML gets escaped
-                    messages.error(request, 'Failed to save changes: %s' % form.errors)
-                break
-
-        return self.get(request, *args, **kwargs)
+    patch = get_object_or_404(Patch, pk=request.POST.get('dispositionform-patch', None))
+    patch_disposition, created = PatchDisposition.objects.get_or_create(patch=patch)
+    patch_disposition.user = request.user
+    form = PatchDispositionForm(request.POST, prefix='dispositionform', instance=patch_disposition)
+    if form.is_valid():
+        form.save()
+        return HttpResponse('saved')
+    else:
+        response = HttpResponse('error')
+        response['X-Form-Errors'] = form.errors
+        return response
 
 
 class ClassicRecipeStatsView(TemplateView):
