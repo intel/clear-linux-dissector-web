@@ -15,7 +15,7 @@ from layerindex.views import LayerListView, LayerReviewListView, LayerReviewDeta
     ClassicRecipeSearchView, ClassicRecipeDetailView, ClassicRecipeStatsView, LayerUpdateDetailView, UpdateListView, \
     UpdateDetailView, StatsView, publish_view, LayerCheckListView, BBClassCheckListView, TaskStatusView, \
     ComparisonRecipeSelectView, ComparisonRecipeSelectDetailView, task_log_view, task_stop_view, email_test_view, \
-    TaskFilesView, update_file_download_view, patch_disposition_update_view
+    TaskFilesView, update_file_download_view, patch_disposition_update_view, ComparisonPatchView
 from layerindex.models import LayerItem, Recipe, RecipeChangeset
 from rest_framework import routers
 from . import restviews
@@ -112,6 +112,10 @@ urlpatterns = [
             paginate_by=0,
             content_type='text/csv'),
         name='comparison_recipe_search_csv'),
+    url(r'^comparison/patches/(?P<branch>[-., \w]+)/$',
+        ComparisonPatchView.as_view(
+            template_name='layerindex/comparisonpatches.html'),
+        name='comparison_patch_search'),
     url(r'^comparison/stats/(?P<branch>[-., \w]+)/$',
         ClassicRecipeStatsView.as_view(
             template_name='layerindex/classicstats.html'),

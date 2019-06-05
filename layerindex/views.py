@@ -47,7 +47,7 @@ from layerindex.forms import (AdvancedRecipeSearchForm, BulkChangeEditFormSet,
                               ComparisonRecipeSelectForm, EditLayerForm,
                               EditNoteForm, EditProfileForm,
                               LayerMaintainerFormSet, RecipeChangesetForm,
-                              PatchDispositionForm)
+                              PatchDispositionForm, ComparisonPatchSearchForm)
 from layerindex.models import (BBAppend, BBClass, Branch, ClassicRecipe,
                                Distro, DynamicBuildDep, IncFile, LayerBranch,
                                LayerDependency, LayerItem, LayerMaintainer,
@@ -1746,3 +1746,94 @@ class ComparisonRecipeSelectDetailView(DetailView):
             messages.error(request, 'Failed to save changes: %s' % form.errors)
 
         return self.get(request, *args, **kwargs)
+
+
+class ComparisonPatchView(RecipeSearchView):
+    context_object_name = 'patch_list'
+
+    def render_to_response(self, context, **kwargs):
+        # Bypass the redirect-to-single-instance behaviour of RecipeSearchView
+        return super(ListView, self).render_to_response(context, **kwargs)
+
+    def get_queryset(self):
+        query_string = self.request.GET.get('q', '')
+        selectedlayers_param = self.request.GET.get('selectedlayers', '')
+        if selectedlayers_param:
+            layer_ids = [int(i) for i in selectedlayers_param.split(',')]
+        else:
+            layer_ids = []
+        cover_status = self.request.GET.get('cover_status', None)
+        patch_disposition = self.request.GET.get('patch_disposition', '')
+        patch_applied = self.request.GET.get('patch_applied', '')
+        needs_attention = self.request.GET.get('needs_attention', '')
+        qs = Patch.objects.filter(recipe__layerbranch__branch__name=self.kwargs['branch']).order_by('recipe__pn', 'apply_order')
+        filtered = False
+        if layer_ids:
+            qs = qs.filter(recipe__classicrecipe__cover_layerbranch__layer__in=layer_ids)
+            filtered = True
+        if cover_status:
+            if cover_status == '!':
+                qs = qs.filter(recipe__classicrecipe__cover_status__in=['U', 'N'])
+            elif cover_status == '#':
+                qs = qs.exclude(recipe__classicrecipe__cover_status__in=['U', 'N', 'S'])
+            else:
+                qs = qs.filter(recipe__classicrecipe__cover_status=cover_status)
+            filtered = True
+        if patch_disposition.strip():
+            if not self.request.user.has_perm('layerindex.patch_disposition'):
+                raise PermissionDenied
+            if patch_disposition == '-':
+                qs = qs.filter(patchdisposition__isnull=True).distinct()
+            else:
+                qs = qs.filter(patchdisposition__disposition=patch_disposition).distinct()
+            filtered = True
+        if patch_applied.strip():
+            if patch_applied == '1':
+                qs = qs.filter(applied=True)
+            else:
+                qs = qs.filter(applied=False)
+            filtered = True
+        if needs_attention.strip():
+            if needs_attention == '1':
+                qs = qs.filter(recipe__classicrecipe__needs_attention=True)
+            else:
+                qs = qs.filter(recipe__classicrecipe__needs_attention=False)
+            filtered = True
+        if query_string:
+            qs = qs.filter(utils.string_to_query(query_string, ['path', 'recipe__pn', 'recipe__summary']))
+            filtered = True
+        if filtered or 'q' in self.request.GET:
+            return qs
+        else:
+            return Patch.objects.none()
+
+    def get_context_data(self, **kwargs):
+        context = super(ComparisonPatchView, self).get_context_data(**kwargs)
+        context['this_url_name'] = 'comparison_patch_search'
+        branchname = self.kwargs.get('branch', 'oe-classic')
+        context['branch'] = get_object_or_404(Branch, name=branchname)
+        if self.request.GET:
+            searched = True
+            search_form = ComparisonPatchSearchForm(self.request.GET)
+        else:
+            searched = False
+            search_form = ComparisonPatchSearchForm()
+        if not self.request.user.has_perm('layerindex.patch_disposition'):
+            del search_form.fields['patch_disposition']
+        context['search_form'] = search_form
+        context['searched'] = searched
+        selectedlayers_param = self.request.GET.get('selectedlayers', '')
+        if selectedlayers_param:
+            all_layer_names = dict(LayerItem.objects.all().values_list('id', 'name'))
+            layer_ids = [int(i) for i in selectedlayers_param.split(',')]
+            layer_names = [all_layer_names[i] for i in layer_ids]
+            context['selectedlayers_display'] = ','.join(layer_names)
+        else:
+            layer_ids = []
+            context['selectedlayers_display'] = ' (any)'
+        context['selectedlayers'] = layer_ids
+
+        context['can_disposition_patches'] = _can_disposition_patches(self.request)
+        if context['can_disposition_patches']:
+            context['patch_form'] = PatchDispositionForm(prefix='dispositionform')
+        return context

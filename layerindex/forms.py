@@ -358,6 +358,21 @@ class ComparisonRecipeSelectForm(StyledForm):
     oe_layer = forms.ModelChoiceField(label='OE Layer', queryset=LayerItem.objects.filter(comparison=False).filter(status__in=['P', 'X']).order_by('name'), empty_label="(any)", required=False)
 
 
+class ComparisonPatchSearchForm(StyledForm):
+    PATCH_APPLIED_CHOICES = [
+        ('', '(any)'),
+        ('1', 'Yes'),
+        ('0', 'No'),
+        ]
+
+    q = forms.CharField(label='Keyword', max_length=255, required=False)
+    patch_disposition = forms.ChoiceField(label='Disposition', choices=ClassicRecipeSearchForm.PATCH_DISPOSITION_CHOICES, required=False)
+    patch_applied = forms.ChoiceField(label='Applied', choices=PATCH_APPLIED_CHOICES, required=False)
+    oe_layer = forms.ModelChoiceField(label='OE Layer', queryset=LayerItem.objects.filter(comparison=False).filter(status__in=['P', 'X']).order_by('name'), empty_label="(any)", required=False)
+    cover_status = forms.ChoiceField(label='Cover status', choices=ClassicRecipeSearchForm.COVER_STATUS_CHOICES, required=False)
+    needs_attention = forms.ChoiceField(label='Needs attention', choices=ClassicRecipeSearchForm.ATTENTION_CHOICES, required=False)
+
+
 class PatchDispositionForm(StyledModelForm):
     class Meta:
         model = PatchDisposition
