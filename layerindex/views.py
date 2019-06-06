@@ -1766,6 +1766,7 @@ class ComparisonPatchView(RecipeSearchView):
         patch_disposition = self.request.GET.get('patch_disposition', '')
         patch_applied = self.request.GET.get('patch_applied', '')
         needs_attention = self.request.GET.get('needs_attention', '')
+        export = self.request.GET.get('export', '')
         qs = Patch.objects.filter(recipe__layerbranch__branch__name=self.kwargs['branch']).order_by('recipe__pn', 'apply_order')
         filtered = False
         if layer_ids:
@@ -1799,6 +1800,9 @@ class ComparisonPatchView(RecipeSearchView):
             else:
                 qs = qs.filter(recipe__classicrecipe__needs_attention=False)
             filtered = True
+        if export:
+            qs = qs.filter(recipe__classicrecipe__export=export)
+            filtered = True
         if query_string:
             qs = qs.filter(utils.string_to_query(query_string, ['path', 'recipe__pn', 'recipe__summary']))
             filtered = True
@@ -1820,6 +1824,7 @@ class ComparisonPatchView(RecipeSearchView):
             search_form = ComparisonPatchSearchForm()
         if not self.request.user.has_perm('layerindex.patch_disposition'):
             del search_form.fields['patch_disposition']
+            del search_form.fields['export']
         context['search_form'] = search_form
         context['searched'] = searched
         selectedlayers_param = self.request.GET.get('selectedlayers', '')
