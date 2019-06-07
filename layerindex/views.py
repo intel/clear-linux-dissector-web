@@ -47,7 +47,8 @@ from layerindex.forms import (AdvancedRecipeSearchForm, BulkChangeEditFormSet,
                               ComparisonRecipeSelectForm, EditLayerForm,
                               EditNoteForm, EditProfileForm,
                               LayerMaintainerFormSet, RecipeChangesetForm,
-                              PatchDispositionForm, ComparisonPatchSearchForm)
+                              PatchDispositionForm, ComparisonPatchSearchForm,
+                              ComparisonRecipeExportOptionsForm)
 from layerindex.models import (BBAppend, BBClass, Branch, ClassicRecipe,
                                Distro, DynamicBuildDep, IncFile, LayerBranch,
                                LayerDependency, LayerItem, LayerMaintainer,
@@ -1386,7 +1387,24 @@ class ClassicRecipeDetailView(SuccessMessageMixin, DetailView):
         context['can_disposition_patches'] = _can_disposition_patches(self.request)
         if context['can_disposition_patches']:
             context['patch_form'] = PatchDispositionForm(prefix='dispositionform')
+            context['export_form'] = ComparisonRecipeExportOptionsForm(prefix='exportform', instance=recipe)
         return context
+
+
+def export_options_update_view(request, pk):
+    if not _can_disposition_patches(request):
+        raise PermissionDenied
+
+    recipe = get_object_or_404(ClassicRecipe, pk=pk)
+    form = ComparisonRecipeExportOptionsForm(request.POST, prefix='exportform', instance=recipe)
+    if form.is_valid():
+        form.save()
+        response = HttpResponse('error')
+        response['X-No-Export-Reason'] = recipe.no_export_reason()
+    else:
+        response = HttpResponse('error')
+        response['X-Form-Errors'] = form.errors
+    return response
 
 
 def patch_disposition_update_view(request):

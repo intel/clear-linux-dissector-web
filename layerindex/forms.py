@@ -384,3 +384,8 @@ class PatchDispositionForm(StyledModelForm):
         widgets = {
             'patch': forms.HiddenInput(),
         }
+
+class ComparisonRecipeExportOptionsForm(StyledModelForm):
+    class Meta:
+        model = ClassicRecipe
+        fields = ('export', 'export_class')
