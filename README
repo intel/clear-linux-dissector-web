@@ -54,6 +54,12 @@ instructions will walk you through the setup.
    password resets), you should use the -e/--email-host option to specify your
    outgoing email server.
 
+   NOTE: If you import an existing database dump, you will get whatever data
+   was in the database, however you will not have the corresponding Clear Linux
+   sources which means that file diffs for version comparisons won't be
+   possible. To obtain the sources please see "Importing/Updating Clear Linux
+   data" below.
+
    During the setup you will be asked for a username, email and password to
    set up a super user for the database.
 
@@ -109,11 +115,11 @@ import_layer.py script to import layers individually.
 NOTE: Please also see "Security Considerations" below.
 
 
-Usage
------
+Updating OpenEmbedded data
+--------------------------
 
-You may wish to update the OpenEmbedded layer information on a regular basis;
-if you wish to do that:
+You may wish to update the OpenEmbedded layer information on a regular basis.
+To do that:
 
    Incremental update:
 
@@ -125,6 +131,30 @@ if you wish to do that:
        docker-compose run --rm layersapp /opt/layerindex/layerindex/update.py -r
 
 
+Importing/Updating Clear Linux data
+-----------------------------------
+
+Importing data from Clear Linux (or a suitably-structured derivative) can
+be done through the web UI by users with the
+"layerindex | classic recipe | Can update comparison branches" permission
+via the "Import Distro Data" button on the main page. However, if you wish
+to import data on the backend you can do so as follows:
+
+docker-compose run --rm layersapp /opt/layerindex/layerindex/tools/import_clear.py -d -p /opt/dissector -o /opt/sources -b <branchname>
+
+Where <branchname> should be replaced by the name of the Clear Linux branch
+to use (e.g. "clearlinux"). You can import into a new branch if you wish,
+and specify a specific version with -r. Use the --help option to see more.
+
+Importing a derivative Clear Linux distribution is similar; you will need
+the corresponding source tarball:
+
+docker-compose run --rm layersapp /opt/layerindex/layerindex/tools/import_clear.py -d -p /opt/dissector -o /opt/sources -b <branchname> -g <derivative tarball URL>
+
+Typically when importing a derivative you would specify a *different* branch
+than your main Clear Linux branch.
+
+
 
 Upgrading from an earlier version
 ---------------------------------
@@ -134,6 +164,7 @@ To upgrade the Docker-based setup from a previous release, simply run:
 ./dockersetup.py -u
 
 This will update the code and run any required database migrations.
+
 
 
 Setting up other distro comparisons
