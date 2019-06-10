@@ -1819,7 +1819,10 @@ class ComparisonPatchView(RecipeSearchView):
                 qs = qs.filter(recipe__classicrecipe__needs_attention=False)
             filtered = True
         if export:
-            qs = qs.filter(recipe__classicrecipe__export=export)
+            if export == '+':
+                qs = qs.filter(recipe__classicrecipe__export__in=['X', 'R'])
+            else:
+                qs = qs.filter(recipe__classicrecipe__export=export)
             filtered = True
         if query_string:
             qs = qs.filter(utils.string_to_query(query_string, ['path', 'recipe__pn', 'recipe__summary']))

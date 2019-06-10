@@ -97,26 +97,33 @@ def init_parser(settings, branch, bitbakepath, enable_tracking=False, nocheckout
 
     return (tinfoil, tempdir)
 
-def setup_layer(config_data, fetchdir, layerdir, layer, layerbranch, logger):
+def setup_layer(config_data, fetchdir, layerdir, layer=None, layerbranch=None, logger=None):
     # Parse layer.conf files for this layer and its dependencies
     # This is necessary not just because BBPATH needs to be set in order
     # for include/require/inherit to work outside of the current directory
     # or across layers, but also because custom variable values might be
     # set in layer.conf.
+    # NOTE: layer and layerbranch are optional but you should always specify
+    # them unless you're parsing a layer not in the index.
+
+    if not logger:
+        raise Exception('setup_layer: logger must be specified')
+
     config_data_copy = bb.data.createCopy(config_data)
     utils.parse_layer_conf(layerdir, config_data_copy)
-    for dep in layerbranch.dependencies_set.all():
-        depurldir = dep.dependency.get_fetch_dir()
-        deprepodir = os.path.join(fetchdir, depurldir)
-        deplayerbranch = dep.dependency.get_layerbranch(layerbranch.branch.name)
-        if not deplayerbranch:
-            if dep.required:
-                raise RecipeParseError('Dependency %s of layer %s does not have branch record for branch %s' % (dep.dependency.name, layer.name, layerbranch.branch.name))
-            else:
-                logger.warning('Recommends %s of layer %s does not have branch record for branch %s - ignoring' % (dep.dependency.name, layer.name, layerbranch.branch.name))
-                continue
-        deplayerdir = os.path.join(deprepodir, deplayerbranch.vcs_subdir)
-        utils.parse_layer_conf(deplayerdir, config_data_copy)
+    if layerbranch and layer:
+        for dep in layerbranch.dependencies_set.all():
+            depurldir = dep.dependency.get_fetch_dir()
+            deprepodir = os.path.join(fetchdir, depurldir)
+            deplayerbranch = dep.dependency.get_layerbranch(layerbranch.branch.name)
+            if not deplayerbranch:
+                if dep.required:
+                    raise RecipeParseError('Dependency %s of layer %s does not have branch record for branch %s' % (dep.dependency.name, layer.name, layerbranch.branch.name))
+                else:
+                    logger.warning('Recommends %s of layer %s does not have branch record for branch %s - ignoring' % (dep.dependency.name, layer.name, layerbranch.branch.name))
+                    continue
+            deplayerdir = os.path.join(deprepodir, deplayerbranch.vcs_subdir)
+            utils.parse_layer_conf(deplayerdir, config_data_copy)
     config_data_copy.delVar('LAYERDIR')
     return config_data_copy
 

@@ -13,6 +13,8 @@ import subprocess
 import logging
 import re
 import shutil
+import errno
+import tempfile
 
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -88,31 +90,14 @@ def compare_url_list(urls1, urls2):
     return normalise_list(urls1) == normalise_list(urls2)
 
 
-def write_bbappend(args, layerdir, recipe, cover_recipe, cover_layerdir, rd):
-    import oe.recipeutils
+def get_patches(recipe, srcdir, cover_patch_hashes):
     from django.db.models import Q
     from layerindex.models import PatchDisposition
-
-    cover_patch_hashes = []
-    for patch in cover_recipe.patch_set.all():
-        pfn = os.path.join(cover_layerdir, patch.path)
-        sha256sum = hash_patch(pfn)
-        cover_patch_hashes.append(sha256sum)
-
-    if recipe.pv == cover_recipe.pv:
-        rsources, rfiles = filter_urls(recipe.source_set.exclude(url__endswith='.sig').exclude(url__endswith='.asc').values_list('url', flat=True))
-        crsources, _ = filter_urls(cover_recipe.source_set.values_list('url', flat=True))
-        if not compare_url_list(rsources, crsources):
-            logger.info('%s: [%s] != [%s]' % (cover_recipe.pn, ', '.join(rsources), ', '.join(crsources)))
-        if rfiles:
-            logger.info('%s: extra files: [%s]' % (cover_recipe.pn, ', '.join(rfiles)))
-    else:
-        logger.info('%s: version %s != %s' % (cover_recipe.pn, recipe.pv, cover_recipe.pv))
 
     srcfiles = {}
     patches = []
     for patch in recipe.patch_set.filter(Q(patchdisposition__isnull=True) | Q(patchdisposition__disposition='A')):
-        pfn = os.path.join(args.srcdir, patch.path)
+        pfn = os.path.join(srcdir, patch.path)
         sha256sum = hash_patch(pfn)
         if sha256sum in cover_patch_hashes:
             if not PatchDisposition.objects.filter(patch=patch).exists():
@@ -135,6 +120,38 @@ def write_bbappend(args, layerdir, recipe, cover_recipe, cover_layerdir, rd):
         if patch.striplevel != 1:
             params.append('striplevel=%s' % patch.striplevel)
         patches.append((pfn, params))
+    return patches, srcfiles
+
+
+def patches_to_srcuri(patches, srcuri):
+    for pfn, params in patches:
+        if params:
+            paramstr = ';' + (';'.join(params))
+        else:
+            paramstr = ''
+        srcuri.append('file://%s%s' % (os.path.basename(pfn), paramstr))
+
+
+def write_bbappend(args, layerdir, recipe, cover_recipe, cover_layerdir, rd):
+    import oe.recipeutils
+
+    cover_patch_hashes = []
+    for patch in cover_recipe.patch_set.all():
+        pfn = os.path.join(cover_layerdir, patch.path)
+        sha256sum = hash_patch(pfn)
+        cover_patch_hashes.append(sha256sum)
+
+    if recipe.pv == cover_recipe.pv:
+        rsources, rfiles = filter_urls(recipe.source_set.exclude(url__endswith='.sig').exclude(url__endswith='.asc').values_list('url', flat=True))
+        crsources, _ = filter_urls(cover_recipe.source_set.values_list('url', flat=True))
+        if not compare_url_list(rsources, crsources):
+            logger.info('%s: [%s] != [%s]' % (cover_recipe.pn, ', '.join(rsources), ', '.join(crsources)))
+        if rfiles:
+            logger.info('%s: extra files: [%s]' % (cover_recipe.pn, ', '.join(rfiles)))
+    else:
+        logger.info('%s: version %s != %s' % (cover_recipe.pn, recipe.pv, cover_recipe.pv))
+
+    patches, srcfiles = get_patches(recipe, args.srcdir, cover_patch_hashes)
 
     # FIXME this hack shouldn't be necessary!
     oe.recipeutils.list_vars.append('SRC_URI_append')
@@ -147,12 +164,7 @@ def write_bbappend(args, layerdir, recipe, cover_recipe, cover_layerdir, rd):
             # FIXME this should be made possible within bbappend_recipe()
             pvalues = {}
             srcuri = []
-            for pfn, params in patches:
-                if params:
-                    paramstr = ';' + (';'.join(params))
-                else:
-                    paramstr = ''
-                srcuri.append('file://%s%s' % (os.path.basename(pfn), paramstr))
+            patches_to_srcuri(patches, srcuri)
             if recipe.export_class == 'T':
                 srcurivar = 'SRC_URI_append_class-target'
             else:
@@ -164,10 +176,112 @@ def write_bbappend(args, layerdir, recipe, cover_recipe, cover_layerdir, rd):
             oe.recipeutils.patch_recipe_file(bbappend, pvalues, patch=False)
 
 
+def get_checksums(args, uri):
+    if args.dldir:
+        dltempdir = None
+        dldir = args.dldir
+        try:
+            os.makedirs(dldir)
+        except FileExistsError:
+            pass
+    else:
+        dltempdir = tempfile.mkdtemp()
+        dldir = dltempdir
+    checksums = {}
+    try:
+        return_code = subprocess.call(['wget', '-nc', uri], cwd=dldir)
+        if return_code != 0:
+            logger.error('Failed to fetch source %s' % uri)
+            return None
+        checksums['sha256sum'] = utils.sha256_file(os.path.join(dldir, os.path.basename(uri)))
+        checksums['md5sum'] = utils.md5_file(os.path.join(dldir, os.path.basename(uri)))
+    finally:
+        if dltempdir:
+            shutil.rmtree(dltempdir)
+    return checksums
+
+
+def update_recipe(args, recipe, rd, tinfoil):
+    import oe.recipeutils
+    import bb.fetch
+    import bb.utils
+    import settings
+
+    # Get a list of entries in SRC_URI in the recipe to be updated
+    # that are not the upstream source or patches (which we will
+    # be replacing)
+    existing_patches = [os.path.basename(pth) for pth in oe.recipeutils.get_recipe_patches(rd)]
+    existing_srcuri = []
+    has_defconfig = False
+    for entry in rd.getVar('SRC_URI').split():
+        scheme, _, pth, _, _, _ = bb.fetch.decodeurl(entry)
+        filename = os.path.basename(pth)
+        if filename in existing_patches:
+            continue
+        if scheme != 'file':
+            continue
+        if filename == 'defconfig':
+            has_defconfig = True
+        existing_srcuri.append(entry)
+    # Get patches we want to add to SRC_URI and copy in
+    patches, srcfiles = get_patches(recipe, args.srcdir, [])
+    patch_srcuri = []
+    patches_to_srcuri(patches, patch_srcuri)
+    # Get sources
+    src_srcuri = []
+    configfile = None
+    for entry in recipe.source_set.all().values_list('url', flat=True):
+        if '://' in entry:
+            src_srcuri.append(entry)
+        if not configfile and entry.startswith('config') and not entry.endswith('-sos'):
+            configfile = entry
+    # Now compose new SRC_URI
+    new_srcuri = src_srcuri + patch_srcuri + existing_srcuri
+    # Now grab the SRC_URI checksums
+    checksums = get_checksums(args, src_srcuri[0])
+    if not checksums:
+        # Download failed, error already shown
+        sys.exit(1)
+    # Update the recipe file
+    recipefile = rd.getVar('FILE')
+    fields = {'SRC_URI': ' '.join(new_srcuri)}
+    for csname, value in checksums.items():
+        fields['SRC_URI[%s]' % csname] = value
+    oe.recipeutils.patch_recipe(rd, recipefile, fields, patch=False)
+    if rd.getVar('LINUX_VERSION'):
+        # FIXME patch_recipe cannot cope with ?= at the moment so we have to take this approach
+        def update_linuxversion_varfunc(varname, origvalue, op, newlines):
+            if varname == 'LINUX_VERSION':
+               return recipe.pv, None, 0, True
+            return origvalue, None, 0, True
+        bb.utils.edit_metadata_file(recipefile, ['LINUX_VERSION'], update_linuxversion_varfunc)
+    # Copy over patch files
+    filesdir = os.path.join(os.path.dirname(recipefile), rd.getVar('PN'))
+    try:
+        os.makedirs(filesdir)
+    except FileExistsError:
+        pass
+    for pfn in srcfiles.keys():
+        shutil.copy2(pfn, filesdir)
+    if has_defconfig:
+        if configfile:
+            # Copy defconfig
+            # FIXME code outside of dissector app shouldn't know about this setting - probably need to rename it
+            srcdir = getattr(settings, 'VERSION_COMPARE_SOURCE_DIR')
+            configpath = os.path.join(srcdir, recipe.layerbranch.local_path, recipe.filepath, configfile)
+            if os.path.exists(configpath):
+                shutil.copy2(configpath, os.path.join(filesdir, 'defconfig'))
+            else:
+                logger.warn('%s: unable to find file %s to copy as defconfig' % (recipe.pn, configpath))
+        else:
+            logger.warn('%s: unable to find replacement defconfig' % recipe.pn)
+
+
 def export_layer(args):
     utils.setup_django()
     import settings
     from layerindex.models import Branch, LayerItem, LayerBranch, ClassicRecipe, Patch
+    from django.db.models import Q
     from django.db import transaction
 
     from layerindex.models import LayerItem, LayerBranch
@@ -231,10 +345,40 @@ def export_layer(args):
         logger.error('Output directory must be a git repository if specifying -p/--patch')
         return 1
 
-    for entry in os.listdir(outlayerdir):
-        entrypath = os.path.join(outlayerdir, entry)
-        if entry.startswith('recipes') and os.path.isdir(entrypath):
-            shutil.rmtree(entrypath)
+    if args.patch and os.path.exists(args.patch):
+        logger.error('Output patch file %s already exists' % args.patch)
+        return 1
+
+    recipefiles = []
+    patchdirs = []
+    # Gather all recipes, delete bbappends and gather directories where they exist(ed)
+    for root, dirs, files in os.walk(outlayerdir):
+        for fn in files:
+            fp = os.path.join(root, fn)
+            if fp.endswith('.bbappend'):
+                os.remove(fp)
+                patchdirs.append(os.path.dirname(fp))
+            elif fp.endswith('.bb'):
+                recipefiles.append(fp)
+                patchdirs.append(os.path.dirname(fp))
+    # Delete all subdirs of recipe/bbappend dirs (i.e. patch directories)
+    for patchdir in patchdirs:
+        try:
+            for subdir in os.listdir(patchdir):
+                dp = os.path.join(patchdir, subdir)
+                if os.path.isdir(dp):
+                    shutil.rmtree(dp)
+        except FileNotFoundError:
+            pass
+    # Now delete all empty directories
+    for root, dirs, _ in os.walk(outlayerdir, topdown=False):
+        for dn in dirs:
+            dp = os.path.join(root, dn)
+            try:
+                os.rmdir(dp)
+            except OSError as e:
+                if e.errno == errno.ENOTEMPTY:
+                    pass
 
     master_branch = utils.get_branch('master')
     fetchdir = settings.LAYER_FETCH_DIR
@@ -250,7 +394,7 @@ def export_layer(args):
         sys.stderr.write("Layer index lock timeout expired\n")
         sys.exit(1)
     try:
-        (tinfoil, tempdir) = recipeparse.init_parser(settings, master_branch, bitbakepath, True)
+        (tinfoil, tempdir) = recipeparse.init_parser(settings, master_branch, bitbakepath, enable_tracking=True)
         try:
             utils.setup_core_layer_sys_path(settings, master_branch.name)
 
@@ -267,25 +411,46 @@ def export_layer(args):
 
             logger.info('Exporting ' + str(branch))
 
-            cover_layerbranch = None
-            recipequery = ClassicRecipe.objects.filter(layerbranch=layerbranch, deleted=False, cover_status='D', export='X')
+            if not args.no_appends:
+                # Handle bbappends
+                cover_layerbranch = None
+                recipeappendquery = ClassicRecipe.objects.filter(layerbranch=layerbranch, deleted=False, cover_status='D', export='X')
+                if args.cover_layers:
+                    recipeappendquery = recipeappendquery.filter(cover_layerbranch__layer__name__in=args.cover_layers.split(','))
+
+                for recipe in recipeappendquery.order_by('cover_layerbranch', 'pn'):
+                    cover_recipe = recipe.get_cover_recipe()
+                    if not cover_recipe:
+                        logger.warn('Missing cover recipe for recipe %s that has "Direct match" cover type' % recipe.pn)
+                        continue
+                    if recipe.cover_layerbranch != cover_layerbranch:
+                        cover_layerbranch = recipe.cover_layerbranch
+                        layerfetchdir = os.path.join(fetchdir, cover_layerbranch.layer.get_fetch_dir())
+                        utils.checkout_layer_branch(cover_layerbranch, layerfetchdir)
+                        cover_layerdir = os.path.join(layerfetchdir, cover_layerbranch.vcs_subdir)
+                        config_data_copy = recipeparse.setup_layer(tinfoil.config_data, fetchdir, cover_layerdir, cover_layerbranch.layer, cover_layerbranch, logger)
+                        config_data_copy.setVar('BBLAYERS', ' '.join([cover_layerdir, outlayerdir]))
+                    recipefile = str(os.path.join(layerfetchdir, cover_layerbranch.vcs_subdir, cover_recipe.filepath, cover_recipe.filename))
+                    rd = tinfoil.parse_recipe_file(recipefile, appends=False, config_data=config_data_copy)
+                    write_bbappend(args, outlayerdir, recipe, cover_recipe, cover_layerdir, rd)
+
+            # Handle recipes
+            import oe.recipeutils
+            recipequery = ClassicRecipe.objects.filter(layerbranch=layerbranch, deleted=False, export='R')
             if args.cover_layers:
-                recipequery = recipequery.filter(cover_layerbranch__layer__name__in=args.cover_layers.split(','))
-            for recipe in recipequery.order_by('cover_layerbranch', 'pn'):
-                cover_recipe = recipe.get_cover_recipe()
-                if not cover_recipe:
-                    logger.warn('Missing cover recipe for recipe %s that has "Direct match" cover type' % recipe.pn)
+                recipequery = recipequery.filter(Q(cover_layerbranch__layer__name__in=args.cover_layers.split(',')) | Q(cover_layerbranch__isnull=True))
+            config_data_copy = recipeparse.setup_layer(tinfoil.config_data, fetchdir, outlayerdir, logger=logger)
+            config_data_copy.setVar('BBLAYERS', outlayerdir)
+            recipes = {}
+            for recipefile in recipefiles:
+                rd = tinfoil.parse_recipe_file(recipefile, appends=False)
+                recipes[rd.getVar('PN')] = rd
+            for recipe in recipequery.order_by('pn'):
+                rd = recipes.get(recipe.pn, None)
+                if rd is None:
+                    logger.warn('Recipe %s is set to export type "Recipe" but was not found in output layer' % recipe.pn)
                     continue
-                if recipe.cover_layerbranch != cover_layerbranch:
-                    cover_layerbranch = recipe.cover_layerbranch
-                    layerfetchdir = os.path.join(fetchdir, cover_layerbranch.layer.get_fetch_dir())
-                    utils.checkout_layer_branch(cover_layerbranch, layerfetchdir)
-                    cover_layerdir = os.path.join(layerfetchdir, cover_layerbranch.vcs_subdir)
-                    config_data_copy = recipeparse.setup_layer(tinfoil.config_data, fetchdir, cover_layerdir, cover_layerbranch.layer, cover_layerbranch, logger)
-                    config_data_copy.setVar('BBLAYERS', ' '.join([cover_layerdir, outlayerdir]))
-                recipefile = str(os.path.join(layerfetchdir, cover_layerbranch.vcs_subdir, cover_recipe.filepath, cover_recipe.filename))
-                rd = tinfoil.parse_recipe_file(recipefile, appends=False, config_data=config_data_copy)
-                write_bbappend(args, outlayerdir, recipe, cover_recipe, cover_layerdir, rd)
+                update_recipe(args, recipe, rd, tinfoil)
         finally:
             tinfoil.shutdown()
     finally:
@@ -303,7 +468,7 @@ def export_layer(args):
             logger.error('git add failed')
             return 1
 
-        cmd = ['git', 'diff', '--cached', '-p']
+        cmd = ['git', '-c', 'diff.renameLimit=2048', 'diff', '--cached', '-p']
         with open(patch, 'w') as f:
             logger.debug('Executing %s' % cmd)
             return_code = subprocess.call(cmd, cwd=os.path.abspath(args.outdir), stdout=f)
@@ -334,6 +499,8 @@ def main():
     parser.add_argument('-r', '--fetch-revision', help='Checkout the specified branch/tag/revision (in conjunction with -f/--fetch-layer)')
     parser.add_argument('-s', '--subdir', help='Specify subdirectory for layer')
     parser.add_argument('-p', '--patch', help='Create a patch to update the layer')
+    parser.add_argument('--dldir', help='Specify directory for downloads')
+    parser.add_argument('--no-appends', action='store_true', help='Skip writing bbappends (for debugging only)')
 
     args = parser.parse_args()
 

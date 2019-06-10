@@ -365,7 +365,8 @@ class ComparisonPatchSearchForm(StyledForm):
         ('0', 'No'),
         ]
     EXPORT_CHOICES = [
-        ('', '(any)')
+        ('', '(any)'),
+        ('+', '(exportable)'),
     ] + ClassicRecipe.EXPORT_CHOICES
 
     q = forms.CharField(label='Keyword', max_length=255, required=False)

@@ -492,6 +492,14 @@ def sha256_file(ifn):
             shash.update(line)
     return shash.hexdigest()
 
+def md5_file(ifn):
+    import hashlib
+    shash = hashlib.md5()
+    with open(ifn, 'rb') as f:
+        for line in f:
+            shash.update(line)
+    return shash.hexdigest()
+
 def human_filesize(numbytes):
     if numbytes == 0:
         return '0 B'

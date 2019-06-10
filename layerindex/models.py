@@ -718,7 +718,8 @@ class ClassicRecipe(Recipe):
         ('D', 'Direct match'),
     ]
     EXPORT_CHOICES = [
-        ('X', 'Export'),
+        ('X', 'Export bbappend'),
+        ('R', 'Export recipe update'),
         ('A', 'Already handled'),
         ('N', 'Not needed'),
     ]
