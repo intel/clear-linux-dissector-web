@@ -275,7 +275,8 @@ REGISTRATION_OPEN = False
 * Account lockout: this application will lock out the user in two ways:
 
   - By IP address (using django-axes) after too many invalid login attempts.
-    (default 3). The lockout can be removed using the following command:
+    (default 4, resets after an hour). The lockout can be removed
+    immediately using the following command:
 
     docker-compose exec layersapp /opt/layerindex/manage.py axes_reset
 
