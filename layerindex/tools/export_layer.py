@@ -446,9 +446,13 @@ def export_layer(args):
                 rd = tinfoil.parse_recipe_file(recipefile, appends=False)
                 recipes[rd.getVar('PN')] = rd
             for recipe in recipequery.order_by('pn'):
-                rd = recipes.get(recipe.pn, None)
+                if recipe.cover_pn:
+                    cover_pn = recipe.cover_pn
+                else:
+                    cover_pn = recipe.pn
+                rd = recipes.get(cover_pn, None)
                 if rd is None:
-                    logger.warn('Recipe %s is set to export type "Recipe" but was not found in output layer' % recipe.pn)
+                    logger.warn('Recipe %s is set to export type "Recipe" but recipe named %s was not found in output layer' % (recipe.pn, cover_pn))
                     continue
                 update_recipe(args, recipe, rd, tinfoil)
         finally:
