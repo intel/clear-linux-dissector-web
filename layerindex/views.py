@@ -55,7 +55,8 @@ from layerindex.models import (BBAppend, BBClass, Branch, ClassicRecipe,
                                LayerNote, LayerUpdate, Machine, Patch, Recipe,
                                RecipeChange, RecipeChangeset, Source, StaticBuildDep,
                                Update, SecurityQuestion, SecurityQuestionAnswer,
-                               UserProfile, PatchDisposition, UpdateFile)
+                               UserProfile, PatchDisposition, UpdateFile,
+                               SavedSearch)
 
 
 from . import tasks, utils
@@ -1862,4 +1863,6 @@ class ComparisonPatchView(RecipeSearchView):
         context['can_disposition_patches'] = _can_disposition_patches(self.request)
         if context['can_disposition_patches']:
             context['patch_form'] = PatchDispositionForm(prefix='dispositionform')
+
+        context['savedsearches'] = SavedSearch.objects.filter(search_url='comparison_patch_search', search_url_args=branchname)
         return context

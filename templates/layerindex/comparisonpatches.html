@@ -97,6 +97,9 @@
                         </table>
                         <br>
                         <button class="btn btn-default" type="submit">Search</button>
+                        {% for search in savedsearches %}
+                        <a href="{{ search.url }}" class="btn btn-link">{{ search.name }}</a>
+                        {% endfor %}
                     </form>
                 </div>
 

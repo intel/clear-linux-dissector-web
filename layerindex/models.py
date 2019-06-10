@@ -11,6 +11,7 @@ from django.core.urlresolvers import reverse
 from django.core.validators import URLValidator
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.core.urlresolvers import reverse_lazy
 from collections import namedtuple
 import os
 import re
@@ -990,3 +991,18 @@ class PatchDisposition(models.Model):
         return '%s - %s' % (self.patch, self.get_disposition_display())
 
 
+class SavedSearch(models.Model):
+    name = models.CharField(max_length=50)
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
+    search_url = models.CharField(max_length=255)
+    search_url_args = models.CharField(max_length=255)
+    search = models.TextField()
+
+    class Meta:
+        verbose_name_plural = "Saved searches"
+
+    def url(self):
+        return reverse_lazy(self.search_url, args=tuple(self.search_url_args.split(','))) + '?' + self.search
+
+    def __str__(self):
+        return '%s: %s' % (self.search_url, self.name)
