@@ -21,6 +21,9 @@
                             <li><a href="{% url 'comparison_recipe_search' branch.name %}">{% if branch.name == 'oe-classic' %}Recipes{% else %}Packages{% endif %}</a></li>
                             <li class="active"><a href="{% url 'comparison_patch_search' branch.name %}">Patches</a></li>
                             <li><a href="{% url 'comparison_recipe_stats' branch.name %}">Stats</a></li>
+                            {% if can_view_dispositioning %}
+                            <li><a href="{% url 'comparison_patch_stats' branch.name %}">Patch Stats</a></li>
+                            {% endif %}
 {% endautoescape %}
 {% endblock %}
 

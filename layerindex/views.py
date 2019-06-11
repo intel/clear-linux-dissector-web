@@ -48,7 +48,8 @@ from layerindex.forms import (AdvancedRecipeSearchForm, BulkChangeEditFormSet,
                               EditNoteForm, EditProfileForm,
                               LayerMaintainerFormSet, RecipeChangesetForm,
                               PatchDispositionForm, ComparisonPatchSearchForm,
-                              ComparisonRecipeExportOptionsForm)
+                              ComparisonRecipeExportOptionsForm,
+                              ComparisonPatchStatsForm)
 from layerindex.models import (BBAppend, BBClass, Branch, ClassicRecipe,
                                Distro, DynamicBuildDep, IncFile, LayerBranch,
                                LayerDependency, LayerItem, LayerMaintainer,
@@ -1252,7 +1253,7 @@ class ClassicRecipeSearchView(RecipeSearchView):
                 init_qs = init_qs.filter(patch__isnull=True)
             filtered = True
         if patch_disposition.strip():
-            if not self.request.user.has_perm('layerindex.patch_disposition'):
+            if not _can_view_dispositioning(self.request):
                 raise PermissionDenied
             if patch_disposition == '-':
                 init_qs = init_qs.filter(patch__isnull=False).filter(patch__patchdisposition__isnull=True).distinct()
@@ -1307,14 +1308,13 @@ class ClassicRecipeSearchView(RecipeSearchView):
         context['this_url_name'] = 'recipe_search'
         branchname = self.kwargs.get('branch', 'oe-classic')
         context['branch'] = get_object_or_404(Branch, name=branchname)
+        context['can_view_dispositioning'] = _can_view_dispositioning(self.request)
         if 'q' in self.request.GET:
             searched = True
-            search_form = ClassicRecipeSearchForm(self.request.GET)
+            search_form = ClassicRecipeSearchForm(self.request.GET, can_view_dispositioning=context['can_view_dispositioning'])
         else:
             searched = False
-            search_form = ClassicRecipeSearchForm()
-        if not self.request.user.has_perm('layerindex.patch_disposition'):
-            del search_form.fields['patch_disposition']
+            search_form = ClassicRecipeSearchForm(can_view_dispositioning=context['can_view_dispositioning'])
         context['compare'] = self.request.GET.get('compare', False)
         context['reversed'] = self.request.GET.get('reversed', False)
         context['search_form'] = search_form
@@ -1351,6 +1351,16 @@ class ClassicRecipeSearchView(RecipeSearchView):
 def _can_disposition_patches(request):
     if request.user.is_authenticated():
         if not request.user.has_perm('layerindex.patch_disposition'):
+            return False
+    else:
+        return False
+    return True
+
+def _can_view_dispositioning(request):
+    if _can_disposition_patches(request):
+        return True
+    if request.user.is_authenticated():
+        if not request.user.has_perm('layerindex.patch_disposition_view'):
             return False
     else:
         return False
@@ -1472,6 +1482,68 @@ class ClassicRecipeStatsView(TemplateView):
         categories = sorted(categories, key=lambda cat: catcounts[cat], reverse=True)
         context['chart_category_labels'] = categories
         context['chart_category_values'] = [catcounts[k] for k in categories]
+        context['can_view_dispositioning'] = _can_view_dispositioning(self.request)
+        return context
+
+
+class ComparisonPatchStatsView(TemplateView):
+    def get_context_data(self, **kwargs):
+        if not _can_view_dispositioning(self.request):
+            raise PermissionDenied
+
+        context = super(ComparisonPatchStatsView, self).get_context_data(**kwargs)
+        selectedlayers_param = self.request.GET.get('selectedlayers', '')
+        if selectedlayers_param:
+            layer_ids = [int(i) for i in selectedlayers_param.split(',')]
+        else:
+            layer_ids = []
+        branchname = self.kwargs.get('branch', 'oe-classic')
+        context['branch'] = get_object_or_404(Branch, name=branchname)
+        context['url_branch'] = branchname
+        context['this_url_name'] = 'recipe_search'
+        # *** Patch disposition chart ***
+        patches = Patch.objects.filter(recipe__layerbranch__branch=context['branch']).filter(recipe__classicrecipe__deleted=False).filter(applied=True).filter(recipe__classicrecipe__cover_status='D').filter(recipe__classicrecipe__export__in=['R', 'X'])
+        context['query_description'] = 'patches applied in Clear Linux only, for exported direct-match recipes only'
+        if layer_ids:
+            patches = patches.filter(recipe__classicrecipe__cover_layerbranch__layer__in=layer_ids)
+
+        def disposition_chart(prefix):
+            all_disposition_values = [item[1] for item in PatchDisposition.PATCH_DISPOSITION_CHOICES]
+            dispositions = []
+            disposition_counts = {}
+            for choice, desc in PatchDisposition.PATCH_DISPOSITION_CHOICES:
+                count = patches.filter(patchdisposition__disposition=choice).count()
+                if count > 0:
+                    dispositions.append(desc)
+                    disposition_counts[desc] = count
+            not_dispositioned = '(not dispositioned)'
+            dispositions.append(not_dispositioned)
+            all_disposition_values.insert(0, not_dispositioned)
+            disposition_counts[not_dispositioned] = patches.filter(patchdisposition__isnull=True).count()
+            dispositions = sorted(dispositions, key=lambda disposition: disposition_counts[disposition], reverse=True)
+            context[prefix + '_labels'] = dispositions
+            context[prefix + '_values'] = [disposition_counts[disposition] for disposition in dispositions]
+            context[prefix + '_colors'] = [all_disposition_values.index(disposition) for disposition in dispositions]
+
+        disposition_chart('chart_disposition')
+
+        # *** Patch disposition (CVEs only) chart ***
+        patches = patches.filter(src_path__icontains='cve-')
+        disposition_chart('chart_disposition_cve')
+
+
+        context['search_form'] = ComparisonPatchStatsForm()
+        selectedlayers_param = self.request.GET.get('selectedlayers', '')
+        if selectedlayers_param:
+            all_layer_names = dict(LayerItem.objects.all().values_list('id', 'name'))
+            layer_ids = [int(i) for i in selectedlayers_param.split(',')]
+            layer_names = [all_layer_names[i] for i in layer_ids]
+            context['selectedlayers_display'] = ','.join(layer_names)
+        else:
+            layer_ids = []
+            context['selectedlayers_display'] = ' (any)'
+        context['selectedlayers'] = layer_ids
+
         return context
 
 
@@ -1838,12 +1910,13 @@ class ComparisonPatchView(RecipeSearchView):
         context['this_url_name'] = 'comparison_patch_search'
         branchname = self.kwargs.get('branch', 'oe-classic')
         context['branch'] = get_object_or_404(Branch, name=branchname)
+        context['can_view_dispositioning'] = _can_view_dispositioning(self.request)
         if self.request.GET:
             searched = True
-            search_form = ComparisonPatchSearchForm(self.request.GET)
+            search_form = ComparisonPatchSearchForm(self.request.GET, can_view_dispositioning=context['can_view_dispositioning'])
         else:
             searched = False
-            search_form = ComparisonPatchSearchForm()
+            search_form = ComparisonPatchSearchForm(can_view_dispositioning=context['can_view_dispositioning'])
         if not self.request.user.has_perm('layerindex.patch_disposition'):
             del search_form.fields['patch_disposition']
             del search_form.fields['export']

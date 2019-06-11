@@ -352,6 +352,11 @@ class ClassicRecipeSearchForm(StyledForm):
     cover_verified = forms.ChoiceField(label='Verified', choices=VERIFIED_CHOICES, required=False)
     needs_attention = forms.ChoiceField(label='Needs attention', choices=ATTENTION_CHOICES, required=False)
 
+    def __init__(self, *args, can_view_dispositioning=False, **kwargs):
+        super(ClassicRecipeSearchForm, self).__init__(*args, **kwargs)
+        if not can_view_dispositioning:
+            del self.fields['patch_disposition']
+
 
 class ComparisonRecipeSelectForm(StyledForm):
     q = forms.CharField(label='Keyword', max_length=255, required=False)
@@ -376,6 +381,15 @@ class ComparisonPatchSearchForm(StyledForm):
     cover_status = forms.ChoiceField(label='Cover status', choices=ClassicRecipeSearchForm.COVER_STATUS_CHOICES, required=False)
     export = forms.ChoiceField(label='Export', choices=EXPORT_CHOICES, required=False)
     needs_attention = forms.ChoiceField(label='Needs attention', choices=ClassicRecipeSearchForm.ATTENTION_CHOICES, required=False)
+
+    def __init__(self, *args, can_view_dispositioning=False, **kwargs):
+        super(ComparisonPatchSearchForm, self).__init__(*args, **kwargs)
+        if not can_view_dispositioning:
+            del self.fields['patch_disposition']
+
+
+class ComparisonPatchStatsForm(StyledForm):
+    oe_layer = forms.ModelChoiceField(label='OE Layer', queryset=LayerItem.objects.filter(comparison=False).filter(status__in=['P', 'X']).order_by('name'), empty_label="(any)", required=False)
 
 
 class PatchDispositionForm(StyledModelForm):

@@ -989,6 +989,7 @@ class PatchDisposition(models.Model):
     class Meta:
         permissions = (
             ("patch_disposition", "Can disposition patches"),
+            ("patch_disposition_view", "Can view patch dispositioning"),
         )
 
     def __str__(self):
