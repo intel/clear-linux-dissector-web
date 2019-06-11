@@ -577,6 +577,10 @@ class Source(models.Model):
     recipe = models.ForeignKey(Recipe)
     url = models.CharField(max_length=255)
     sha256sum = models.CharField(max_length=64, blank=True)
+    index = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['recipe', 'index']
 
     def web_url(self):
         def drop_dotgit(url):
