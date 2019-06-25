@@ -241,10 +241,6 @@ class ImageCompareView(FormView):
         return context
 
 
-class ImageCompareDetailView(DetailView):
-    model = ImageComparison
-
-
 class ImageCompareRecipeSearchView(ListView):
     context_object_name = 'recipe_list'
     paginate_by = 50

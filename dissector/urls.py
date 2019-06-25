@@ -8,7 +8,7 @@ from django.conf.urls import *
 from django.views.generic import TemplateView, DetailView, ListView, RedirectView
 from django.views.defaults import page_not_found
 from django.core.urlresolvers import reverse_lazy
-from dissector.views import FrontPageView, ImageCompareView, ImageCompareDetailView, \
+from dissector.views import FrontPageView, ImageCompareView, \
     ImageCompareRecipeSearchView, ImageCompareRecipeDetailView, ImageCompareRecipeSelectView, \
     ImageCompareRecipeSelectDetailView, image_compare_patch_view, \
     VersionCompareSelectView, VersionCompareView, VersionCompareRecipeDetailView, VersionCompareFileDiffView, \
