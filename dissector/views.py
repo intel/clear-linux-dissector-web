@@ -276,6 +276,8 @@ class ImageCompareRecipeDetailView(SuccessMessageMixin, UpdateView):
         context = super(ImageCompareRecipeDetailView, self).get_context_data(**kwargs)
         recipe = self.get_object()
         if recipe:
+            if not recipe.comparison.user_can_view(self.request.user):
+                raise PermissionDenied
             context['packageconfigs'] = recipe.packageconfig_set.order_by('feature')
             context['staticdependencies'] = recipe.staticbuilddep_set.order_by('name')
             cover_recipe = recipe.get_cover_recipe()
@@ -309,6 +311,9 @@ class ImageCompareRecipeSelectView(ClassicRecipeSearchView):
             raise PermissionDenied
 
         recipe = get_object_or_404(ImageComparisonRecipe, pk=self.kwargs['pk'])
+        if not recipe.comparison.user_can_edit(self.request.user):
+            raise PermissionDenied
+
         form = ImageComparisonRecipeForm(request.POST, prefix='selectrecipedialog', instance=recipe)
 
         if form.is_valid():
