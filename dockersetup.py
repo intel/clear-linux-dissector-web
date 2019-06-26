@@ -716,10 +716,23 @@ if return_code != 0:
     print("Collecting static files failed")
     sys.exit(1)
 
+if https_port and not no_https:
+    protocol = 'https'
+    port = https_port
+    defport == '443'
+else:
+    protocol = 'http'
+    port = http_port
+    defport = '80'
+if port == defport:
+    host = hostname
+else:
+    host = '%s:%s' % (hostname, port)
+
 if not updatemode:
     if not dbfile:
         ## Set site name
-        return_code = subprocess.call(['docker-compose', 'run', '--rm', 'layersapp', '/opt/layerindex/layerindex/tools/site_name.py', hostname, 'Clear Linux* Dissector'], shell=False)
+        return_code = subprocess.call(['docker-compose', 'run', '--rm', 'layersapp', '/opt/layerindex/layerindex/tools/site_name.py', host, 'Clear Linux* Dissector'], shell=False)
 
     if not no_admin_user:
         ## For a fresh database, create an admin account
@@ -737,11 +750,5 @@ else:
         print("")
         print("NOTE: you may need to use -p %s (or set COMPOSE_PROJECT_NAME=\"%s\" ) if running docker-compose directly in future" % (project_name, project_name))
     print("")
-    if https_port and not no_https:
-        protocol = 'https'
-        port = https_port
-    else:
-        protocol = 'http'
-        port = http_port
-    print("The application should now be accessible at %s://%s:%s" % (protocol, hostname, port))
+    print("The application should now be accessible at %s://%s" % (protocol, host))
     print("")
