@@ -7,6 +7,7 @@
 from django.utils.deprecation import MiddlewareMixin
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
+from reversion.middleware import RevisionMiddleware
 import settings
 import re
 
@@ -25,3 +26,7 @@ class LoginRequiredMiddleware(MiddlewareMixin):
                     return HttpResponseRedirect(reverse('login'))
         except AttributeError:
             return HttpResponseRedirect(reverse('login'))
+
+
+class NonAtomicRevisionMiddleware(RevisionMiddleware):
+    atomic = False
