@@ -46,7 +46,7 @@ from dissector.models import (ImageComparison, ImageComparisonRecipe,
                                VersionComparison, VersionComparisonDifference,
                                VersionComparisonFileDiff)
 from layerindex.models import (Branch, LayerItem, LayerBranch, ClassicRecipe,
-                              Source, Patch)
+                              Source, Patch, Update)
 from layerindex.views import (ClassicRecipeSearchView, ClassicRecipeDetailView,
                               ClassicRecipeLinkWrapper)
 
