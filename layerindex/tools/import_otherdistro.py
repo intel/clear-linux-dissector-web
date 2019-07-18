@@ -613,6 +613,9 @@ def try_specfile(args):
         return ret
 
     specfile = args.specfile
+    # Hack to handle files in the current directory
+    if not os.sep in specfile:
+        specfile = '.' + os.sep + specfile
     metapath = os.path.dirname(specfile)
 
     try:
