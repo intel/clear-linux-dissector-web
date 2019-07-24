@@ -135,7 +135,7 @@ class ImageCompareView(FormView):
                             layer.layer_type = 'M'
                             layer.summary = 'N/A'
                             layer.description = 'N/A'
-                            layer.vcs_url = jslayer['vcs_url']
+                            layer.vcs_url = jslayer.get('vcs_url', '')
                             layer.comparison = True
                             layer.save()
                         layerbranch = LayerBranch()
@@ -198,7 +198,7 @@ class ImageCompareView(FormView):
                             # FIXME cover_status might not match
                             recipe.cover_status = cover_recipe.cover_status
 
-                        recipe.sha256sum = jsrecipe.get('filepath', '')
+                        recipe.sha256sum = jsrecipe.get('sha256sum', '')
 
                         recipe.save()
 
