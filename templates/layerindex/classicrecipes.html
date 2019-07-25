@@ -74,6 +74,7 @@
                 {% endif %}
                 {% endblock %}
 
+                {% block searchform %}
                 <div class="row bottom-margin">
                     <form id="search-form" class="form-inline" method="GET">
                        <table class="search-form-table">
@@ -194,6 +195,7 @@
                         {% endblock %}
                     </form>
                 </div>
+                {% endblock %}
 
 {% if recipe_list %}
                 <table class="table table-striped table-bordered recipestable">

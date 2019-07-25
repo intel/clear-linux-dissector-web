@@ -1939,3 +1939,25 @@ class ComparisonPatchView(RecipeSearchView):
 
         context['savedsearches'] = SavedSearch.objects.filter(search_url='comparison_patch_search', search_url_args=branchname)
         return context
+
+
+
+class ClassicRecipeCoverLinkView(ClassicRecipeSearchView):
+    def render_to_response(self, context, **kwargs):
+        # Reinstate the redirect-to-single-instance behaviour
+        if len(self.object_list) == 1:
+            return HttpResponseRedirect(reverse('comparison_recipe', args=(self.object_list[0].id,)))
+        else:
+            return super(ListView, self).render_to_response(context, **kwargs)
+
+    def get_queryset(self):
+        branch = get_object_or_404(Branch, name=self.kwargs['branch'])
+        layerbranch = get_object_or_404(LayerBranch, branch=branch, layer__name=self.kwargs['branch'])
+        qs = ClassicRecipe.objects.filter(layerbranch=layerbranch, cover_pn=self.kwargs['cover_pn'])
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(ClassicRecipeCoverLinkView, self).get_context_data(**kwargs)
+        context['cover_pn'] = self.kwargs['cover_pn']
+        context['searched'] = True
+        return context
