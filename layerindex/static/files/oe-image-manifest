@@ -193,7 +193,7 @@ def export_recipe_info(args):
                     logger.error('Layer name %s is not unique in configuration' % layername)
                     sys.exit(2)
                 repodir = find_git_repo(layerdir)
-                if repodir and os.path.abspath(repodir) != os.path.abspath(layerdir):
+                if repodir:
                     remotebranch = get_git_remote_branch(repodir)
                     remote = 'origin'
                     if remotebranch and '/' in remotebranch:
@@ -201,7 +201,8 @@ def export_recipe_info(args):
                         layerdata['actual_branch'] = rbsplit[1]
                         remote = rbsplit[0]
                     layerdata['vcs_url'] = get_git_repo_url(repodir, remote)
-                    layerdata['vcs_subdir'] = os.path.relpath(layerdir, repodir)
+                    if os.path.abspath(repodir) != os.path.abspath(layerdir):
+                        layerdata['vcs_subdir'] = os.path.relpath(layerdir, repodir)
                     commit = get_git_head_commit(repodir)
                     if commit:
                         layerdata['vcs_commit'] = commit
