@@ -104,10 +104,10 @@ Database Setup
 --------------
 
 For a fresh database (without importing any database dump) you will need layer
-data. To import the full set for the master branch from the public instance at
-layers.openembedded.org you can run the following:
+data. To import the full set for the master branch from the OpenEmbedded public
+layer index instance at layers.openembedded.org you can run the following:
 
-docker-compose run --rm layersapp /opt/layerindex/layerindex/tools/import_layers.py -d https://layers.openembedded.org
+docker-compose run --rm layersapp /opt/layerindex/layerindex/tools/import_layers.py https://layers.openembedded.org
 
 Alternatively, you can populate the database manually or use the separate
 import_layer.py script to import layers individually.
@@ -115,11 +115,17 @@ import_layer.py script to import layers individually.
 NOTE: Please also see "Security Considerations" below.
 
 
+
 Updating OpenEmbedded data
 --------------------------
 
 You may wish to update the OpenEmbedded layer information on a regular basis.
-To do that:
+To do that from layers.openembedded.org (as above):
+
+docker-compose run --rm layersapp /opt/layerindex/layerindex/tools/import_layers.py https://layers.openembedded.org
+
+Alternatively to fetch and parse all layer repositories directly, you would
+run the following:
 
    Incremental update:
 
@@ -129,6 +135,10 @@ To do that:
    changed as part of an upgrade of the application code):
 
        docker-compose run --rm layersapp /opt/layerindex/layerindex/update.py -r
+
+NOTE: the latter method using update.py is slower and potentially less secure -
+see "Security Considerations" below.
+
 
 
 Importing/Updating Clear Linux data
@@ -324,6 +334,12 @@ REGISTRATION_OPEN = False
   application is based has been disabled, since it has no access controls
   on querying data (since the OE layer index operates entirely on publicly
   accessible information, whereas this application may not in actual usage).
+
+* If you choose to update OE/YP layer information directly (using update.py),
+  be aware that there are some potential security concerns with doing so as
+  parsing layer information inherently involves executing python code. It is
+  recommended that you instead import the data from layers.openembedded.org
+  (using import_layers.py as above).
 
 
 
