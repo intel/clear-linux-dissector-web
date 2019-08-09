@@ -1,6 +1,27 @@
 Clear Linux Dissector Release Notes
 ===================================
 
+Release 0.6 (pre-release): 9th August 2019
+------------------------------------------
+
+Changes:
+* dockersetup: fixed an error when https is enabled
+* dockersetup: fixed a number of proxy support issues
+* dockersetup: added a connectivity check to ensure you know if you are behind a proxy and your proxy configuration is not correct and complete. (This can be disabled if needed by specifying the --no-connectivity option.)
+* dockersetup: added an uninstall option
+* oe-image-manifest: properly gather layer information for layers at the top level of their repository
+* Fixed errors/warnings when importing image comparison
+* Handle non-UTF8 encoded spec files in Clear Linux
+* Fixed admin logout login button redirection
+* Fixed a couple of Edit Profile form message bugs:
+  - Tweak message when one or more (but not all) security question answers have been changed so that it's clear that all are required
+  - Ensure success message gets shown upon saving
+* Tweaked password reset security question handling:
+  - Require all three answers to be correct (previously only two had to be)
+  - Allow three attempts instead of just two
+
+
+
 Release 0.5 (pre-release): 16th July 2019
 -----------------------------------------
 

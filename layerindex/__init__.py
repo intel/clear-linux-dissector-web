@@ -1,2 +1,2 @@
 # Application version number
-APP_VERSION = "0.5"
+APP_VERSION = "0.6"
