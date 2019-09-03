@@ -18,7 +18,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import Permission, User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.sites.models import Site
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.urlresolvers import resolve, reverse, reverse_lazy
 from django.db import transaction
 from django.db.models import Count, Q
@@ -136,7 +136,9 @@ class ImageCompareView(FormView):
                             layer.summary = 'N/A'
                             layer.description = 'N/A'
                             layer.vcs_url = jslayer.get('vcs_url', '')
+                            utils.validate_vcs_url(layer.vcs_url)
                             layer.comparison = True
+                            utils.validate_fields(layer)
                             layer.save()
                         layerbranch = LayerBranch()
                         layerbranch.layer = layer
@@ -144,6 +146,7 @@ class ImageCompareView(FormView):
                         layerbranch.vcs_subdir = jslayer.get('vcs_subdir', '')
                         layerbranch.actual_branch = jslayer.get('actual_branch', '')
                         layerbranch.local_path = local_path
+                        utils.validate_fields(layerbranch)
                         layerbranch.save()
                         layerbranches[layername] = layerbranch
                         return layerbranch
@@ -153,6 +156,7 @@ class ImageCompareView(FormView):
                     comparison.name = form.cleaned_data['name']
                     comparison.from_branch = branch
                     comparison.to_branch = form.cleaned_data['to_branch']
+                    utils.validate_fields(comparison)
                     comparison.save()
 
                     local_path = str(comparison.id)
@@ -200,6 +204,7 @@ class ImageCompareView(FormView):
 
                         recipe.sha256sum = jsrecipe.get('sha256sum', '')
 
+                        utils.validate_fields(recipe)
                         recipe.save()
 
                         # Take care of dependencies
@@ -211,6 +216,7 @@ class ImageCompareView(FormView):
                             source = Source()
                             source.recipe = recipe
                             source.url = jsurl
+                            utils.validate_fields(recipe)
                             source.save()
                         for jspatch in jsrecipe.get('patches', []):
                             patch = Patch()
@@ -224,8 +230,11 @@ class ImageCompareView(FormView):
                                 patch.sha256sum = utils.sha256_file(patchfn)
                             except Exception as e:
                                 print('Failed to read patch status for %s: %s' % (patch.path, e))
+                            utils.validate_fields(recipe)
                             patch.save()
 
+        except ValidationError as e:
+            return HttpResponse('ValidationError: %s' % e)
         finally:
             shutil.rmtree(tmpoutdir)
 

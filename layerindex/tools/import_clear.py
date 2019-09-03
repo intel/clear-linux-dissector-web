@@ -78,6 +78,9 @@ def import_derivative(args, tempdir):
     localbundles = {}
     stdbundles = []
     for bundle in bundles:
+        if '/' in bundle:
+            # No paths allowed
+            raise Exception('Invalid bundle name: "%s"' % bundle)
         bundlefn = os.path.join(srcpath, 'src', 'bundles', bundle)
         if os.path.exists(bundlefn):
             pkgs = []
@@ -93,6 +96,9 @@ def import_derivative(args, tempdir):
     if not release:
         logger.error('No version specified in %s' % imagefile)
         return None, None, None, None
+    if '/' in release:
+        # No paths allowed
+        raise Exception('Invalid version: "%s"' % version)
 
     return release, stdbundles, localbundles, srcpath
 

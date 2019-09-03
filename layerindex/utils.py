@@ -584,3 +584,24 @@ def string_to_query(querystr, fieldnames):
         else:
             query = query & fquery
     return query
+
+def validate_vcs_url(url):
+    from django.core.exceptions import ValidationError
+    res = re.match(r'^([a-z]+)://[^ ]+$', url)
+    if res:
+        scheme = res.groups()[0]
+        if scheme not in ['git', 'ssh', 'http', 'https']:
+            raise ValidationError('Invalid scheme: %s' % scheme)
+    else:
+        raise ValidationError('Invalid URL %s' % url)
+    if '../' in url:
+        raise ValidationError('Parent directory references not allowed')
+
+def validate_fields(obj):
+    # Basic validation for importing
+    from django.core.exceptions import ValidationError
+    for fld in obj.__class__._meta.get_fields():
+        if getattr(fld, 'choices', None):
+            value = getattr(obj, fld.name)
+            if value not in dict(fld.choices).keys():
+                raise ValidationError('%s.%s: invalid value: "%s"' % (obj.__class__.__name__, fld.name, value))
