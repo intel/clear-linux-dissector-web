@@ -183,8 +183,12 @@ def import_clear(args):
             shutil.move(tmpsrcdir, pkgsrcdir)
 
     if not args.no_status:
-        skiplist = ['helloworld']
-        cmd = ['layerindex/tools/update_classic_status.py', '-b', args.branch, '-l', layername, '-d', '-s', ','.join(skiplist)]
+        cmd = ['layerindex/tools/update_classic_status.py', '-b', args.branch, '-l', layername, '-d']
+        if args.no_import_status:
+            skiplist = ['helloworld']
+            cmd += ['-s', ','.join(skiplist)]
+        else:
+            cmd += ['-i', 'clear_status.json', '--ignore-missing']
         if args.update:
             cmd += ['-u', args.update]
         logger.debug('Executing %s' % cmd)
@@ -211,6 +215,7 @@ def main():
     parser.add_argument('--bundles-url', help='Base URL for downloading release archives of clr-bundles')
     parser.add_argument('--repo-url', help='Base URL for downloading releases')
     parser.add_argument('--no-status', help='Skip updating status', action='store_true')
+    parser.add_argument('--no-import-status', help='Do not import status, update it instead', action='store_true')
 
     args = parser.parse_args()
 
