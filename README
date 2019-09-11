@@ -326,6 +326,27 @@ REGISTRATION_OPEN = False
   accessible information, whereas this application may not in actual usage).
 
 
+
+Backup and restore
+------------------
+
+To back up the database within the docker-based setup, you can run the
+following command (no need to substitute ${MYSQL_ROOT_PASSWORD}, it's
+already present within the container environment):
+
+docker-compose exec layersdb /bin/sh -c '/usr/bin/mysqldump -u root --password=${MYSQL_ROOT_PASSWORD} layersdb' | gzip > backup-`date +%Y_%m_%d_%H%M`.sql.gz
+
+To restore one of these backups you would run the following command (take
+care, this will overwrite the data immediately without prompting!):
+
+zcat backupfile.sql.gz | docker-compose exec -T layersdb /bin/sh -c '/usr/bin/mysql -u root --password=${MYSQL_ROOT_PASSWORD} layersdb'
+
+Note: this does not cover any downloaded sources or generated diffs; these
+are stored within volumes that would need to be backed up separately if
+desired.
+
+
+
 Maintenance
 -----------
 
@@ -338,6 +359,7 @@ The latest version of the code can always be found here:
 
 Contributions are welcome. Please send changes in the form of pull requests
 on the github repository linked above.
+
 
 
 License
