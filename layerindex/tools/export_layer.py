@@ -426,7 +426,7 @@ def export_layer(args):
                     if recipe.cover_layerbranch != cover_layerbranch:
                         cover_layerbranch = recipe.cover_layerbranch
                         layerfetchdir = os.path.join(fetchdir, cover_layerbranch.layer.get_fetch_dir())
-                        utils.checkout_layer_branch(cover_layerbranch, layerfetchdir)
+                        utils.checkout_layer_branch(cover_layerbranch, layerfetchdir, use_last_rev=True)
                         cover_layerdir = os.path.join(layerfetchdir, cover_layerbranch.vcs_subdir)
                         config_data_copy = recipeparse.setup_layer(tinfoil.config_data, fetchdir, cover_layerdir, cover_layerbranch.layer, cover_layerbranch, logger)
                         config_data_copy.setVar('BBLAYERS', ' '.join([cover_layerdir, outlayerdir]))
