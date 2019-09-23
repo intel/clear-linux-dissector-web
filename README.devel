@@ -42,7 +42,7 @@ distros).
    pip to build the dependencies; it's also assumed you want MariaDB as
    the database backend):
 
-   sudo apt-get install virtualenv libmariadb-client-lgpl-dev build-essential python3-dev libjpeg-dev libz-dev libfreetype6-dev mariadb-server rabbitmq-server
+   sudo apt-get install libmariadb-client-lgpl-dev build-essential python3-dev libjpeg-dev libz-dev libfreetype6-dev mariadb-server rabbitmq-server
 
 2. Work around path issues (you may not need this):
 
@@ -50,7 +50,7 @@ distros).
 
 3. Create a Python 3 virtualenv (path can be anywhere you like):
 
-   virtualenv -p python3 /path/to/desired/venv
+   python3 -m venv /path/to/desired/venv
 
 4. Activate the virtualenv:
 
