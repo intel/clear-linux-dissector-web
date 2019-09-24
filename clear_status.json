@@ -561,6 +561,14 @@
             "cover_layer": null
         },
         {
+            "pn": "aspell-es",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "aspell-pt_BR",
             "cover_pn": "",
             "cover_status": "U",
@@ -1017,6 +1025,14 @@
             "cover_layer": "openembedded-core"
         },
         {
+            "pn": "bash_kernel",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "bash-completion",
             "cover_pn": "bash-completion",
             "cover_status": "D",
@@ -1054,14 +1070,6 @@
             "cover_status": "U",
             "cover_comment": "",
             "classic_category": "python",
-            "cover_layer": null
-        },
-        {
-            "pn": "bash_kernel",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
             "cover_layer": null
         },
         {
@@ -1647,6 +1655,14 @@
             "cover_comment": "",
             "classic_category": "",
             "cover_layer": "openembedded-core"
+        },
+        {
+            "pn": "c_rehash",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
         },
         {
             "pn": "c-ares",
@@ -2417,6 +2433,14 @@
             "cover_layer": null
         },
         {
+            "pn": "cmus",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "cnf",
             "cover_pn": "",
             "cover_status": "U",
@@ -2817,14 +2841,6 @@
             "cover_layer": null
         },
         {
-            "pn": "compat-hdf5-soname10",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
             "pn": "compat-hwloc-soname5",
             "cover_pn": "",
             "cover_status": "U",
@@ -2945,14 +2961,6 @@
             "cover_layer": null
         },
         {
-            "pn": "compat-llvm-soname4",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
             "pn": "compat-llvm-soname5",
             "cover_pn": "",
             "cover_status": "U",
@@ -3018,14 +3026,6 @@
         },
         {
             "pn": "compat-opencv-soname34",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
-            "pn": "compat-openexr-soname23",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -3523,8 +3523,8 @@
         {
             "pn": "cve-check-tool",
             "cover_pn": "cve-check-tool",
-            "cover_status": "D",
-            "cover_comment": "",
+            "cover_status": "R",
+            "cover_comment": "Functionally replaced by cve-check class and cve-update-db in OE-Core",
             "classic_category": "",
             "cover_layer": "openembedded-core"
         },
@@ -3559,14 +3559,6 @@
             "cover_comment": "",
             "classic_category": "python",
             "cover_layer": "meta-python"
-        },
-        {
-            "pn": "c_rehash",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
         },
         {
             "pn": "dapl",
@@ -4249,7 +4241,7 @@
             "cover_layer": null
         },
         {
-            "pn": "deprecated-sphinxcontrib-websupport",
+            "pn": "deprecated-sphinx_rtd_theme",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -4257,7 +4249,7 @@
             "cover_layer": null
         },
         {
-            "pn": "deprecated-sphinx_rtd_theme",
+            "pn": "deprecated-sphinxcontrib-websupport",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -4529,6 +4521,14 @@
             "cover_layer": "meta-cloud-services"
         },
         {
+            "pn": "django_compressor",
+            "cover_pn": "python-django-compressor",
+            "cover_status": "D",
+            "cover_comment": "",
+            "classic_category": "python",
+            "cover_layer": "meta-openstack"
+        },
+        {
             "pn": "django-appconf",
             "cover_pn": "python-django-appconf",
             "cover_status": "D",
@@ -4567,14 +4567,6 @@
             "cover_comment": "",
             "classic_category": "",
             "cover_layer": "meta-cloud-services"
-        },
-        {
-            "pn": "django_compressor",
-            "cover_pn": "python-django-compressor",
-            "cover_status": "D",
-            "cover_comment": "",
-            "classic_category": "python",
-            "cover_layer": "meta-openstack"
         },
         {
             "pn": "dkms",
@@ -6417,7 +6409,7 @@
             "cover_layer": null
         },
         {
-            "pn": "glances",
+            "pn": "glance_store",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -6425,7 +6417,7 @@
             "cover_layer": null
         },
         {
-            "pn": "glance_store",
+            "pn": "glances",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -6910,7 +6902,7 @@
             "cover_status": "D",
             "cover_comment": "",
             "classic_category": "",
-            "cover_layer": "openembedded-core"
+            "cover_layer": "meta-oe"
         },
         {
             "pn": "gnome-todo",
@@ -6999,6 +6991,38 @@
             "cover_comment": "",
             "classic_category": "",
             "cover_layer": "openembedded-core"
+        },
+        {
+            "pn": "go-github.com-BurntSushi-toml",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "go-github.com-inconshreveable-mousetrap",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "go-github.com-spf13-cobra",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "go-github.com-spf13-pflag",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
         },
         {
             "pn": "goaccess",
@@ -7170,14 +7194,6 @@
         },
         {
             "pn": "gradle",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
-            "pn": "gradle-dep",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -7409,14 +7425,6 @@
             "cover_layer": null
         },
         {
-            "pn": "gtk+",
-            "cover_pn": "gtk+",
-            "cover_status": "D",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": "openembedded-core"
-        },
-        {
             "pn": "gtk-doc",
             "cover_pn": "gtk-doc",
             "cover_status": "D",
@@ -7439,6 +7447,14 @@
             "cover_comment": "",
             "classic_category": "",
             "cover_layer": "meta-xfce"
+        },
+        {
+            "pn": "gtk+",
+            "cover_pn": "gtk+",
+            "cover_status": "D",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": "meta-oe"
         },
         {
             "pn": "gtk3",
@@ -8034,11 +8050,11 @@
         },
         {
             "pn": "icon-naming-utils",
-            "cover_pn": "icon-naming-utils",
-            "cover_status": "D",
-            "cover_comment": "",
+            "cover_pn": "",
+            "cover_status": "N",
+            "cover_comment": "Used to be in OE-Core but was removed (no longer needed)",
             "classic_category": "",
-            "cover_layer": "openembedded-core"
+            "cover_layer": null
         },
         {
             "pn": "icu4c",
@@ -8473,20 +8489,20 @@
             "cover_layer": "meta-jupyter"
         },
         {
-            "pn": "ipython-sql",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "python",
-            "cover_layer": null
-        },
-        {
             "pn": "ipython_genutils",
             "cover_pn": "python-ipython-genutils",
             "cover_status": "D",
             "cover_comment": "",
             "classic_category": "python",
             "cover_layer": "meta-jupyter"
+        },
+        {
+            "pn": "ipython-sql",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "python",
+            "cover_layer": null
         },
         {
             "pn": "ipywidgets",
@@ -8615,6 +8631,14 @@
             "cover_comment": "",
             "classic_category": "",
             "cover_layer": "openembedded-core"
+        },
+        {
+            "pn": "iwd",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
         },
         {
             "pn": "ixion",
@@ -8857,6 +8881,30 @@
             "cover_layer": "meta-jupyter"
         },
         {
+            "pn": "jupyter_client",
+            "cover_pn": "python-jupyter-client",
+            "cover_status": "D",
+            "cover_comment": "",
+            "classic_category": "python",
+            "cover_layer": "meta-jupyter"
+        },
+        {
+            "pn": "jupyter_console",
+            "cover_pn": "python-jupyter-console",
+            "cover_status": "D",
+            "cover_comment": "",
+            "classic_category": "python",
+            "cover_layer": "meta-jupyter"
+        },
+        {
+            "pn": "jupyter_core",
+            "cover_pn": "python-jupyter-core",
+            "cover_status": "D",
+            "cover_comment": "",
+            "classic_category": "python",
+            "cover_layer": "meta-jupyter"
+        },
+        {
             "pn": "jupyter-nbgallery",
             "cover_pn": "",
             "cover_status": "U",
@@ -8895,30 +8943,6 @@
             "cover_comment": "",
             "classic_category": "python",
             "cover_layer": null
-        },
-        {
-            "pn": "jupyter_client",
-            "cover_pn": "python-jupyter-client",
-            "cover_status": "D",
-            "cover_comment": "",
-            "classic_category": "python",
-            "cover_layer": "meta-jupyter"
-        },
-        {
-            "pn": "jupyter_console",
-            "cover_pn": "python-jupyter-console",
-            "cover_status": "D",
-            "cover_comment": "",
-            "classic_category": "python",
-            "cover_layer": "meta-jupyter"
-        },
-        {
-            "pn": "jupyter_core",
-            "cover_pn": "python-jupyter-core",
-            "cover_status": "D",
-            "cover_comment": "",
-            "classic_category": "python",
-            "cover_layer": "meta-jupyter"
         },
         {
             "pn": "kactivities",
@@ -10846,7 +10870,7 @@
             "cover_status": "D",
             "cover_comment": "",
             "classic_category": "",
-            "cover_layer": "openembedded-core"
+            "cover_layer": "meta-realtime"
         },
         {
             "pn": "latexcodec",
@@ -12766,7 +12790,7 @@
             "cover_status": "D",
             "cover_comment": "",
             "classic_category": "",
-            "cover_layer": "openembedded-core"
+            "cover_layer": "meta-gnome"
         },
         {
             "pn": "libuv",
@@ -13146,19 +13170,19 @@
         },
         {
             "pn": "libXxf86dga",
-            "cover_pn": "libxxf86dga",
-            "cover_status": "D",
-            "cover_comment": "",
+            "cover_pn": "",
+            "cover_status": "N",
+            "cover_comment": "Used to be in OE-Core but was removed (obsolete)",
             "classic_category": "",
-            "cover_layer": "openembedded-core"
+            "cover_layer": null
         },
         {
             "pn": "libXxf86misc",
-            "cover_pn": "libxxf86misc",
-            "cover_status": "D",
-            "cover_comment": "",
+            "cover_pn": "",
+            "cover_status": "N",
+            "cover_comment": "Used to be in OE-Core but was removed (obsolete)",
             "classic_category": "",
-            "cover_layer": "openembedded-core"
+            "cover_layer": null
         },
         {
             "pn": "libyami",
@@ -13545,6 +13569,14 @@
             "cover_layer": null
         },
         {
+            "pn": "LS_COLORS",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "lsacpi",
             "cover_pn": "",
             "cover_status": "U",
@@ -13583,14 +13615,6 @@
             "cover_comment": "",
             "classic_category": "",
             "cover_layer": "meta-oe"
-        },
-        {
-            "pn": "LS_COLORS",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
         },
         {
             "pn": "ltp",
@@ -14345,6 +14369,14 @@
             "cover_layer": null
         },
         {
+            "pn": "mod_wsgi",
+            "cover_pn": "mod-wsgi",
+            "cover_status": "D",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": "meta-cloud-services"
+        },
+        {
             "pn": "ModemManager",
             "cover_pn": "modemmanager",
             "cover_status": "D",
@@ -14359,14 +14391,6 @@
             "cover_comment": "",
             "classic_category": "kde",
             "cover_layer": "meta-kf5"
-        },
-        {
-            "pn": "mod_wsgi",
-            "cover_pn": "mod-wsgi",
-            "cover_status": "D",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": "meta-cloud-services"
         },
         {
             "pn": "moka-icon-theme",
@@ -14689,6 +14713,14 @@
             "cover_layer": "meta-oe"
         },
         {
+            "pn": "mumble",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "munch",
             "cover_pn": "",
             "cover_status": "U",
@@ -14785,6 +14817,14 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-aggdesigner",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-airbase",
             "cover_pn": "",
             "cover_status": "U",
@@ -14834,6 +14874,14 @@
         },
         {
             "pn": "mvn-akka",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-aliyun-openapi-java-sdk",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -14961,6 +15009,22 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-asciidoctorj",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-asciidoctorj-pdf",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-asm",
             "cover_pn": "",
             "cover_status": "U",
@@ -15010,6 +15074,14 @@
         },
         {
             "pn": "mvn-avro",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-awaitility",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -15105,14 +15177,6 @@
             "cover_layer": null
         },
         {
-            "pn": "mvn-breeze-macros_2.11",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
             "pn": "mvn-breeze_2.11",
             "cover_pn": "",
             "cover_status": "U",
@@ -15122,6 +15186,14 @@
         },
         {
             "pn": "mvn-breeze_2.12",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-breeze-macros_2.11",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -15225,7 +15297,7 @@
             "cover_layer": null
         },
         {
-            "pn": "mvn-chill-java",
+            "pn": "mvn-chill_2.11",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -15233,7 +15305,7 @@
             "cover_layer": null
         },
         {
-            "pn": "mvn-chill_2.11",
+            "pn": "mvn-chill-java",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -15577,6 +15649,14 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-dd-plist",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-decentxml",
             "cover_pn": "",
             "cover_status": "U",
@@ -15785,6 +15865,14 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-findbugs",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-findbugs-annotations",
             "cover_pn": "",
             "cover_status": "U",
@@ -15818,6 +15906,14 @@
         },
         {
             "pn": "mvn-freemarker",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-frocksdb",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -15873,6 +15969,14 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-gmaven",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-GMetrics",
             "cover_pn": "",
             "cover_status": "U",
@@ -15889,6 +15993,14 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-google-api-java-client",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-google-api-services-storage",
             "cover_pn": "",
             "cover_status": "U",
@@ -15898,6 +16010,14 @@
         },
         {
             "pn": "mvn-google-collections",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-google-http-java-client",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -15930,6 +16050,22 @@
         },
         {
             "pn": "mvn-grizzly",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-grolifant",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-groovy",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -16137,6 +16273,14 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-incubator-datasketches-java",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-intellij.annotations",
             "cover_pn": "",
             "cover_status": "U",
@@ -16202,6 +16346,14 @@
         },
         {
             "pn": "mvn-jackson-databind",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-jackson-dataformat-cbor",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -16489,6 +16641,14 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-jcommander",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-jdependency",
             "cover_pn": "",
             "cover_status": "U",
@@ -16546,6 +16706,14 @@
         },
         {
             "pn": "mvn-jersey-json",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-jetbrains-annotations",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -16921,7 +17089,15 @@
             "cover_layer": null
         },
         {
-            "pn": "mvn-kafka-clients",
+            "pn": "mvn-junit5",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-kafka_2.11",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -16937,7 +17113,31 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-kafka-clients",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-kerby",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-keytool",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-kolor",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -16953,7 +17153,23 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-kotlin",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-kryo",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-ktlint",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -16970,6 +17186,14 @@
         },
         {
             "pn": "mvn-kxml2",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-LatencyUtils",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -17257,14 +17481,6 @@
             "cover_layer": null
         },
         {
-            "pn": "mvn-maven-embedder",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
             "pn": "mvn-maven-error-diagnostics",
             "cover_pn": "",
             "cover_status": "U",
@@ -17529,14 +17745,6 @@
             "cover_layer": null
         },
         {
-            "pn": "mvn-maven-resolver-provider",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
             "pn": "mvn-maven-resources-plugin",
             "cover_pn": "",
             "cover_status": "U",
@@ -17617,14 +17825,6 @@
             "cover_layer": null
         },
         {
-            "pn": "mvn-maven-slf4j-provider",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
             "pn": "mvn-maven-source-plugin",
             "cover_pn": "",
             "cover_status": "U",
@@ -17666,6 +17866,14 @@
         },
         {
             "pn": "mvn-metrics",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-micrometer",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -17849,6 +18057,14 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-oauth-java-client",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-objenesis",
             "cover_pn": "",
             "cover_status": "U",
@@ -17986,6 +18202,14 @@
         },
         {
             "pn": "mvn-ow2",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-paradise",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -18193,7 +18417,23 @@
             "cover_layer": null
         },
         {
+            "pn": "mvn-pmaven",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "mvn-powermock",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-powermock-reflect",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -18266,6 +18506,14 @@
         },
         {
             "pn": "mvn-reflections",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-rhino",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -18425,14 +18673,6 @@
             "cover_layer": null
         },
         {
-            "pn": "mvn-scalatest-maven-plugin",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
             "pn": "mvn-scalatest_2.11",
             "cover_pn": "",
             "cover_status": "U",
@@ -18442,6 +18682,14 @@
         },
         {
             "pn": "mvn-scalatest_2.12",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-scalatest-maven-plugin",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -18466,6 +18714,14 @@
         },
         {
             "pn": "mvn-selenium",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-semver",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -18522,6 +18778,14 @@
         },
         {
             "pn": "mvn-siesta",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-simpleframework",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -18738,6 +19002,14 @@
         },
         {
             "pn": "mvn-test-interface",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "mvn-testng",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -19481,6 +19753,14 @@
             "cover_layer": null
         },
         {
+            "pn": "ngraph",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "nicstat",
             "cover_pn": "nicstat",
             "cover_status": "D",
@@ -19758,6 +20038,14 @@
             "cover_status": "U",
             "cover_comment": "",
             "classic_category": "python",
+            "cover_layer": null
+        },
+        {
+            "pn": "numlockx",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
             "cover_layer": null
         },
         {
@@ -20089,6 +20377,14 @@
             "cover_layer": null
         },
         {
+            "pn": "openjdk13",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "openldap",
             "cover_pn": "openldap",
             "cover_status": "D",
@@ -20239,6 +20535,14 @@
             "cover_comment": "",
             "classic_category": "",
             "cover_layer": "meta-cloud-services"
+        },
+        {
+            "pn": "os_vif",
+            "cover_pn": "python-os-vif",
+            "cover_status": "D",
+            "cover_comment": "",
+            "classic_category": "python",
+            "cover_layer": "meta-openstack"
         },
         {
             "pn": "os-api-ref",
@@ -20535,14 +20839,6 @@
             "cover_comment": "",
             "classic_category": "",
             "cover_layer": "meta-overc"
-        },
-        {
-            "pn": "os_vif",
-            "cover_pn": "python-os-vif",
-            "cover_status": "D",
-            "cover_comment": "",
-            "classic_category": "python",
-            "cover_layer": "meta-openstack"
         },
         {
             "pn": "otp",
@@ -20905,6 +21201,14 @@
             "cover_layer": null
         },
         {
+            "pn": "pathspec",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "patsy",
             "cover_pn": "",
             "cover_status": "U",
@@ -21174,6 +21478,14 @@
             "cover_status": "U",
             "cover_comment": "",
             "classic_category": "perl",
+            "cover_layer": null
+        },
+        {
+            "pn": "perl-App-perlbrew",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
             "cover_layer": null
         },
         {
@@ -21646,6 +21958,14 @@
             "cover_status": "U",
             "cover_comment": "",
             "classic_category": "perl",
+            "cover_layer": null
+        },
+        {
+            "pn": "perl-Class-Measure",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
             "cover_layer": null
         },
         {
@@ -26217,7 +26537,7 @@
             "cover_layer": null
         },
         {
-            "pn": "perl-Text-CSV-Encoded",
+            "pn": "perl-Text-CSV_XS",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -26225,7 +26545,7 @@
             "cover_layer": null
         },
         {
-            "pn": "perl-Text-CSV_XS",
+            "pn": "perl-Text-CSV-Encoded",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -27089,7 +27409,7 @@
             "cover_layer": null
         },
         {
-            "pn": "php-jsond",
+            "pn": "php-json_post",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -27097,7 +27417,7 @@
             "cover_layer": null
         },
         {
-            "pn": "php-json_post",
+            "pn": "php-jsond",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -27737,6 +28057,14 @@
             "cover_layer": "meta-oe"
         },
         {
+            "pn": "pmix",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "po4a",
             "cover_pn": "po4a",
             "cover_status": "D",
@@ -28305,7 +28633,7 @@
             "cover_layer": null
         },
         {
-            "pn": "pydotplus",
+            "pn": "pydot_ng",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -28313,7 +28641,7 @@
             "cover_layer": null
         },
         {
-            "pn": "pydot_ng",
+            "pn": "pydotplus",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -28895,14 +29223,6 @@
             "cover_comment": "",
             "classic_category": "",
             "cover_layer": "meta-oe"
-        },
-        {
-            "pn": "python-dldt",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
         },
         {
             "pn": "python-editor",
@@ -36273,14 +36593,6 @@
             "cover_layer": null
         },
         {
-            "pn": "rabbitmq-java-client-dep",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
             "pn": "rabbitmq-server",
             "cover_pn": "rabbitmq-server",
             "cover_status": "D",
@@ -36601,19 +36913,19 @@
             "cover_layer": null
         },
         {
-            "pn": "retrying",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
             "pn": "retry_decorator",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
             "classic_category": "python",
+            "cover_layer": null
+        },
+        {
+            "pn": "retrying",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
             "cover_layer": null
         },
         {
@@ -37081,6 +37393,46 @@
             "cover_layer": null
         },
         {
+            "pn": "SDL_gfx",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "SDL_image",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "SDL_mixer",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "SDL_net",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
+            "pn": "SDL_ttf",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "SDL2",
             "cover_pn": "",
             "cover_status": "U",
@@ -37122,46 +37474,6 @@
         },
         {
             "pn": "SDL2_ttf",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
-            "pn": "SDL_gfx",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
-            "pn": "SDL_image",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
-            "pn": "SDL_mixer",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
-            "pn": "SDL_net",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "",
-            "cover_layer": null
-        },
-        {
-            "pn": "SDL_ttf",
             "cover_pn": "",
             "cover_status": "U",
             "cover_comment": "",
@@ -37281,22 +37593,6 @@
             "cover_layer": "openembedded-core"
         },
         {
-            "pn": "setuptools-legacy",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "python",
-            "cover_layer": null
-        },
-        {
-            "pn": "setuptools-markdown",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "python",
-            "cover_layer": null
-        },
-        {
             "pn": "setuptools_scm",
             "cover_pn": "python3-setuptools-scm",
             "cover_status": "D",
@@ -37311,6 +37607,22 @@
             "cover_comment": "",
             "classic_category": "python",
             "cover_layer": "meta-iot-cloud"
+        },
+        {
+            "pn": "setuptools-legacy",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "python",
+            "cover_layer": null
+        },
+        {
+            "pn": "setuptools-markdown",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "python",
+            "cover_layer": null
         },
         {
             "pn": "setxkbmap",
@@ -37441,6 +37753,14 @@
             "cover_layer": null
         },
         {
+            "pn": "simplescreenrecorder",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "singledispatch",
             "cover_pn": "python-singledispatch",
             "cover_status": "D",
@@ -37473,6 +37793,14 @@
             "cover_layer": "openembedded-core"
         },
         {
+            "pn": "smart_open",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "python",
+            "cover_layer": null
+        },
+        {
             "pn": "smartcols",
             "cover_pn": "",
             "cover_status": "U",
@@ -37494,14 +37822,6 @@
             "cover_status": "U",
             "cover_comment": "",
             "classic_category": "",
-            "cover_layer": null
-        },
-        {
-            "pn": "smart_open",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "python",
             "cover_layer": null
         },
         {
@@ -37626,11 +37946,11 @@
         },
         {
             "pn": "source-highlight",
-            "cover_pn": "source-highlight",
-            "cover_status": "D",
-            "cover_comment": "",
+            "cover_pn": "",
+            "cover_status": "N",
+            "cover_comment": "Used to be part of OE-Core but was removed (no longer needed)",
             "classic_category": "",
-            "cover_layer": "openembedded-core"
+            "cover_layer": null
         },
         {
             "pn": "sox",
@@ -37679,6 +37999,14 @@
             "cover_comment": "",
             "classic_category": "python",
             "cover_layer": "meta-virtualization"
+        },
+        {
+            "pn": "sphinx_rtd_theme",
+            "cover_pn": "python-sphinx-rtd-theme",
+            "cover_status": "D",
+            "cover_comment": "",
+            "classic_category": "python",
+            "cover_layer": "meta-maker"
         },
         {
             "pn": "sphinx-feature-classification",
@@ -37815,14 +38143,6 @@
             "cover_comment": "",
             "classic_category": "python",
             "cover_layer": null
-        },
-        {
-            "pn": "sphinx_rtd_theme",
-            "cover_pn": "python-sphinx-rtd-theme",
-            "cover_status": "D",
-            "cover_comment": "",
-            "classic_category": "python",
-            "cover_layer": "meta-maker"
         },
         {
             "pn": "spi-tools",
@@ -38313,6 +38633,14 @@
             "cover_layer": "openembedded-core"
         },
         {
+            "pn": "sysprof",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "sysstat",
             "cover_pn": "sysstat",
             "cover_status": "D",
@@ -38561,6 +38889,14 @@
             "cover_layer": null
         },
         {
+            "pn": "tensorflow-serving",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
+        },
+        {
             "pn": "termcolor",
             "cover_pn": "python-termcolor",
             "cover_status": "D",
@@ -38679,6 +39015,14 @@
             "cover_comment": "",
             "classic_category": "",
             "cover_layer": "openembedded-core"
+        },
+        {
+            "pn": "texlive",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "",
+            "cover_layer": null
         },
         {
             "pn": "texmaker",
@@ -40009,6 +40353,14 @@
             "cover_layer": "meta-cloud-services"
         },
         {
+            "pn": "wsgi_intercept",
+            "cover_pn": "",
+            "cover_status": "U",
+            "cover_comment": "",
+            "classic_category": "python",
+            "cover_layer": null
+        },
+        {
             "pn": "WSGIProxy2",
             "cover_pn": "",
             "cover_status": "U",
@@ -40023,14 +40375,6 @@
             "cover_comment": "",
             "classic_category": "python",
             "cover_layer": "meta-openstack"
-        },
-        {
-            "pn": "wsgi_intercept",
-            "cover_pn": "",
-            "cover_status": "U",
-            "cover_comment": "",
-            "classic_category": "python",
-            "cover_layer": null
         },
         {
             "pn": "wsjtx",
@@ -41038,7 +41382,7 @@
             "cover_status": "D",
             "cover_comment": "",
             "classic_category": "",
-            "cover_layer": "openembedded-core"
+            "cover_layer": "meta-oe"
         },
         {
             "pn": "yelp",
