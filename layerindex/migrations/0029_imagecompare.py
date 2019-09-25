@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             name='ImageComparison',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
+                ('name', models.CharField(max_length=180)),
                 ('from_branch', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='imagecomparison_from_set', to='layerindex.Branch')),
                 ('to_branch', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='imagecomparison_to_set', to='layerindex.Branch')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),

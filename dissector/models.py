@@ -14,7 +14,7 @@ from layerindex.models import Branch, LayerBranch, Recipe, ClassicRecipe
 
 class ImageComparison(models.Model):
     user = models.ForeignKey(User)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=180)
     from_branch = models.ForeignKey(Branch, related_name='imagecomparison_from_set')
     to_branch = models.ForeignKey(Branch, related_name='imagecomparison_to_set')
 
