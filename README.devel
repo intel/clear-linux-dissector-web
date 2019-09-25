@@ -40,7 +40,8 @@ distros).
    pip to build the dependencies; it's also assumed you want MariaDB as
    the database backend):
 
-   sudo apt-get install libmariadb-client-lgpl-dev build-essential python3-dev libjpeg-dev libz-dev libfreetype6-dev mariadb-server rabbitmq-server
+   sudo apt-get update
+   sudo apt-get install python3-venv libmariadb-client-lgpl-dev build-essential python3-dev libjpeg-dev libz-dev libfreetype6-dev libssl-dev mariadb-server rabbitmq-server
 
 2. Work around path issues (you may not need this):
 
@@ -65,11 +66,15 @@ Assuming you wish to use MariaDB/MySQL for storing the database - the
 following is completely standard, but to save you having to look it up
 elsewhere:
 
-1. Set the root password and secure the database server:
+1. Start the server:
+
+   sudo /etc/init.d/mysql start
+
+2. Set the root password and secure the database server:
 
    sudo mysql_secure_installation
 
-2. Create a database (substituting "mydatabase" with desired database
+3. Create a database (substituting "mydatabase" with desired database
    name):
 
    mysql -u root -p
