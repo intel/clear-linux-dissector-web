@@ -7,9 +7,30 @@
 from django.utils.deprecation import MiddlewareMixin
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
+from django.contrib.auth import logout
 from reversion.middleware import RevisionMiddleware
 import settings
 import re
+from datetime import datetime
+
+class SessionIdleTimeoutMiddleware(MiddlewareMixin):
+    """
+    Middleware which implements Session IDLE TIMEOUT every page.
+    This requirement can be specified in settings via
+    Variables in SESSION_IDLE_TIMEOUT.
+    """
+    def process_request(self, request):
+        if request.user.is_authenticated():
+            current_datetime = datetime.timestamp(datetime.now())
+            request.session['last_access'] = current_datetime
+            if ('last_access' in request.session):
+                last = (current_datetime - request.session['last_access'])
+                if getattr(settings, 'SESSION_IDLE_TIMEOUT', 0) > 0:
+                    if last > settings.SESSION_IDLE_TIMEOUT:
+                       logout(request)
+                else:
+                    return None
+        return None
 
 class LoginRequiredMiddleware(MiddlewareMixin):
     """

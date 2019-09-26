@@ -102,7 +102,12 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'layerindex.middleware.NonAtomicRevisionMiddleware',
     'layerindex.middleware.LoginRequiredMiddleware',
+    'layerindex.middleware.SessionIdleTimeoutMiddleware',
 )
+
+#session related settings
+SESSION_COOKIE_AGE = 24*60*60    #change expired session
+SESSION_IDLE_TIMEOUT = 30*60  #IDLE logout time
 
 # We allow CORS calls from everybody
 CORS_ORIGIN_ALLOW_ALL = True
