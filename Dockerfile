@@ -43,7 +43,7 @@ RUN apt-get update \
     && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
 	&& locale-gen en_US.UTF-8 \
 	&& update-locale \
-    && wget https://dl.google.com/go/go1.12.4.linux-amd64.tar.gz \
+    && wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz \
     && tar xv -C /usr/local -f go*.tar.gz \
     && rm go*.tar.gz \
     && git clone https://github.com/intel/clear-linux-dissector \
