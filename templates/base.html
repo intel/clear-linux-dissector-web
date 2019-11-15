@@ -84,7 +84,8 @@
         {% block footer %}
         <div class="container">
             <footer>
-                <p class="pull-right">Clear Linux Dissector version {{ app_version }}</p>
+                <p class="pull-right">Clear Linux Dissector version {{ app_version }}<br>
+                <a href="{% url 'privacy' %}">Privacy notice</a></p>
             </footer>
         </div>
         {% endblock %}

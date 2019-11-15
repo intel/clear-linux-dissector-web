@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+<!--
+{% block title_append %} - Privacy Notice{% endblock %}
+-->
+
+{% block content %}
+{% autoescape on %}
+<h2>Privacy Notice</h2>
+
+<p>This application collects data when you create an account (including username, name, email address, password, and answers to security questions), and may also collect data based upon your activity within the application and associate it with your account. Naturally, administrators of this application will have access to this data (though passwords and security question answers are encrypted in the database and thus cannot be accessed.)</p>
+
+<p>If you wish to change information in your profile (username, name, security question answers, etc.) you can do so at any time using the <a href="{% url 'profile' %}">Edit Profile</a> option from the drop-down user menu at the top right of the page. You can also change your password at any time using the <a href="{% url 'password_change' %}">Change password</a> option from the same drop-down menu.</p>
+
+<p>If you wish to delete your account and all associated data from the application, you can do so at any time by choosing the <a href="{% url 'profile' %}">Edit Profile</a> option from the drop-down user menu at the top right of the page, then scrolling to the bottom of the page and clicking on the <i>Delete account</i> button.</p>
+
+{% endautoescape %}
+{% endblock %}
+
+{% block footer %}
+{% endblock %}

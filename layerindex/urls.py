@@ -90,6 +90,10 @@ urlpatterns = [
         TemplateView.as_view(
             template_name='layerindex/about.html'),
         name="about"),
+    url(r'^privacy/$',
+        TemplateView.as_view(
+            template_name='layerindex/privacy_notice.html'),
+        name="privacy"),
     url(r'^stats/$',
         StatsView.as_view(
             template_name='layerindex/stats.html'),

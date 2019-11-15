@@ -363,6 +363,19 @@ desired.
 
 
 
+Privacy notice
+--------------
+
+The application contains a fairly generic privacy notice, the template for
+which is in templates/layerindex/privacy_notice.html. If you wish to change
+this notice (or indeed any other template) you can edit the template file
+and then update the running application just as you would if you changed
+the configuration, i.e.:
+
+./dockersetup.py -u
+
+
+
 Maintenance
 -----------
 

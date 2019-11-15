@@ -314,5 +314,6 @@ LOGIN_EXEMPT_URLS = (
     '^/accounts/reregister/',
     '^/admin/',
     '^/captcha/image/(.*)',
+    '^/layerindex/privacy/',
     '^/layerindex/api/(.*)',
 )
