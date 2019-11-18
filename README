@@ -257,9 +257,17 @@ Security Considerations
 
 Some things to be aware of from a security perspective:
 
-* By default, anyone can register themselves an account. If you wish to
-  disable new user registration and manage users manually through the admin
-  interface instead, then add the following line to docker/settings.py:
+* Almost all functions of the application require logging in; to log in
+  an account is needed.
+
+* An administration interface for viewing/editing accounts and other
+  internal data is available at http://site.name/admin/ . Access to this
+  requires an account with staff (or superuser) status.
+
+* By default, anyone can register themselves an account (using a fairly
+  standard email verification process). If you wish to disable new user
+  registration and manage users manually through the admin interface
+  instead, then add the following line to docker/settings.py:
 
 REGISTRATION_OPEN = False
 
@@ -271,12 +279,12 @@ REGISTRATION_OPEN = False
 * By default, dockersetup.py enables connection to the web server via
   HTTPS using a self-signed certificate; connections via HTTP are
   re-directed to HTTPS. However, the self-signed certificate is only
-  intended to provide a minimum level of security, but will result in
-  browser warnings and is not recommended for production - instead,
-  obtain and use your own certificate/key pair corresponding to the
-  domain which will be used to access the application in production,
-  or alternatively if the application is accessible to the internet you
-  can use Let's Encrypt.
+  intended to provide a minimum level of security for testing HTTPS
+  functionality, but will result in browser warnings and is not
+  recommended for production - instead, obtain and use your own
+  certificate/key pair corresponding to the domain which will be used
+  to access the application in production, or alternatively if the
+  application is accessible to the internet you can use Let's Encrypt.
 
 * If you provide your own certificates for HTTPS, you should probably
   also enable HSTS in your configuration. Refer to the Django Security
@@ -340,6 +348,13 @@ REGISTRATION_OPEN = False
   parsing layer information inherently involves executing python code. It is
   recommended that you instead import the data from layers.openembedded.org
   (using import_layers.py as above).
+
+* Auditing: there are no specific audit logging features built into the
+  application, though these would be fairly easy to add on if needed. The
+  underlying Layer Index code does have a history function which is currently
+  not 100% reliable; the admin interface also has a built-in log of recent
+  changes however it only covers actions within the admin interface and not
+  the application itself.
 
 
 
