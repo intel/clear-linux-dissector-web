@@ -1574,7 +1574,7 @@ def task_log_view(request, task_id):
                 if isinstance(result.info, dict):
                     response['Task-Result'] = result.info.get('retcode', None)
                 else:
-                    response['Task-Result'] = -1
+                    response['Task-Result'] = -96
         else:
             response['Task-Done'] = '0'
             preader = utils.ProgressReader(settings.TASK_LOG_DIR, task_id)

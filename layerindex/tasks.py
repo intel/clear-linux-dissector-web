@@ -64,7 +64,7 @@ def run_update_command(self, branch_name, update_command):
         print('ERROR: %s' % str(e))
         output = str(e)
         erroutput = output
-        retcode = -1
+        retcode = -95
     finally:
         updateobj.log = output
         updateobj.finished = datetime.now()
