@@ -1627,6 +1627,7 @@ class TaskStatusView(TemplateView):
         context['update'] = get_object_or_404(Update, task_id=task_id)
         context['log_url'] = reverse_lazy('task_log', args=(task_id,))
         context['files_url'] = reverse_lazy('task_files', args=(task_id,))
+        context['recipeupdates'] = context['update'].comparisonrecipeupdate_set.order_by('recipe__pn')
         return context
 
 def task_log_view(request, task_id):
