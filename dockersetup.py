@@ -689,7 +689,7 @@ provide information as needed.
 
 if not (args.update or args.uninstall) and not email_host:
     print("""  WARNING: no email host has been specified - functions that require email
-  (such as and new account registraion, password reset and error reports will
+  (such as new account registration, password reset and error reports) will
   not work without it. If you wish to correct this, press Ctrl+C now and then
   re-run specifying the email host with the --email-host option.
 """)
