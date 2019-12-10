@@ -66,7 +66,7 @@ def run_update_command(self, branch_name, update_command):
         erroutput = output
         retcode = -95
     finally:
-        updateobj.log = output
+        updateobj.log = utils.squash_crs(output)
         updateobj.finished = datetime.now()
         updateobj.retcode = retcode
         updateobj.save()

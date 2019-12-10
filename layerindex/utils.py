@@ -473,6 +473,17 @@ def sanitise_html(html):
 def squashspaces(string):
     return re.sub("\s+", " ", string).strip()
 
+def squash_crs(string):
+    """
+    Squash out CRs *within* the string (CRs at the start preserved)
+    Useful for reducing the size of console logs that contain in-line
+    updates such as during download progress from some command-line tools
+    """
+    if isinstance(string, str):
+        return re.sub('\n[^\n]+\r', '\n', string)
+    else:
+        return re.sub(b'\n[^\n]+\r', b'\n', string)
+
 def sha256_file(ifn):
     import hashlib
     shash = hashlib.sha256()

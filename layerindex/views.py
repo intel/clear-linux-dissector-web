@@ -1554,7 +1554,7 @@ def task_log_view(request, task_id):
         datastr = f.read()
         origlen = len(datastr)
         # Squash out CRs *within* the string (CRs at the start preserved)
-        datastr = re.sub(b'\n[^\n]+\r', b'\n', datastr)
+        datastr = utils.squash_crs(datastr)
         # We need to escape this or else things that look like tags in the output
         # will be interpreted as such by the browser
         data = escape(datastr)
