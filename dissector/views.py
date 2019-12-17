@@ -52,6 +52,7 @@ from layerindex.views import (ClassicRecipeSearchView, ClassicRecipeDetailView,
 
 from layerindex import tasks, utils
 
+logger = utils.logger_create('DissectorViews')
 
 
 class ImageCompareView(FormView):
@@ -210,7 +211,7 @@ class ImageCompareView(FormView):
                         # Take care of dependencies
                         depends = jsrecipe.get('DEPENDS', '')
                         packageconfig_opts = jsrecipe.get('packageconfig_opts', {})
-                        recipeparse.handle_recipe_depends(recipe, depends, packageconfig_opts)
+                        recipeparse.handle_recipe_depends(recipe, depends, packageconfig_opts, logger)
 
                         for jsurl in jsrecipe.get('source_urls', []):
                             source = Source()
