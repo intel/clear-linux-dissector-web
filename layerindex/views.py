@@ -1918,9 +1918,6 @@ class ComparisonPatchView(RecipeSearchView):
         else:
             searched = False
             search_form = ComparisonPatchSearchForm(can_view_dispositioning=context['can_view_dispositioning'])
-        if not self.request.user.has_perm('layerindex.patch_disposition'):
-            del search_form.fields['patch_disposition']
-            del search_form.fields['export']
         context['search_form'] = search_form
         context['searched'] = searched
         selectedlayers_param = self.request.GET.get('selectedlayers', '')

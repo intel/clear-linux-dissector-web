@@ -386,6 +386,7 @@ class ComparisonPatchSearchForm(StyledForm):
         super(ComparisonPatchSearchForm, self).__init__(*args, **kwargs)
         if not can_view_dispositioning:
             del self.fields['patch_disposition']
+            del self.fields['export']
 
 
 class ComparisonPatchStatsForm(StyledForm):
