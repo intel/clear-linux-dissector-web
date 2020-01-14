@@ -338,6 +338,13 @@ REGISTRATION_OPEN = False
     this lockout, log into the admin interface, go to Users, click on the
     the user, tick the Active checkbox and then save.
 
+* Login sessions time out - after a fixed time since logging in, and
+  also after a period of inactivity. The SESSION_COOKIE_AGE setting
+  controls the former (default 24 hours), and SESSION_IDLE_TIMEOUT the
+  latter (default 30 minutes). Both values are integers specified as a
+  number of seconds. You can disable one or both of the timeouts by
+  setting the value to 0.
+
 * The REST API inherited from the OpenEmbedded layerindex upon which this
   application is based has been disabled, since it has no access controls
   on querying data (since the OE layer index operates entirely on publicly
