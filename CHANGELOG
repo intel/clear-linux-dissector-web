@@ -1,5 +1,29 @@
-Clear Linux Dissector Release Notes
-===================================
+Clear Linux Dissector Changelog
+===============================
+
+Release 0.7 (pre-release): 22 January 2020
+
+Changes:
+* Importing a Clear Linux release now populates cover status for all packages by default, making setting up a fresh database much more useful
+* Extended the import_layers.py script so that it can fetch and update OE recipe data from layers.openembedded.org, so that running update.py and fetching all layer repositories is no longer needed (and updating is much faster as a result)
+* dockersetup: fixed error when updating with -u if proxy config set in environment
+* dockersetup: ensure letsencrypt volume change gets undone if switching to a different TLS configuration
+* Fixed "Specified key was too long" database error when running migrations to initialise a new database
+* Fixed nginx error in environments where large client-side cookies are in use
+* Fixed CVE-2019-16865 (denial of service vulnerability in Pillow; should not have affected this application)
+* Bumped minimum Django version to avoid CVE-2019-19844 (account takeover using carefully crafted email address)
+* Fixed error during setup due to MySQL/MariaDB column size issue
+* Fixed "terminated (-1)" at the end of Clear Linux distro data update task even if it succeeded
+* Fixed long delays and high browser CPU usage when refreshing update task page
+* Fixed a layer parse issue with newer YP releases / master; that would only be an issue if you're using the update script directly though (which is no longer recommended)
+* Added session inactivity timeout and enabled that and absolute timeout by default
+* Added a default privacy notice page (linked from the footer of every page)
+* Added basic documentation on database backup and restore to README
+* Updated bundled jQuery, Chart.js and Bootstrap
+* Updated pinned python packages and installed Go version in the container
+* RELEASENOTES renamed to CHANGELOG
+
+
 
 Release 0.6 (pre-release): 9th August 2019
 ------------------------------------------
