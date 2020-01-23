@@ -20,7 +20,9 @@ html, body {
 
 /* HEADER */
 .header-bkgd {
-    background: url('../img/header-bkgd.png') no-repeat top center;
+    background: #141E30;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #243B55, #141E30);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #243B55, #141E30); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
     background-size: 100% 100%;
     margin-bottom: 20px;
 }
@@ -175,9 +177,9 @@ nav .container {
     color: #fefefe !important;
     font-weight: 700;
     font-size: 14px;
-    background: url('../img/clearlinux-logo.png') no-repeat 18px center;
-    background-size: 30px 47px;
-    padding-left: 53px;
+    background: url('../img/yocto-logo.png') no-repeat 18px center;
+    background-size: 144px 55px;
+    padding-left: 160px;
     height: 47px;
 }
 
