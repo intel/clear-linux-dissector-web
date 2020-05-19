@@ -309,6 +309,9 @@ VERSION_COMPARE_SOURCE_DIR = ""
 IMAGE_COMPARE_PATCH_DIR = BASE_DIR + "/static/patches"
 IMAGE_COMPARE_PATCH_URL_PREFIX = "/layerindex/imagecompare/patch/"
 
+# Path for update downloadable files to be stored
+UPDATE_FILES_DIR = IMAGE_COMPARE_PATCH_DIR + '/update_files'
+
 LOGIN_EXEMPT_URLS = (
     '^/accounts/register/',
     '^/accounts/reset/[0-9A-Za-z_\-]+/[0-9A-Za-z]{1,3}-[0-9A-Za-z]{1,20}/',

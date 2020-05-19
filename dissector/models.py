@@ -20,6 +20,10 @@ class ImageComparison(models.Model):
 
     class Meta:
         unique_together = ('user', 'name',)
+        permissions = (
+            # FIXME this is on the wrong model - but there's no more practical place for now
+            ("export_comparison_branch", "Can export comparison branch as a layer"),
+        )
 
     def user_can_view(self, user):
         if user.is_authenticated():

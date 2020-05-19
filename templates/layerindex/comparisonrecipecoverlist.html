@@ -1,0 +1,30 @@
+{% extends "layerindex/classicrecipes.html" %}
+{% load i18n %}
+
+{% comment %}
+
+  layerindex-web - comparison recipe cover list page template
+
+  Copyright (C) 2019 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+<!--
+{% block title_append %} - packages covering {{ cover_pn }} in {{ branch }}{% endblock %}
+-->
+
+{% block navbar %}
+{% endblock %}
+
+                {% block page_heading %}
+                <h1>Packages covering {{ cover_pn }} in {{ branch }}</h1>
+                {% endblock %}
+
+                {% block searchform %}
+                {% endblock %}
+
+                            {% block table_head_extra %}<th></th>{% endblock %}
+
+                        {% block export_button %}
+                        {% endblock %}

@@ -18,3 +18,7 @@ def truncatesimple(strval, length):
 @register.filter
 def timesince2(date, date2=None):
     return utils.timesince2(date, date2)
+
+@register.filter
+def human_filesize(size):
+    return utils.human_filesize(size)

@@ -122,7 +122,7 @@ class ClassicRecipeAdmin(admin.ModelAdmin):
     search_fields = ['filename', 'pn', 'cover_pn']
     list_filter = ['layerbranch__layer__name', 'layerbranch__branch__name']
     def get_readonly_fields(self, request, obj=None):
-        rwfields = ['cover_layerbranch', 'cover_pn', 'cover_status', 'cover_verified', 'cover_comment', 'classic_category', 'needs_attention', 'sha256sum', 'export']
+        rwfields = ['cover_layerbranch', 'cover_pn', 'cover_status', 'cover_verified', 'cover_comment', 'classic_category', 'needs_attention', 'sha256sum', 'export', 'export_class']
         rofields = []
         for f in ClassicRecipe._meta.get_fields():
             if f.name not in rwfields and not (f.auto_created and f.is_relation):
@@ -230,6 +230,7 @@ admin.site.register(LayerMaintainer, LayerMaintainerAdmin)
 admin.site.register(LayerDependency, LayerDependencyAdmin)
 admin.site.register(LayerNote, LayerNoteAdmin)
 admin.site.register(Update, UpdateAdmin)
+admin.site.register(UpdateFile)
 admin.site.register(LayerUpdate, LayerUpdateAdmin)
 admin.site.register(PackageConfig, PackageConfigAdmin)
 admin.site.register(StaticBuildDep, StaticBuildDepAdmin)
@@ -253,3 +254,4 @@ admin.site.register(SiteNotice)
 admin.site.register(SecurityQuestion)
 admin.site.register(SecurityQuestionAnswer)
 admin.site.register(UserProfile)
+admin.site.register(SavedSearch)

@@ -19,7 +19,13 @@
 {% block navs %}
 {% autoescape on %}
                             <li class="active"><a href="{% url 'comparison_recipe_search' branch.name %}">{% if branch.name == 'oe-classic' %}Recipes{% else %}Packages{% endif %}</a></li>
+                            {% if branch.name != 'oe-classic' %}
+                            <li><a href="{% url 'comparison_patch_search' branch.name %}">Patches</a></li>
+                            {% endif %}
                             <li><a href="{% url 'comparison_recipe_stats' branch.name %}">Stats</a></li>
+                            {% if branch.name != 'oe-classic' and can_view_dispositioning %}
+                            <li><a href="{% url 'comparison_patch_stats' branch.name %}">Patch Stats</a></li>
+                            {% endif %}
 {% endautoescape %}
 {% endblock %}
 
@@ -68,6 +74,7 @@
                 {% endif %}
                 {% endblock %}
 
+                {% block searchform %}
                 <div class="row bottom-margin">
                     <form id="search-form" class="form-inline" method="GET">
                        <table class="search-form-table">
@@ -188,6 +195,7 @@
                         {% endblock %}
                     </form>
                 </div>
+                {% endblock %}
 
 {% if recipe_list %}
                 <table class="table table-striped table-bordered recipestable">

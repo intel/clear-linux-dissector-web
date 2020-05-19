@@ -326,6 +326,16 @@ class ClassicRecipeSearchForm(StyledForm):
         ('1', 'Has patches'),
         ('0', 'No patches'),
         ]
+    PATCH_DISPOSITION_CHOICES = [
+        ('', '(any)'),
+        ('-', '(Not dispositioned)'),
+        ('A', 'Apply'),
+        ('R', 'Further review'),
+        ('E', 'Existing'),
+        ('N', 'Not needed'),
+        ('V', 'Different version'),
+        ('I', 'Invalid'),
+        ]
     ATTENTION_CHOICES = [
         ('', '(any)'),
         ('1', 'Yes'),
@@ -336,13 +346,50 @@ class ClassicRecipeSearchForm(StyledForm):
     category = forms.CharField(max_length=255, required=False)
     oe_layer = forms.ModelChoiceField(label='OE Layer', queryset=LayerItem.objects.filter(comparison=False).filter(status__in=['P', 'X']).order_by('name'), empty_label="(any)", required=False)
     has_patches = forms.ChoiceField(label='Patches', choices=PATCH_CHOICES, required=False)
+    patch_disposition = forms.ChoiceField(label='Patch disposition', choices=PATCH_DISPOSITION_CHOICES, required=False)
+    patch_name = forms.CharField(max_length=255, required=False)
     cover_status = forms.ChoiceField(label='Status', choices=COVER_STATUS_CHOICES, required=False)
     cover_verified = forms.ChoiceField(label='Verified', choices=VERIFIED_CHOICES, required=False)
     needs_attention = forms.ChoiceField(label='Needs attention', choices=ATTENTION_CHOICES, required=False)
 
+    def __init__(self, *args, can_view_dispositioning=False, **kwargs):
+        super(ClassicRecipeSearchForm, self).__init__(*args, **kwargs)
+        if not can_view_dispositioning:
+            del self.fields['patch_disposition']
+
 
 class ComparisonRecipeSelectForm(StyledForm):
     q = forms.CharField(label='Keyword', max_length=255, required=False)
+    oe_layer = forms.ModelChoiceField(label='OE Layer', queryset=LayerItem.objects.filter(comparison=False).filter(status__in=['P', 'X']).order_by('name'), empty_label="(any)", required=False)
+
+
+class ComparisonPatchSearchForm(StyledForm):
+    PATCH_APPLIED_CHOICES = [
+        ('', '(any)'),
+        ('1', 'Yes'),
+        ('0', 'No'),
+        ]
+    EXPORT_CHOICES = [
+        ('', '(any)'),
+        ('+', '(exportable)'),
+    ] + ClassicRecipe.EXPORT_CHOICES
+
+    q = forms.CharField(label='Keyword', max_length=255, required=False)
+    patch_disposition = forms.ChoiceField(label='Disposition', choices=ClassicRecipeSearchForm.PATCH_DISPOSITION_CHOICES, required=False)
+    patch_applied = forms.ChoiceField(label='Applied', choices=PATCH_APPLIED_CHOICES, required=False)
+    oe_layer = forms.ModelChoiceField(label='OE Layer', queryset=LayerItem.objects.filter(comparison=False).filter(status__in=['P', 'X']).order_by('name'), empty_label="(any)", required=False)
+    cover_status = forms.ChoiceField(label='Cover status', choices=ClassicRecipeSearchForm.COVER_STATUS_CHOICES, required=False)
+    export = forms.ChoiceField(label='Export', choices=EXPORT_CHOICES, required=False)
+    needs_attention = forms.ChoiceField(label='Needs attention', choices=ClassicRecipeSearchForm.ATTENTION_CHOICES, required=False)
+
+    def __init__(self, *args, can_view_dispositioning=False, **kwargs):
+        super(ComparisonPatchSearchForm, self).__init__(*args, **kwargs)
+        if not can_view_dispositioning:
+            del self.fields['patch_disposition']
+            del self.fields['export']
+
+
+class ComparisonPatchStatsForm(StyledForm):
     oe_layer = forms.ModelChoiceField(label='OE Layer', queryset=LayerItem.objects.filter(comparison=False).filter(status__in=['P', 'X']).order_by('name'), empty_label="(any)", required=False)
 
 
@@ -354,4 +401,7 @@ class PatchDispositionForm(StyledModelForm):
             'patch': forms.HiddenInput(),
         }
 
-PatchDispositionFormSet = modelformset_factory(PatchDisposition, form=PatchDispositionForm, extra=0)
+class ComparisonRecipeExportOptionsForm(StyledModelForm):
+    class Meta:
+        model = ClassicRecipe
+        fields = ('export', 'export_class')

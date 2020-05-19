@@ -1,0 +1,325 @@
+{% extends "layerindex/classic_base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% comment %}
+
+  layerindex-web - comparison recipe patch search page template
+
+  Copyright (C) 2013, 2018, 2019 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+
+<!--
+{% block title_append %} - {% if branch.name == 'oe-classic' %}OE-Classic patches{% else %}{{ branch.short_description }} patches{% endif %}{% endblock %}
+-->
+
+{% block navs %}
+{% autoescape on %}
+                            <li><a href="{% url 'comparison_recipe_search' branch.name %}">{% if branch.name == 'oe-classic' %}Recipes{% else %}Packages{% endif %}</a></li>
+                            <li class="active"><a href="{% url 'comparison_patch_search' branch.name %}">Patches</a></li>
+                            <li><a href="{% url 'comparison_recipe_stats' branch.name %}">Stats</a></li>
+                            {% if can_view_dispositioning %}
+                            <li><a href="{% url 'comparison_patch_stats' branch.name %}">Patch Stats</a></li>
+                            {% endif %}
+{% endautoescape %}
+{% endblock %}
+
+{% block content_inner %}
+{% autoescape on %}
+
+        <div class="row">
+
+            <div class="col-md-8">
+
+                {% block page_heading %}
+                <h2>{{ branch.short_description }} patches</h2>
+                {% endblock %}
+
+                <div class="row bottom-margin">
+                    <form id="search-form" class="form-inline" method="GET">
+                       <table class="search-form-table">
+                            <tbody>
+                                {% for field in search_form.visible_fields %}
+                                <tr>
+                                    {% if field.name == 'oe_layer' %}
+                                    <td>
+                                        {{ field.label }}
+                                    </td>
+                                    <td>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control input-large" id="id_selectedlayers_display" value="{{ selectedlayers_display }}" />
+                                            <div class="input-group-btn">
+                                                <a href="#layerDialog" id="id_select_layers" role="button" class="btn btn-default" data-toggle="modal">...</a>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="id_selectedlayers" name="selectedlayers" value="{{ selectedlayers|join:"," }}" />
+
+                                        <div id="layerDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="layerDialogLabel">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                                        <h3 id="layerDialogLabel">Select layers to include</h3>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="form-group has-feedback has-clear">
+                                                            <input type="text" class="form-control" id="layersearchtext" placeholder="search layers">
+                                                            <a class="glyphicon glyphicon-remove-sign form-control-feedback form-control-clear" id="layersearchclear" style="pointer-events: auto; text-decoration: none;cursor: pointer;"></a>
+                                                        </div>
+                                                        <div class="scrolling" id="id_layerdialog_list">
+                                                        </div>
+                                                        <div class="buttonblock">
+                                                        <button type="button" class="btn btn-default" id="id_layerdialog_select_all">Select all</button>
+                                                        <button type="button" class="btn btn-default buttonblock-btn" id="id_layerdialog_select_none">Select none</button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button class="btn btn-primary" id="id_layerdialog_ok" data-dismiss="modal">OK</button>
+                                                        <button class="btn btn-default" id="id_layerdialog_cancel" data-dismiss="modal">Cancel</button>
+                                                    </div>
+                                                </div><!-- /.modal-content -->
+                                            </div><!-- /.modal-dialog -->
+                                        </div>
+
+                                    </td>
+                                    {% else %}
+                                    <td>
+                                        {{ field.label }}
+                                    </td>
+                                    <td>
+                                        {{ field }}
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+
+                            </tbody>
+                        </table>
+                        <br>
+                        <button class="btn btn-default" type="submit">Search</button>
+                        {% for search in savedsearches %}
+                        <a href="{{ search.url }}" class="btn btn-link">{{ search.name }}</a>
+                        {% endfor %}
+                    </form>
+                </div>
+
+{% if patch_list %}
+                <br>
+                <table class="table table-striped table-bordered recipestable">
+                    <thead>
+                        <tr>
+                            <th width="10"></th>
+                            <th>Patch</th>
+                            <th class="col-md-2">Status</th>
+                            {% block table_head_extra %}{% endblock %}
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for patch in patch_list %}
+                            {% ifchanged patch.recipe %}
+                            <tr><td colspan="4">
+                                <a href="{% url 'comparison_recipe' patch.recipe.id %}">{{ patch.recipe.name }}{% if patch.recipe.classicrecipe.needs_attention %} <i class="glyphicon glyphicon-exclamation-sign" data-toggle="tooltip" title="Needs attention" aria-hidden="true"></i>{% endif %}</a>
+                                {% if patch.recipe.classicrecipe.get_cover_recipe %}<i class="glyphicon glyphicon-link" data-toggle="tooltip" title="{{ patch.recipe.classicrecipe.get_cover_desc }}" aria-hidden="true"></i>{% endif %}
+                                {% if can_disposition_patches %}{% if patch.recipe.classicrecipe.export != 'X' %}<i class="glyphicon glyphicon-ban-circle" data-toggle="tooltip" title="Recipe will not be exported: {{ patch.recipe.classicrecipe.no_export_reason }}" aria-hidden="true"></i>{% endif %}{% endif %}
+                            </td></tr>
+                            {% endifchanged %}
+                            <tr>
+                                <td></td>
+                                <td><a href="{{ patch.vcs_web_url }}">{{ patch.src_path }}</a>{% if not patch.applied %} <i class="glyphicon glyphicon-ban-circle not-applied" aria-hidden="true"></i>{% endif %}</td>
+                                {% if branch.comparison %}
+                                    {% if can_disposition_patches %}
+                                    <td id="patch_{{ patch.id }}_disposition_cell">{{ patch.patchdisposition.get_disposition_display }}</td>
+                                    <td><a href="#patchDialog" role="button" data-toggle="modal" class="btn btn-default pull-right patch_disposition_button" id="patch_link_{{ patch.id }}" patch-id="{{ patch.id }}" patch-disposition="{{ patch.patchdisposition.disposition }}" patch-comment="{{ patch.patchdisposition.comment }}" patch-name="{{ patch.src_path }}">...</a></td>
+                                    {% endif %}
+                                {% else %}
+                                <td>{{ patch.get_status_display }} {{ patch.status_extra | urlize }}</td>
+                                {% endif %}
+                                {% block table_row_extra %}{% endblock %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+    {% if is_paginated %}
+        {% load bootstrap_pagination %}
+        <div class="text-center">
+        {% bootstrap_paginate page_obj range=10 show_prev_next="false" show_first_last="true" %}
+        </div>
+    {% endif %}
+{% else %}
+    {% if searched %}
+    <p>No matching patches in {{ branch }} branch.</p>
+    {% endif %}
+{% endif %}
+
+            </div>
+
+        </div>
+
+{% if can_disposition_patches %}
+    <form id="patch_form" method="post">
+        <div id="patchDialog" class="modal fade patchdialog" tabindex="-1" role="dialog" aria-labelledby="patchDialogLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h3 id="patchDialogLabel">Dialog title</h3>
+                    </div>
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        {{ patch_form }}
+                        <div class="alert alert-danger" style="display: none;" id="patchDialogAlert"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary patchdialog-save">Save</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+    </form>
+{% endif %}
+
+{% endautoescape %}
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    update_selected_layer_display = function() {
+        layernames = [];
+        layerids = [];
+        $('.filterlayercheckbox:checked').each(function() {
+            layernames.push($("label[for="+$(this).attr('id')+"]").html());
+            layerids.push($(this).attr('value'))
+        });
+        $('#id_selectedlayers').val(layerids)
+        if(layernames.length)
+            $('#id_selectedlayers_display').val(layernames)
+        else
+            $('#id_selectedlayers_display').val(' (any)')
+    }
+    update_filters_enabled = function() {
+        if( $('#id_reversed').is(":checked") ) {
+            $('#id_reversed_fields').show()
+        }
+        else {
+            $('#id_reversed_fields').hide()
+        }
+    }
+    select_layer_checkboxes = function() {
+        $('.filterlayercheckbox').prop('checked', false);
+        selectedlayers = $('#id_selectedlayers').val().split(',');
+        for(i in selectedlayers) {
+            $('#id_layercheckbox_' + selectedlayers[i]).prop('checked', true);
+        }
+    }
+    setup_layer_list = function() {
+        if( $.trim($('#id_layerdialog_list').html()) ) {
+            select_layer_checkboxes()
+        }
+        else {
+            $('#id_layerdialog_list').html('Loading...');
+            $('#id_layerdialog_ok').prop('disabled', true)
+            $('#id_layerdialog_ok').addClass('disabled')
+            $.ajax({
+                url: '{% url 'layer_checklist' 'master' %}',
+                dataType: 'html',
+                success: function( resp ) {
+                    $('#id_layerdialog_list').html(resp);
+                    select_layer_checkboxes()
+                    $('#id_layerdialog_ok').prop('disabled', false)
+                    $('#id_layerdialog_ok').removeClass('disabled')
+                },
+                error: function( req, status, err ) {
+                    $('#id_layerdialog_list').html(err);
+                    console.log( 'something went wrong', status, err );
+                }
+            });
+        }
+    }
+    function clearLayerSearch() {
+        $("#layersearchtext").val('');
+        $(".layerstable > tbody > tr").show();
+    }
+    $(document).ready(function() {
+        $('#id_selectedlayers_display').prop('readonly', true)
+        update_filters_enabled()
+        $('[data-toggle="tooltip"]').tooltip();
+        $('.not-applied').tooltip({title:"Not being applied in {{ branch }}"});
+        firstfield = $("#search-form input:text").first()
+        if( ! firstfield.val() )
+            firstfield.focus()
+    });
+    $('#id_layerdialog_select_all').click(function (e) {
+        $('.layerstable').find('tr:visible').find('.filterlayercheckbox').prop('checked', true);
+    });
+    $('#id_layerdialog_select_none').click(function (e) {
+        $('.layerstable').find('tr:visible').find('.filterlayercheckbox').prop('checked', false);
+    });
+    $('#id_layerdialog_ok').click(function (e) {
+        update_selected_layer_display()
+    });
+    $('#id_select_layers').click(function (e) {
+        clearLayerSearch();
+        setup_layer_list();
+    });
+    $("#layersearchtext").on("input", function() {
+        var value = $(this).val().toLowerCase();
+        $(".layerstable > tbody > tr").filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+    });
+    $("#layersearchclear").click(function(){
+        clearLayerSearch();
+        $("#layersearchtext").focus();
+    });
+{% if can_disposition_patches %}
+    $('.patch_disposition_button').click(function (e) {
+        $('#patchDialogAlert').hide();
+        patch_id = $(this).attr('patch-id');
+        patch_name = $(this).attr('patch-name');
+        patch_disposition = $(this).attr('patch-disposition')
+        if( patch_disposition ) {
+            $('#id_dispositionform-disposition').val(patch_disposition);
+        }
+        else {
+            $('#id_dispositionform-disposition').val('A');
+        }
+        $('#id_dispositionform-comment').val($(this).attr('patch-comment'))
+        $('#id_dispositionform-patch').val(patch_id)
+        $('#patchDialogLabel').html('Disposition patch ' + patch_name);
+    });
+    $('.patchdialog-save').click(function (e) {
+        patch_id = $('#id_dispositionform-patch').val();
+        $.post(
+            '{% url 'patch_disposition_update' %}',
+            $('#patch_form').serialize()
+        ).done(function( data, status, xhr ) {
+            error = xhr.getResponseHeader('X-Form-Errors');
+            if( error ) {
+                $('#patchDialogAlert').html('Form error: ' + error);
+                $('#patchDialogAlert').show();
+            }
+            else {
+                $('#patchDialog').modal('hide');
+                patch_link = $('#patch_link_' + patch_id);
+                $('#patch_' + patch_id + '_disposition_cell').html($('#id_dispositionform-disposition option:selected').text());
+                patch_link.attr('patch-disposition', $('#id_dispositionform-disposition').val());
+                patch_link.attr('patch-comment', $('#id_dispositionform-comment').val());
+            }
+        }).fail(function( xhr, status, errorThrown ) {
+            $('#patchDialogAlert').html('Submit error: ' + errorThrown);
+            $('#patchDialogAlert').show();
+        });
+    });
+{% endif %}
+{% block scripts_extra %}
+{% endblock %}
+</script>
+{% endblock %}

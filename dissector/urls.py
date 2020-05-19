@@ -12,7 +12,8 @@ from dissector.views import FrontPageView, ImageCompareView, \
     ImageCompareRecipeSearchView, ImageCompareRecipeDetailView, ImageCompareRecipeSelectView, \
     ImageCompareRecipeSelectDetailView, image_compare_patch_view, \
     VersionCompareSelectView, VersionCompareView, VersionCompareRecipeDetailView, VersionCompareFileDiffView, \
-    version_compare_diff_view, VersionCompareContentView, version_compare_regenerate_view, ComparisonImportView
+    version_compare_diff_view, VersionCompareContentView, version_compare_regenerate_view, ComparisonImportView, \
+    ComparisonLayerExportView
 
 
 
@@ -77,4 +78,9 @@ urlpatterns = [
     url(r'^versioncompare/diff_file/(?P<diff_id>[-\w]+)/$',
         version_compare_diff_view,
         name="version_comparison_diff_ajax"),
+
+    url(r'^comparisonexport/$',
+        ComparisonLayerExportView.as_view(
+            template_name='dissector/comparisonlayerexport.html'),
+        name="comparison_layer_export"),
 ]

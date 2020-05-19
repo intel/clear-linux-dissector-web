@@ -40,6 +40,7 @@ RUN apt-get update \
 	rpm2cpio \
 	rpm \
 	cpio \
+	openssh-client \
     && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
 	&& locale-gen en_US.UTF-8 \
 	&& update-locale \
@@ -74,7 +75,12 @@ COPY docker/connectivity_check.sh /opt/connectivity_check.sh
 
 RUN mkdir /opt/workdir \
 	&& adduser --system --uid=500 layers \
-	&& chown -R layers /opt/workdir
+	&& chown -R layers /opt/workdir \
+	&& mkdir -p /home/layers/.ssh/ \
+	&& chown layers:nogroup /home/layers/.ssh/
+#COPY --chown=layers:nogroup docker/dotssh/* /home/layers/.ssh/
+#RUN chmod 600 /home/layers/.ssh/*
+
 USER layers
 
 # Always copy in .gitconfig and proxy helper script (they need editing to be active)
