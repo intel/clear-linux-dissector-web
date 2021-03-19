@@ -14,7 +14,7 @@ django-registration==3.0.1
 django-reversion==2.0.13
 django-reversion-compare==0.8.6
 django-simple-captcha==0.5.12
-djangorestframework==3.9.4
+djangorestframework==3.11.2
 gitdb2==2.0.6
 GitPython==2.1.13
 kombu==4.6.3
