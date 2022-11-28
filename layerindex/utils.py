@@ -246,9 +246,15 @@ def checkout_repo(repodir, commit, logger, force=False):
         # Now check out the revision
         runcmd(['git', 'checkout', commit], repodir, logger=logger)
 
-def checkout_layer_branch(layerbranch, repodir, logger=None):
+def checkout_layer_branch(layerbranch, repodir, use_last_rev=False, logger=None):
     branchname = layerbranch.get_checkout_branch()
-    checkout_repo(repodir, 'origin/%s' % branchname, logger)
+    if use_last_rev:
+        rev = layerbranch.vcs_last_rev
+        if not rev:
+            raise Exception('No fetch revision for %s!' % layerbranch)
+    else:
+        rev = 'origin/%s' % branchname
+    checkout_repo(repodir, rev, logger)
 
 def is_layer_valid(layerdir):
     conf_file = os.path.join(layerdir, "conf", "layer.conf")
@@ -487,6 +493,14 @@ def squash_crs(string):
 def sha256_file(ifn):
     import hashlib
     shash = hashlib.sha256()
+    with open(ifn, 'rb') as f:
+        for line in f:
+            shash.update(line)
+    return shash.hexdigest()
+
+def md5_file(ifn):
+    import hashlib
+    shash = hashlib.md5()
     with open(ifn, 'rb') as f:
         for line in f:
             shash.update(line)

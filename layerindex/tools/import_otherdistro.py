@@ -362,7 +362,7 @@ def update_recipe_file(path, recipe, repodir, raiseexceptions=False):
             elif key.startswith('patch'):
                 patches.append((int(key[5:] or '0'), expand(value)))
             elif key.startswith('source'):
-                sources.append(expand(value))
+                sources.append((int(key[6:] or '0'), expand(value)))
 
         recipe.configopts = utils.squashspaces(configopts)
 
@@ -406,7 +406,7 @@ def update_recipe_file(path, recipe, repodir, raiseexceptions=False):
         recipe.patch_set.exclude(id__in=saved_patches).delete()
 
         existing_ids = list(recipe.source_set.values_list('id', flat=True))
-        for src in sources:
+        for index, src in sources:
             srcobj, _ = Source.objects.get_or_create(recipe=recipe, url=src)
             if not '://' in src:
                 sourcepath = os.path.join(os.path.dirname(path), src)
@@ -414,6 +414,7 @@ def update_recipe_file(path, recipe, repodir, raiseexceptions=False):
                     srcobj.sha256sum = utils.sha256_file(sourcepath)
                 else:
                     srcobj.sha256sum = ''
+            srcobj.index = index
             srcobj.save()
             if srcobj.id in existing_ids:
                 existing_ids.remove(srcobj.id)

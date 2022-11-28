@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% comment %}
+
+  layerindex-web - comparison layer export page template
+
+  Copyright (C) 2019 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+<!--
+{% block title_append %} - comparison layer export{% endblock %}
+-->
+{% block hero %}
+        <div class="container">
+            <h2 class="home">Comparison Layer Export</h2>
+            <p class="pageDesc">This tool allows you to export an OpenEmbedded layer based upon data in a comparison branch.</p>
+        </div>
+{% endblock %}
+
+{% block content %}
+{% autoescape on %}
+
+    <div class="container">
+        <form class="form insetContent" enctype="multipart/form-data" method="POST">
+    {% csrf_token %}
+    {% for hidden in form.hidden_fields %}
+        {{ hidden }}
+    {% endfor %}
+    {% for field in form.visible_fields %}
+        <div class="row">
+        {% if field.errors %}
+        <div class="form-group alert alert-danger">
+        {{ field.errors }}
+        {% endif %}
+
+        <div id="group_{{ field.name }}" class="form-group">
+            <label for="{{ field.id_for_label }}" class="labelTitle">{{ field.label }}</label><br>
+        {% if field.name == 'oe_layer' %}
+            <div class="input-group">
+                <input type="text" class="form-control input-large" id="id_selectedlayers_display" value="{{ selectedlayers_display }}" />
+                <div class="input-group-btn">
+                    <a href="#layerDialog" id="id_select_layers" role="button" class="btn btn-default" data-toggle="modal">...</a>
+                </div>
+            </div>
+            <input type="hidden" id="id_selectedlayers" name="oe_layer" value="{{ selectedlayers|join:"," }}" />
+
+            <div id="layerDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="layerDialogLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h3 id="layerDialogLabel">Select layers to include</h3>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group has-feedback has-clear">
+                                <input type="text" class="form-control" id="layersearchtext" placeholder="search layers">
+                                <a class="glyphicon glyphicon-remove-sign form-control-feedback form-control-clear" id="layersearchclear" style="pointer-events: auto; text-decoration: none;cursor: pointer;"></a>
+                            </div>
+                            <div class="scrolling" id="id_layerdialog_list">
+                            </div>
+                            <div class="buttonblock">
+                            <button type="button" class="btn btn-default" id="id_layerdialog_select_all">Select all</button>
+                            <button type="button" class="btn btn-default buttonblock-btn" id="id_layerdialog_select_none">Select none</button>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" id="id_layerdialog_ok" data-dismiss="modal">OK</button>
+                            <button class="btn btn-default" id="id_layerdialog_cancel" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal-dialog -->
+            </div>
+        {% else %}
+            {{ field }}
+        {% endif %}
+            <span class="fileInputDesc">
+                {{ field.help_text }}
+            </span><br>
+        </div>
+
+        {% if field.errors %}
+        </div>
+        {% endif %}
+        </div>
+    {% endfor %}
+    <div class="control-group">
+        <div class="controls">
+            <button type="submit" class="btn btn-success">EXPORT</button>
+        </div>
+    </div>
+</form>
+    </div> <!-- /container -->
+    
+    
+    
+{% endautoescape %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    update_selected_layer_display = function() {
+        layernames = [];
+        layerids = [];
+        $('.filterlayercheckbox:checked').each(function() {
+            layernames.push($("label[for="+$(this).attr('id')+"]").html());
+            layerids.push($(this).attr('value'))
+        });
+        $('#id_selectedlayers').val(layerids)
+        if(layernames.length)
+            $('#id_selectedlayers_display').val(layernames)
+        else
+            $('#id_selectedlayers_display').val(' (any)')
+    }
+    select_layer_checkboxes = function() {
+        $('.filterlayercheckbox').prop('checked', false);
+        selectedlayers = $('#id_selectedlayers').val().split(',');
+        for(i in selectedlayers) {
+            $('#id_layercheckbox_' + selectedlayers[i]).prop('checked', true);
+        }
+    }
+    setup_layer_list = function() {
+        if( $.trim($('#id_layerdialog_list').html()) ) {
+            select_layer_checkboxes()
+        }
+        else {
+            $('#id_layerdialog_list').html('Loading...');
+            $('#id_layerdialog_ok').prop('disabled', true)
+            $('#id_layerdialog_ok').addClass('disabled')
+            $.ajax({
+                url: '{% url 'layer_checklist' 'master' %}',
+                dataType: 'html',
+                success: function( resp ) {
+                    $('#id_layerdialog_list').html(resp);
+                    select_layer_checkboxes()
+                    $('#id_layerdialog_ok').prop('disabled', false)
+                    $('#id_layerdialog_ok').removeClass('disabled')
+                },
+                error: function( req, status, err ) {
+                    $('#id_layerdialog_list').html(err);
+                    console.log( 'something went wrong', status, err );
+                }
+            });
+        }
+    }
+    function clearLayerSearch() {
+        $("#layersearchtext").val('');
+        $(".layerstable > tbody > tr").show();
+    }
+    $(document).ready(function() {
+        $('#id_selectedlayers_display').prop('readonly', true)
+        $('[data-toggle="tooltip"]').tooltip();
+        firstfield = $("#search-form input:text").first()
+        if( ! firstfield.val() )
+            firstfield.focus()
+    });
+    $('#id_layerdialog_select_all').click(function (e) {
+        $('.layerstable').find('tr:visible').find('.filterlayercheckbox').prop('checked', true);
+    });
+    $('#id_layerdialog_select_none').click(function (e) {
+        $('.layerstable').find('tr:visible').find('.filterlayercheckbox').prop('checked', false);
+    });
+    $('#id_layerdialog_ok').click(function (e) {
+        update_selected_layer_display()
+    });
+    $('#id_select_layers').click(function (e) {
+        clearLayerSearch();
+        setup_layer_list();
+    });
+    $("#layersearchtext").on("input", function() {
+        var value = $(this).val().toLowerCase();
+        $(".layerstable > tbody > tr").filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+    });
+    $("#layersearchclear").click(function(){
+        clearLayerSearch();
+        $("#layersearchtext").focus();
+    });
+</script>
+{% endblock %}

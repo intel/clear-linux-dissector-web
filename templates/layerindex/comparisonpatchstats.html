@@ -1,0 +1,265 @@
+{% extends "layerindex/classic_base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+
+{% comment %}
+
+  layerindex-web - Comparison patch stats template
+
+  Copyright (C) 2013, 2018, 2019 Intel Corporation
+  Licensed under the MIT license, see COPYING.MIT for details
+
+{% endcomment %}
+
+
+<!--
+{% block title_append %} - Patch statistics{% endblock %}
+-->
+
+{% block navs %}
+{% autoescape on %}
+                            <li><a href="{% url 'comparison_recipe_search' branch.name %}">{% if branch.name == 'oe-classic' %}Recipes{% else %}Packages{% endif %}</a></li>
+                            <li><a href="{% url 'comparison_patch_search' branch.name %}">Patches</a></li>
+                            <li><a href="{% url 'comparison_recipe_stats' branch.name %}">Stats</a></li>
+                            <li class="active"><a href="{% url 'comparison_patch_stats' branch.name %}">Patch Stats</a></li>
+{% endautoescape %}
+{% endblock %}
+
+
+
+{% block content_inner %}
+{% autoescape on %}
+
+
+        <div class="row">
+
+            <h1>{{ branch.short_description }} Patch Statistics</h1>
+
+            <br>
+            <div class="row bottom-margin">
+                <form id="search-form" class="form-inline" method="GET">
+                    <table class="search-form-table">
+                        <tbody>
+                            {% for field in search_form.visible_fields %}
+                            <tr>
+                                {% if field.name == 'oe_layer' %}
+                                <td>
+                                    {{ field.label }}
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control input-large" id="id_selectedlayers_display" value="{{ selectedlayers_display }}" />
+                                        <div class="input-group-btn">
+                                            <a href="#layerDialog" id="id_select_layers" role="button" class="btn btn-default" data-toggle="modal">...</a>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="id_selectedlayers" name="selectedlayers" value="{{ selectedlayers|join:"," }}" />
+
+                                    <div id="layerDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="layerDialogLabel">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                                    <h3 id="layerDialogLabel">Select layers to include</h3>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="form-group has-feedback has-clear">
+                                                        <input type="text" class="form-control" id="layersearchtext" placeholder="search layers">
+                                                        <a class="glyphicon glyphicon-remove-sign form-control-feedback form-control-clear" id="layersearchclear" style="pointer-events: auto; text-decoration: none;cursor: pointer;"></a>
+                                                    </div>
+                                                    <div class="scrolling" id="id_layerdialog_list">
+                                                    </div>
+                                                    <div class="buttonblock">
+                                                    <button type="button" class="btn btn-default" id="id_layerdialog_select_all">Select all</button>
+                                                    <button type="button" class="btn btn-default buttonblock-btn" id="id_layerdialog_select_none">Select none</button>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button class="btn btn-primary" id="id_layerdialog_ok" data-dismiss="modal">OK</button>
+                                                    <button class="btn btn-default" id="id_layerdialog_cancel" data-dismiss="modal">Cancel</button>
+                                                </div>
+                                            </div><!-- /.modal-content -->
+                                        </div><!-- /.modal-dialog -->
+                                    </div>
+
+                                </td>
+                                {% else %}
+                                <td>
+                                    {{ field.label }}
+                                </td>
+                                <td>
+                                    {{ field }}
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+
+                        </tbody>
+                    </table>
+                    <br>
+                    <p class="text-muted">Note: conditions always applied: {{ query_description }}</p>
+                    <button class="btn btn-default" type="submit">Update</button>
+                </form>
+            </div>
+
+
+            <h2>Patch dispositioning</h2>
+            <div>
+                <canvas id="chart_disposition">
+                </canvas>
+            </div>
+
+            <h2>Patch dispositioning (CVEs only)</h2>
+            <div>
+                <canvas id="chart_disposition_cve">
+                </canvas>
+            </div>
+
+        </div>
+
+{% endautoescape %}
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static "js/Chart.js" %}"></script>
+    <script>
+        update_selected_layer_display = function() {
+            layernames = [];
+            layerids = [];
+            $('.filterlayercheckbox:checked').each(function() {
+                layernames.push($("label[for="+$(this).attr('id')+"]").html());
+                layerids.push($(this).attr('value'))
+            });
+            $('#id_selectedlayers').val(layerids)
+            if(layernames.length)
+                $('#id_selectedlayers_display').val(layernames)
+            else
+                $('#id_selectedlayers_display').val(' (any)')
+        }
+        select_layer_checkboxes = function() {
+            $('.filterlayercheckbox').prop('checked', false);
+            selectedlayers = $('#id_selectedlayers').val().split(',');
+            for(i in selectedlayers) {
+                $('#id_layercheckbox_' + selectedlayers[i]).prop('checked', true);
+            }
+        }
+        setup_layer_list = function() {
+            if( $.trim($('#id_layerdialog_list').html()) ) {
+                select_layer_checkboxes()
+            }
+            else {
+                $('#id_layerdialog_list').html('Loading...');
+                $('#id_layerdialog_ok').prop('disabled', true)
+                $('#id_layerdialog_ok').addClass('disabled')
+                $.ajax({
+                    url: '{% url 'layer_checklist' 'master' %}',
+                    dataType: 'html',
+                    success: function( resp ) {
+                        $('#id_layerdialog_list').html(resp);
+                        select_layer_checkboxes()
+                        $('#id_layerdialog_ok').prop('disabled', false)
+                        $('#id_layerdialog_ok').removeClass('disabled')
+                    },
+                    error: function( req, status, err ) {
+                        $('#id_layerdialog_list').html(err);
+                        console.log( 'something went wrong', status, err );
+                    }
+                });
+            }
+        }
+        function sortBy(data, sortArray) {
+            var ret = [];
+            for( var i=0; i < sortArray.length; i++ ) {
+                ret.push(data[sortArray[i]]);
+            }
+            return ret;
+        }
+        function clearLayerSearch() {
+            $("#layersearchtext").val('');
+            $(".layerstable > tbody > tr").show();
+        }
+        $('#id_layerdialog_select_all').click(function (e) {
+            $('.layerstable').find('tr:visible').find('.filterlayercheckbox').prop('checked', true);
+        });
+        $('#id_layerdialog_select_none').click(function (e) {
+            $('.layerstable').find('tr:visible').find('.filterlayercheckbox').prop('checked', false);
+        });
+        $('#id_layerdialog_ok').click(function (e) {
+            update_selected_layer_display()
+        });
+        $('#id_select_layers').click(function (e) {
+            clearLayerSearch();
+            setup_layer_list();
+        });
+        $("#layersearchtext").on("input", function() {
+            var value = $(this).val().toLowerCase();
+            $(".layerstable > tbody > tr").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+        });
+        $("#layersearchclear").click(function(){
+            clearLayerSearch();
+            $("#layersearchtext").focus();
+        });
+        $(document).ready(function() {
+            $('#id_selectedlayers_display').prop('readonly', true)
+            $('[data-toggle="tooltip"]').tooltip();
+            firstfield = $("#search-form input:text").first()
+            if( ! firstfield.val() )
+                firstfield.focus()
+
+            chartColors = {
+                red: 'rgb(255, 99, 132)',
+                yellow: 'rgb(255, 205, 86)',
+                green: 'rgb(75, 192, 192)',
+                green2: 'rgb(51, 204, 51)',
+                blue: 'rgb(54, 162, 235)',
+                purple: 'rgb(153, 102, 255)',
+                pink: 'rgb(255, 51, 153)',
+                grey: 'rgb(201, 203, 207)',
+            };
+            chartColorsArray = Object.values(chartColors);
+
+            // --- Dispositioning chart ---
+            color_indexes = {{ chart_disposition_colors }};
+            chart_disposition_colors = sortBy(chartColorsArray, color_indexes);
+            var config = {
+                type: 'pie',
+                data: {
+                    datasets: [{
+                        data: {{ chart_disposition_values }},
+                        backgroundColor: chart_disposition_colors,
+                    }],
+                    labels: {{ chart_disposition_labels|safe }}
+                },
+                options: {
+                    responsive: true
+                }
+            };
+
+            var ctx = document.getElementById('chart_disposition').getContext('2d');
+            window.myPie = new Chart(ctx, config);
+
+            // --- Dispositioning (CVEs only) chart ---
+            color_indexes = {{ chart_disposition_cve_colors }};
+            chart_disposition_cve_colors = sortBy(chartColorsArray, color_indexes);
+            var config = {
+                type: 'pie',
+                data: {
+                    datasets: [{
+                        data: {{ chart_disposition_cve_values }},
+                        backgroundColor: chart_disposition_cve_colors,
+                    }],
+                    labels: {{ chart_disposition_cve_labels|safe }}
+                },
+                options: {
+                    responsive: true
+                }
+            };
+
+            var ctx = document.getElementById('chart_disposition_cve').getContext('2d');
+            window.myPie = new Chart(ctx, config);
+        });
+    </script>
+{% endblock %}

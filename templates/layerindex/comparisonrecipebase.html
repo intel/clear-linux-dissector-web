@@ -167,7 +167,9 @@
                     </tr></tbody>
                 </table>
 <br><br>
+                {% block patch_table_heading %}
                 <h2>Patches</h2>
+                {% endblock %}
                 <table width="100%" class="table table-bordered">
                     <thead>
                         <th width="50%">{{ layerbranch_desc }}{{ layerbranch_addtext }}</th>

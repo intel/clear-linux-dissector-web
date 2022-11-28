@@ -14,7 +14,9 @@ from layerindex.views import LayerListView, LayerReviewListView, LayerReviewDeta
     bulk_change_edit_view, bulk_change_patch_view, BulkChangeDeleteView, RecipeDetailView, RedirectParamsView, \
     ClassicRecipeSearchView, ClassicRecipeDetailView, ClassicRecipeStatsView, LayerUpdateDetailView, UpdateListView, \
     UpdateDetailView, StatsView, publish_view, LayerCheckListView, BBClassCheckListView, TaskStatusView, \
-    ComparisonRecipeSelectView, ComparisonRecipeSelectDetailView, task_log_view, task_stop_view, email_test_view
+    ComparisonRecipeSelectView, ComparisonRecipeSelectDetailView, task_log_view, task_stop_view, email_test_view, \
+    TaskFilesView, update_file_download_view, patch_disposition_update_view, ComparisonPatchView, \
+    export_options_update_view, ComparisonPatchStatsView, ClassicRecipeCoverLinkView
 from layerindex.models import LayerItem, Recipe, RecipeChangeset
 from rest_framework import routers
 from . import restviews
@@ -78,6 +80,9 @@ urlpatterns = [
         UpdateDetailView.as_view(
             template_name='layerindex/updatedetail.html'),
         name='update'),
+    url(r'^updatefile/(?P<pk>[-\w]+)/$',
+        update_file_download_view,
+        name='update_file_download'),
     url(r'^history/$',
         HistoryListView.as_view(
             template_name='layerindex/history.html'),
@@ -108,14 +113,26 @@ urlpatterns = [
             paginate_by=0,
             content_type='text/csv'),
         name='comparison_recipe_search_csv'),
+    url(r'^comparison/patches/(?P<branch>[-., \w]+)/$',
+        ComparisonPatchView.as_view(
+            template_name='layerindex/comparisonpatches.html'),
+        name='comparison_patch_search'),
     url(r'^comparison/stats/(?P<branch>[-., \w]+)/$',
         ClassicRecipeStatsView.as_view(
             template_name='layerindex/classicstats.html'),
         name='comparison_recipe_stats'),
+    url(r'^comparison/patchstats/(?P<branch>[-., \w]+)/$',
+        ComparisonPatchStatsView.as_view(
+            template_name='layerindex/comparisonpatchstats.html'),
+        name='comparison_patch_stats'),
     url(r'^comparison/recipe/(?P<pk>[-\w]+)/$',
         ClassicRecipeDetailView.as_view(
             template_name='layerindex/classicrecipedetail.html'),
         name='comparison_recipe'),
+    url(r'^comparison/cover/(?P<branch>[-., \w]+)/(?P<cover_pn>[-+.\w]+)/$',
+        ClassicRecipeCoverLinkView.as_view(
+            template_name='layerindex/comparisonrecipecoverlist.html'),
+        name='comparison_recipe_cover_link'),
     url(r'^comparison/select/(?P<pk>[-\w]+)/$',
         ComparisonRecipeSelectView.as_view(
             template_name='layerindex/comparisonrecipeselect.html'),
@@ -124,6 +141,12 @@ urlpatterns = [
         ComparisonRecipeSelectDetailView.as_view(
             template_name='layerindex/comparisonrecipeselectdetail.html'),
         name='comparison_select_detail'),
+    url(r'^comparison/patchdisposition/$',
+        patch_disposition_update_view,
+        name='patch_disposition_update'),
+    url(r'^comparison/exportoptions/(?P<pk>[-\w]+)/$',
+        export_options_update_view,
+        name='export_options_update'),
 
     url(r'^email_test/$',
         email_test_view,
@@ -138,6 +161,10 @@ urlpatterns = [
     url(r'^stoptask/(?P<task_id>[-\w]+)/$',
         task_stop_view,
         name='task_stop'),
+    url(r'^taskfiles/(?P<task_id>[-\w]+)/$',
+        TaskFilesView.as_view(
+            template_name='layerindex/taskfiles.html'),
+        name='task_files'),
     url(r'^ajax/layerchecklist/(?P<branch>[-., \w]+)/$',
         LayerCheckListView.as_view(
             template_name='layerindex/layerchecklist.html'),

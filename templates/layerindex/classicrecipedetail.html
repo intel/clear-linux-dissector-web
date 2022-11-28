@@ -70,6 +70,16 @@
                         {% endif %}
                         {% endblock %}
 
+                {% block patch_table_heading %}
+                <h2>Patches
+                    <a href="#exportDialog" role="button" data-toggle="modal" id="export_options_button" class="btn btn-default pull-right">Export options...</a>
+                </h2>
+                {% if can_disposition_patches and recipe.patch_set.exists %}
+                <div class="alert alert-warning" id="no_export_alert" {% if not recipe.no_export_reason %}style="display: none;"{% endif %}>
+                    <b>NOTE:</b> This recipe will not be exported: <span id="no_export_reason">{{ recipe.no_export_reason }}</span>
+                </div>
+                {% endif %}
+                {% endblock %}
                                     {% block patch_status_heading %}
                                     {% if rcp.layerbranch.branch.comparison %}
                                         {% if can_disposition_patches %}
@@ -84,8 +94,8 @@
                                     {% block patch_status %}
                                     {% if rcp.layerbranch.branch.comparison %}
                                         {% if can_disposition_patches %}
-                                        <td>{{ patch.patchdisposition.get_disposition_display }}</td>
-                                        <td><a href="#patchDialog{{ patch.id }}" role="button" data-toggle="modal" class="btn btn-default pull-right patch_disposition_button" patch-id="{{ patch.id }}" patch-name="{{ patch.src_path }}">...</a></td>
+                                        <td id="patch_{{ patch.id }}_disposition_cell">{{ patch.patchdisposition.get_disposition_display }}</td>
+                                        <td><a href="#patchDialog" role="button" data-toggle="modal" class="btn btn-default pull-right patch_disposition_button" id="patch_link_{{ patch.id }}" patch-id="{{ patch.id }}" patch-disposition="{{ patch.patchdisposition.disposition }}" patch-comment="{{ patch.patchdisposition.comment }}" patch-name="{{ patch.src_path }}">...</a></td>
                                         {% endif %}
                                     {% else %}
                                     <td>{{ patch.get_status_display }} {{ patch.status_extra | urlize }}</td>
@@ -94,43 +104,123 @@
 
 {% block content_extra %}
 {% if can_disposition_patches %}
-{% for form in patch_formset %}
-    {% with patch_id=form.patch.initial %}
-    <form id="patch_form_{{ patch_id }}" method="post">
-        <div id="patchDialog{{ patch_id }}" class="modal fade patchdialog" tabindex="-1" role="dialog" aria-labelledby="patchDialogLabel{{ patch_id }}">
+    <form id="patch_form" method="post">
+        <div id="patchDialog" class="modal fade patchdialog" tabindex="-1" role="dialog" aria-labelledby="patchDialogLabel">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h3 id="patchDialogLabel{{ patch_id }}">Dialog title</h3>
+                        <h3 id="patchDialogLabel">Dialog title</h3>
                     </div>
                     <div class="modal-body">
                         {% csrf_token %}
-                        {{ form }}
+                        {{ patch_form }}
+                        <div class="alert alert-danger" style="display: none;" id="patchDialogAlert"></div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary patchdialog-save" data-dismiss="modal" patch-id="{{ patch_id }}">Save</button>
-                        <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary patchdialog-save">Save</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     </div>
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->
-        </div>
+        </div><!-- /.modal -->
     </form>
-    {% endwith %}
-{% endfor %}
+
+    <form id="export_form" method="post">
+        <div id="exportDialog" class="modal fade exportdialog" tabindex="-1" role="dialog" aria-labelledby="exportDialogLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h3 id="exportDialogLabel">{{ recipe }} export settings</h3>
+                    </div>
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        {{ export_form }}
+                        <div class="alert alert-danger" style="display: none;" id="exportDialogAlert"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="exportdialog_save_button" >Save</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+    </form>
 {% endif %}
 {% endblock %}
 
 {% block scripts_extra %}
+{% if can_disposition_patches %}
     $('.patch_disposition_button').click(function (e) {
+        $('#patchDialogAlert').hide();
         patch_id = $(this).attr('patch-id');
         patch_name = $(this).attr('patch-name');
-        $('#patchDialogLabel' + patch_id).html('Disposition patch ' + patch_name);
+        patch_disposition = $(this).attr('patch-disposition')
+        if( patch_disposition ) {
+            $('#id_dispositionform-disposition').val(patch_disposition);
+        }
+        else {
+            $('#id_dispositionform-disposition').val('A');
+        }
+        $('#id_dispositionform-comment').val($(this).attr('patch-comment'))
+        $('#id_dispositionform-patch').val(patch_id)
+        $('#patchDialogLabel').html('Disposition patch ' + patch_name);
     });
     $('.patchdialog-save').click(function (e) {
-        patch_id = $(this).attr('patch-id');
-        $('#patch_form_' + patch_id).submit()
-        $('#patchDialog' + patch_id).modal('hide')
+        patch_id = $('#id_dispositionform-patch').val();
+        $.post(
+            '{% url 'patch_disposition_update' %}',
+            $('#patch_form').serialize()
+        ).done(function( data, status, xhr ) {
+            error = xhr.getResponseHeader('X-Form-Errors');
+            if( error ) {
+                $('#patchDialogAlert').html('Form error: ' + error);
+                $('#patchDialogAlert').show();
+            }
+            else {
+                $('#patchDialog').modal('hide');
+                patch_link = $('#patch_link_' + patch_id);
+                $('#patch_' + patch_id + '_disposition_cell').html($('#id_dispositionform-disposition option:selected').text());
+                patch_link.attr('patch-disposition', $('#id_dispositionform-disposition').val());
+                patch_link.attr('patch-comment', $('#id_dispositionform-comment').val());
+            }
+        }).fail(function( xhr, status, errorThrown ) {
+            $('#patchDialogAlert').html('Submit error: ' + errorThrown);
+            $('#patchDialogAlert').show();
+        });
     });
+
+    $('#export_options_button').click(function (e) {
+        $('#exportDialogAlert').hide();
+    });
+    $('#exportdialog_save_button').click(function (e) {
+        $.post(
+            '{% url 'export_options_update' recipe.id %}',
+            $('#export_form').serialize()
+        ).done(function( data, status, xhr ) {
+            error = xhr.getResponseHeader('X-Form-Errors');
+            if( error ) {
+                $('#exportDialogAlert').html('Form error: ' + error);
+                $('#exportDialogAlert').show();
+            }
+            else {
+                $('#exportDialog').modal('hide');
+            }
+            reason = xhr.getResponseHeader('X-No-Export-Reason');
+            if( reason ) {
+                $('#no_export_reason').html(reason);
+                $('#no_export_alert').show();
+            }
+            else {
+                $('#no_export_alert').hide();
+            }
+        }).fail(function( xhr, status, errorThrown ) {
+            $('#exportDialogAlert').html('Submit error: ' + errorThrown);
+            $('#exportDialogAlert').show();
+        });
+    });
+
+{% endif %}
 {% endblock %}
 
